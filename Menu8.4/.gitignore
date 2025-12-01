@@ -1,0 +1,79 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.lib
+*.dll
+menu
+src/*.o
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+*.sublime-project
+.project
+.cproject
+.settings/
+
+# Build directories
+build/
+dist/
+obj/
+bin/
+*.d
+
+# LVGL build (can be large)
+lvgl/
+
+# Temporary and backup files
+*.tmp
+*.log
+*.bak
+*.swp
+*.[oa]
+*.out
+
+# CMake
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+Makefile.user
+
+# Generated files
+*.gch
+*.pch
+core
+*.core
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.exe
+*.app/
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Package managers
+.cargo/
+Cargo.lock
+
+# Local configuration
+local.mk
+config.local
+.env
+.env.local
