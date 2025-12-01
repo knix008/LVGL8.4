@@ -5,6 +5,7 @@
 #include "../include/screen.h"
 #include "../include/navigation.h"
 #include "../include/chunjiin.h"
+#include "../include/border.h"
 #include <string.h>
 
 // ============================================================================
@@ -75,6 +76,9 @@ static void clear_btn_callback(lv_event_t *e) {
 static void msgbox_event_callback(lv_event_t *e) {
     lv_obj_t *mbox = lv_event_get_current_target(e);
     lv_msgbox_close(mbox);
+    
+    // Remove the green border rectangle
+    remove_green_border();
 }
 
 static void enter_btn_callback(lv_event_t *e) {
@@ -116,10 +120,14 @@ static void enter_btn_callback(lv_event_t *e) {
     // Style the OK button with green color and center alignment
     lv_obj_t *btns_obj = lv_msgbox_get_btns(mbox);
     if (btns_obj) {
+        // Increase the button container height
+        lv_obj_set_height(btns_obj, 60);
+        
         // Get the OK button itself and style it
         lv_obj_t *ok_btn = lv_obj_get_child(btns_obj, 0);
         if (ok_btn) {
             lv_obj_set_style_bg_color(ok_btn, lv_color_hex(0x00FF00), 0);
+            lv_obj_set_size(ok_btn, lv_pct(100), lv_pct(100));  // Fill container
         }
 
         // Make the button container transparent
@@ -132,6 +140,9 @@ static void enter_btn_callback(lv_event_t *e) {
 
     // Add event callback to close the message box when OK is clicked
     lv_obj_add_event_cb(mbox, msgbox_event_callback, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // Show the green rectangle border
+    show_green_border();
 
     // Clear the text area
     chunjiin_init(&chunjiin_state);

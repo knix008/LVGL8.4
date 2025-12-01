@@ -3,4 +3,4 @@ status_bar:
   network: false
   korean_input: true
   info: false
-  face: true
+  face: false

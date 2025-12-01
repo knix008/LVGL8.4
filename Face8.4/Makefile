@@ -30,8 +30,8 @@ ALL_LIBS = $(LVGL_LIB) $(SDL_LIBS) $(FREETYPE_LIBS) $(JPEG_LIBS) $(YAML_LIBS) $(
 
 TARGET = system
 SRC_DIR = src
-SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/home.c $(SRC_DIR)/menu.c $(SRC_DIR)/screen.c $(SRC_DIR)/style.c $(SRC_DIR)/init.c $(SRC_DIR)/info.c $(SRC_DIR)/admin.c $(SRC_DIR)/network.c $(SRC_DIR)/korean.c $(SRC_DIR)/chunjiin.c $(SRC_DIR)/keypad.c $(SRC_DIR)/navigation.c $(SRC_DIR)/config.c $(SRC_DIR)/face.c
-OBJS = $(SRC_DIR)/main.o $(SRC_DIR)/home.o $(SRC_DIR)/menu.o $(SRC_DIR)/screen.o $(SRC_DIR)/style.o $(SRC_DIR)/init.o $(SRC_DIR)/info.o $(SRC_DIR)/admin.o $(SRC_DIR)/network.o $(SRC_DIR)/korean.o $(SRC_DIR)/chunjiin.o $(SRC_DIR)/keypad.o $(SRC_DIR)/navigation.o $(SRC_DIR)/config.o $(SRC_DIR)/face.o
+SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/home.c $(SRC_DIR)/menu.c $(SRC_DIR)/screen.c $(SRC_DIR)/style.c $(SRC_DIR)/init.c $(SRC_DIR)/info.c $(SRC_DIR)/admin.c $(SRC_DIR)/network.c $(SRC_DIR)/korean.c $(SRC_DIR)/chunjiin.c $(SRC_DIR)/keypad.c $(SRC_DIR)/navigation.c $(SRC_DIR)/config.c $(SRC_DIR)/face.c $(SRC_DIR)/border.c
+OBJS = $(SRC_DIR)/main.o $(SRC_DIR)/home.o $(SRC_DIR)/menu.o $(SRC_DIR)/screen.o $(SRC_DIR)/style.o $(SRC_DIR)/init.o $(SRC_DIR)/info.o $(SRC_DIR)/admin.o $(SRC_DIR)/network.o $(SRC_DIR)/korean.o $(SRC_DIR)/chunjiin.o $(SRC_DIR)/keypad.o $(SRC_DIR)/navigation.o $(SRC_DIR)/config.o $(SRC_DIR)/face.o $(SRC_DIR)/border.o
 
 all: check_setup $(TARGET)
 
