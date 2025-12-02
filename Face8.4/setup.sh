@@ -30,11 +30,11 @@ if ! pkg-config --exists freetype2; then
     sudo apt-get install -y libfreetype-dev
 fi
 
-# Check for libyaml
-echo "Checking libyaml..."
-if ! pkg-config --exists yaml-0.1; then
-    echo "libyaml not found. Installing..."
-    sudo apt-get install -y libyaml-dev
+# Check for libjpeg (optional, for JPEG image support)
+echo "Checking libjpeg..."
+if ! pkg-config --exists libjpeg; then
+    echo "libjpeg not found. Installing (optional)..."
+    sudo apt-get install -y libjpeg-dev || echo "Warning: libjpeg installation failed (non-critical)"
 fi
 
 # Clone LVGL if not present

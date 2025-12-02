@@ -1,0 +1,28 @@
+{
+  "status_bar": {
+    "admin": false,
+    "network": false,
+    "korean_input": true,
+    "info": false,
+    "face": false
+  },
+  "border": {
+    "default_color": "0x00FF00",
+    "default_width": 8,
+    "colors": {
+      "green": "0x00FF00",
+      "red": "0xFF0000",
+      "blue": "0x0000FF",
+      "yellow": "0xFFFF00",
+      "orange": "0xFF5733",
+      "purple": "0x8A2BE2",
+      "white": "0xFFFFFF"
+    },
+    "widths": {
+      "thin": 3,
+      "default": 5,
+      "thick": 12,
+      "extra_thick": 16
+    }
+  }
+}

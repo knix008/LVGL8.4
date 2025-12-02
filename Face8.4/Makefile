@@ -17,16 +17,12 @@ FREETYPE_LIBS = $(shell pkg-config --libs freetype2 2>/dev/null || echo "-lfreet
 # JPEG for JPEG image support
 JPEG_LIBS = $(shell pkg-config --libs libjpeg 2>/dev/null || echo "-ljpeg")
 
-# YAML for configuration file support
-YAML_CFLAGS = $(shell pkg-config --cflags yaml-0.1 2>/dev/null || echo "")
-YAML_LIBS = $(shell pkg-config --libs yaml-0.1 2>/dev/null || echo "-lyaml")
-
 # Include paths - lv_conf.h is in current directory
 INCLUDES = -I. -I$(LVGL_DIR)
 
 # Combine all flags
-ALL_CFLAGS = $(CFLAGS) $(INCLUDES) $(SDL_CFLAGS) $(FREETYPE_CFLAGS) $(YAML_CFLAGS)
-ALL_LIBS = $(LVGL_LIB) $(SDL_LIBS) $(FREETYPE_LIBS) $(JPEG_LIBS) $(YAML_LIBS) $(LDFLAGS)
+ALL_CFLAGS = $(CFLAGS) $(INCLUDES) $(SDL_CFLAGS) $(FREETYPE_CFLAGS)
+ALL_LIBS = $(LVGL_LIB) $(SDL_LIBS) $(FREETYPE_LIBS) $(JPEG_LIBS) $(LDFLAGS)
 
 TARGET = system
 SRC_DIR = src

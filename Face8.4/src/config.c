@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <yaml.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <ctype.h>
 
 // External reference to the global app state
 extern AppState app_state;
@@ -30,12 +30,68 @@ static int ensure_config_directory(void) {
 }
 
 // ============================================================================
+// JSON HELPER FUNCTIONS
+// ============================================================================
+
+// Skip whitespace in JSON
+static const char* skip_whitespace(const char* str) {
+    while (*str && isspace(*str)) str++;
+    return str;
+}
+
+// Read entire file into memory
+static char* read_file_contents(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (!file) return NULL;
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* content = malloc(size + 1);
+    if (!content) {
+        fclose(file);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(content, 1, size, file);
+    content[bytes_read] = '\0';
+    fclose(file);
+
+    return content;
+}
+
+// Find a JSON value by key (simple implementation for our use case)
+static const char* find_json_value(const char* json, const char* key) {
+    char search[256];
+    snprintf(search, sizeof(search), "\"%s\"", key);
+    
+    const char* pos = strstr(json, search);
+    if (!pos) return NULL;
+    
+    pos += strlen(search);
+    pos = skip_whitespace(pos);
+    
+    if (*pos != ':') return NULL;
+    pos++;
+    pos = skip_whitespace(pos);
+    
+    return pos;
+}
+
+// Extract boolean value
+static int parse_bool(const char* str) {
+    str = skip_whitespace(str);
+    return (strncmp(str, "true", 4) == 0);
+}
+
+// ============================================================================
 // SAVE STATUS BAR CONFIGURATION
 // ============================================================================
 
 /**
- * Saves the current status bar configuration to YAML file.
- * Persists enabled/disabled state of status bar icons.
+ * Saves the current configuration to JSON file.
+ * Preserves all sections including border configuration.
  * 
  * @return 0 on success, -1 on failure
  */
@@ -45,6 +101,37 @@ int save_status_bar_config(void) {
         return -1;
     }
 
+    // Read existing config to preserve border section
+    char* existing_config = read_file_contents(STATUS_BAR_CONFIG_FILE);
+    
+    // Extract border section if it exists
+    char border_section[2048] = "";
+    if (existing_config) {
+        const char* border_start = strstr(existing_config, "\"border\"");
+        if (border_start) {
+            // Find the opening brace for border object
+            const char* brace = strchr(border_start, '{');
+            if (brace) {
+                int depth = 1;
+                const char* p = brace + 1;
+                while (*p && depth > 0) {
+                    if (*p == '{') depth++;
+                    else if (*p == '}') depth--;
+                    p++;
+                }
+                if (depth == 0) {
+                    // Extract border section
+                    size_t len = p - border_start;
+                    if (len < sizeof(border_section) - 1) {
+                        strncpy(border_section, border_start, len);
+                        border_section[len] = '\0';
+                    }
+                }
+            }
+        }
+        free(existing_config);
+    }
+
     FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "w");
     if (!file) {
         fprintf(stderr, "Error: Failed to open config file for writing: %s\n", 
@@ -52,109 +139,28 @@ int save_status_bar_config(void) {
         return -1;
     }
 
-    yaml_emitter_t emitter;
-    yaml_event_t event;
-
-    // Initialize emitter
-    if (!yaml_emitter_initialize(&emitter)) {
-        fprintf(stderr, "Error: Failed to initialize YAML emitter\n");
-        fclose(file);
-        return -1;
-    }
-
-    yaml_emitter_set_output_file(&emitter, file);
-
-    // Start YAML document
-    yaml_stream_start_event_initialize(&event, YAML_UTF8_ENCODING);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 1);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    // Start mapping (root object)
-    yaml_mapping_start_event_initialize(&event, NULL, 
-                                        (yaml_char_t *)YAML_MAP_TAG, 1, 
-                                        YAML_ANY_MAPPING_STYLE);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    // Add "status_bar" key
-    yaml_scalar_event_initialize(&event, NULL, (yaml_char_t *)YAML_STR_TAG,
-                                (yaml_char_t *)"status_bar", 
-                                strlen("status_bar"),
-                                1, 1, YAML_PLAIN_SCALAR_STYLE);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    // Start nested mapping for status_bar
-    yaml_mapping_start_event_initialize(&event, NULL, 
-                                        (yaml_char_t *)YAML_MAP_TAG, 1, 
-                                        YAML_ANY_MAPPING_STYLE);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    // Iterate through status bar configuration
+    // Write JSON configuration
+    fprintf(file, "{\n");
+    fprintf(file, "  \"status_bar\": {\n");
+    
     for (int i = 0; i < MAX_STATUS_ICONS; i++) {
-        // Key: menu item name
-        yaml_scalar_event_initialize(&event, NULL, (yaml_char_t *)YAML_STR_TAG,
-                                    (yaml_char_t *)MENU_ITEMS[i].config_key, 
-                                    strlen(MENU_ITEMS[i].config_key),
-                                    1, 1, YAML_PLAIN_SCALAR_STYLE);
-        if (!yaml_emitter_emit(&emitter, &event)) {
-            goto emitter_error;
-        }
-
-        // Value: enabled/disabled
         const char *value = app_state.menu_item_selected[i] ? "true" : "false";
-        yaml_scalar_event_initialize(&event, NULL, (yaml_char_t *)YAML_BOOL_TAG,
-                                    (yaml_char_t *)value, strlen(value),
-                                    1, 1, YAML_PLAIN_SCALAR_STYLE);
-        if (!yaml_emitter_emit(&emitter, &event)) {
-            goto emitter_error;
-        }
+        fprintf(file, "    \"%s\": %s%s\n", 
+                MENU_ITEMS[i].config_key, value,
+                (i < MAX_STATUS_ICONS - 1) ? "," : "");
+    }
+    
+    fprintf(file, "  }");
+
+    // Add border section if it exists
+    if (border_section[0] != '\0') {
+        fprintf(file, ",\n  %s", border_section);
     }
 
-    // End status_bar mapping
-    yaml_mapping_end_event_initialize(&event);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
+    fprintf(file, "\n}\n");
 
-    // End root mapping
-    yaml_mapping_end_event_initialize(&event);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    // End document
-    yaml_document_end_event_initialize(&event, 1);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    yaml_stream_end_event_initialize(&event);
-    if (!yaml_emitter_emit(&emitter, &event)) {
-        goto emitter_error;
-    }
-
-    // Cleanup
-    yaml_emitter_delete(&emitter);
     fclose(file);
-
     return 0;
-
-emitter_error:
-    fprintf(stderr, "Error: Failed to emit YAML event\n");
-    yaml_emitter_delete(&emitter);
-    fclose(file);
-    return -1;
 }
 
 // ============================================================================
@@ -162,14 +168,15 @@ emitter_error:
 // ============================================================================
 
 /**
- * Loads the status bar configuration from YAML file.
+ * Loads the status bar configuration from JSON file.
  * Restores previously saved enabled/disabled state of status bar icons.
  * 
  * @return 0 on success, -1 on failure
  */
 int load_status_bar_config(void) {
-    FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "r");
-    if (!file) {
+    char* content = read_file_contents(STATUS_BAR_CONFIG_FILE);
+    
+    if (!content) {
         // Initialize with default values (all disabled)
         for (int i = 0; i < MAX_STATUS_ICONS; i++) {
             app_state.menu_item_selected[i] = false;
@@ -177,104 +184,25 @@ int load_status_bar_config(void) {
         return 0;  // Not an error, just use defaults
     }
 
-    yaml_parser_t parser;
-    yaml_event_t event;
-
-    // Initialize parser
-    if (!yaml_parser_initialize(&parser)) {
-        fprintf(stderr, "Error: Failed to initialize YAML parser\n");
-        fclose(file);
-        return -1;
+    // Find status_bar section
+    const char* status_bar = find_json_value(content, "status_bar");
+    if (status_bar && *status_bar == '{') {
+        // Parse each menu item
+        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+            const char* value = find_json_value(status_bar, MENU_ITEMS[i].config_key);
+            if (value) {
+                app_state.menu_item_selected[i] = parse_bool(value);
+            } else {
+                app_state.menu_item_selected[i] = false;
+            }
+        }
+    } else {
+        // Initialize with defaults
+        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+            app_state.menu_item_selected[i] = false;
+        }
     }
 
-    yaml_parser_set_input_file(&parser, file);
-
-    int in_root_mapping = 0;
-    int in_status_bar_mapping = 0;
-    char *last_key = NULL;
-
-    // Parse YAML events
-    do {
-        if (!yaml_parser_parse(&parser, &event)) {
-            fprintf(stderr, "Error: Parser error %d\n", parser.error);
-            goto parser_error;
-        }
-
-        switch (event.type) {
-            case YAML_MAPPING_START_EVENT:
-                if (!in_root_mapping) {
-                    in_root_mapping = 1;
-                } else if (in_root_mapping && last_key && strcmp(last_key, "status_bar") == 0) {
-                    in_status_bar_mapping = 1;
-                    free(last_key);
-                    last_key = NULL;
-                }
-                break;
-
-            case YAML_SCALAR_EVENT:
-                if (in_status_bar_mapping) {
-                    if (!last_key) {
-                        // This is a key
-                        last_key = strdup((char *)event.data.scalar.value);
-                    } else {
-                        // This is a value
-                        const char *value = (char *)event.data.scalar.value;
-                        
-                        // Find which menu item this corresponds to
-                        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
-                            if (strcmp(last_key, MENU_ITEMS[i].config_key) == 0) {
-                                // Set the configuration
-                                if (strcmp(value, "true") == 0 || strcmp(value, "1") == 0) {
-                                    app_state.menu_item_selected[i] = true;
-                                } else {
-                                    app_state.menu_item_selected[i] = false;
-                                }
-                                break;
-                            }
-                        }
-                        
-                        free(last_key);
-                        last_key = NULL;
-                    }
-                } else if (in_root_mapping && !last_key) {
-                    // Store root-level keys (like "status_bar")
-                    last_key = strdup((char *)event.data.scalar.value);
-                }
-                break;
-
-            case YAML_MAPPING_END_EVENT:
-                if (in_status_bar_mapping) {
-                    in_status_bar_mapping = 0;
-                } else if (in_root_mapping) {
-                    in_root_mapping = 0;
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        if (event.type != YAML_STREAM_END_EVENT) {
-            yaml_event_delete(&event);
-        }
-    } while (event.type != YAML_STREAM_END_EVENT);
-
-    yaml_event_delete(&event);
-
-    // Cleanup
-    if (last_key) {
-        free(last_key);
-    }
-    yaml_parser_delete(&parser);
-    fclose(file);
-
+    free(content);
     return 0;
-
-parser_error:
-    if (last_key) {
-        free(last_key);
-    }
-    yaml_parser_delete(&parser);
-    fclose(file);
-    return -1;
 }
