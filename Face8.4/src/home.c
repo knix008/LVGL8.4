@@ -52,7 +52,10 @@ static void create_main_title_bar(void) {
     app_state.title_bar = lv_obj_create(app_state.screen);
     lv_obj_set_size(app_state.title_bar, SCREEN_WIDTH, TITLE_BAR_HEIGHT);
     lv_obj_align(app_state.title_bar, LV_ALIGN_TOP_MID, 0, 0);
-    apply_bar_style(app_state.title_bar, COLOR_BG_TITLE);
+    apply_bar_style(app_state.title_bar, get_title_bar_color());
+    
+    // Set user data to identify as title bar
+    lv_obj_set_user_data(app_state.title_bar, (void*)1);  // ID: 1 = title bar
 
     // Disable scrolling on title bar - must stay fixed
     lv_obj_set_scrollbar_mode(app_state.title_bar, LV_SCROLLBAR_MODE_OFF);
@@ -78,7 +81,10 @@ static void create_main_status_bar(void) {
     lv_obj_t *status_bar = lv_obj_create(app_state.screen);
     lv_obj_set_size(status_bar, SCREEN_WIDTH, STATUS_BAR_HEIGHT);
     lv_obj_align(status_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
-    apply_bar_style(status_bar, COLOR_BG_TITLE);
+    apply_bar_style(status_bar, get_status_bar_color());
+    
+    // Set user data to identify as status bar
+    lv_obj_set_user_data(status_bar, (void*)2);  // ID: 2 = status bar
 
     // Disable scrolling on status bar - buttons must stay fixed
     lv_obj_set_scrollbar_mode(status_bar, LV_SCROLLBAR_MODE_OFF);
@@ -89,7 +95,7 @@ static void create_main_status_bar(void) {
     lv_obj_t *menu_btn = lv_btn_create(status_bar);
     lv_obj_set_size(menu_btn, BUTTON_WIDTH, BUTTON_HEIGHT);
     lv_obj_align(menu_btn, LV_ALIGN_LEFT_MID, PADDING_HORIZONTAL, 0);
-    apply_button_style(menu_btn, COLOR_BUTTON_BG);
+    apply_button_style(menu_btn, 0);
     lv_obj_set_scrollbar_mode(menu_btn, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(menu_btn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_scroll_to(menu_btn, 0, 0, LV_ANIM_OFF);
@@ -104,7 +110,7 @@ static void create_main_status_bar(void) {
     lv_obj_t *exit_btn = lv_btn_create(status_bar);
     lv_obj_set_size(exit_btn, BUTTON_WIDTH, BUTTON_HEIGHT);
     lv_obj_align(exit_btn, LV_ALIGN_RIGHT_MID, -PADDING_HORIZONTAL, 0);
-    apply_button_style(exit_btn, COLOR_BUTTON_BG);
+    apply_button_style(exit_btn, 0);
     lv_obj_set_scrollbar_mode(exit_btn, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(exit_btn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_scroll_to(exit_btn, 0, 0, LV_ANIM_OFF);

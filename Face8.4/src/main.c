@@ -24,8 +24,13 @@ AppState app_state = {
     .current_title_label = NULL,
     .font_20 = NULL,
     .status_bar = NULL,
-    .menu_item_selected = {false, false, false, false},
-    .status_icons = {NULL, NULL, NULL, NULL}
+    .menu_item_selected = {false, false, false, false, false},
+    .status_icons = {NULL, NULL, NULL, NULL, NULL},
+    .bg_color = COLOR_BG_DARK,
+    .title_bar_color = COLOR_BG_TITLE,
+    .status_bar_color = COLOR_BG_TITLE,
+    .button_color = COLOR_BUTTON_BG,
+    .button_border_color = COLOR_BORDER
 };
 ScreenState screen_stack[MAX_SCREENS];
 int screen_stack_top = -1;
@@ -52,6 +57,7 @@ int main(int argc, char **argv) {
 
     // Load configuration
     load_status_bar_config();
+    load_theme_config();
 
     // Create GUI
     create_gui();

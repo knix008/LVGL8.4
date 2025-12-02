@@ -133,7 +133,10 @@ lv_obj_t *create_standard_title_bar(lv_obj_t *parent, int screen_id) {
     lv_obj_t *title_bar = lv_obj_create(parent);
     lv_obj_set_size(title_bar, SCREEN_WIDTH, TITLE_BAR_HEIGHT);
     lv_obj_align(title_bar, LV_ALIGN_TOP_MID, 0, 0);
-    apply_bar_style(title_bar, COLOR_BG_TITLE);
+    apply_bar_style(title_bar, get_title_bar_color());
+    
+    // Set user data to identify as title bar
+    lv_obj_set_user_data(title_bar, (void*)1);  // ID: 1 = title bar
 
     // Back button (circular)
     lv_obj_t *back_btn = lv_btn_create(title_bar);
@@ -172,7 +175,10 @@ lv_obj_t *create_standard_status_bar(lv_obj_t *parent) {
         app_state.status_bar = lv_obj_create(parent);
         lv_obj_set_size(app_state.status_bar, SCREEN_WIDTH, STATUS_BAR_HEIGHT);
         lv_obj_align(app_state.status_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
-        apply_bar_style(app_state.status_bar, COLOR_BG_TITLE);
+        apply_bar_style(app_state.status_bar, get_status_bar_color());
+        
+        // Set user data to identify as status bar
+        lv_obj_set_user_data(app_state.status_bar, (void*)2);  // ID: 2 = status bar
 
         // Ensure status bar is always visible and on top
         lv_obj_clear_flag(app_state.status_bar, LV_OBJ_FLAG_HIDDEN);
@@ -186,6 +192,9 @@ lv_obj_t *create_standard_status_bar(lv_obj_t *parent) {
         // Move the existing status bar to the new parent screen
         lv_obj_set_parent(app_state.status_bar, parent);
         lv_obj_align(app_state.status_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
+        
+        // Reapply the current status bar color
+        apply_bar_style(app_state.status_bar, get_status_bar_color());
 
         // Ensure it's visible and on top
         lv_obj_clear_flag(app_state.status_bar, LV_OBJ_FLAG_HIDDEN);
@@ -206,7 +215,7 @@ lv_obj_t *create_standard_content(lv_obj_t *parent) {
     lv_obj_t *content = lv_obj_create(parent);
     lv_obj_set_size(content, SCREEN_WIDTH, SCREEN_HEIGHT - TITLE_BAR_HEIGHT - STATUS_BAR_HEIGHT);
     lv_obj_align(content, LV_ALIGN_TOP_MID, 0, TITLE_BAR_HEIGHT);
-    lv_obj_set_style_bg_color(content, lv_color_hex(COLOR_BG_DARK), 0);
+    lv_obj_set_style_bg_color(content, lv_color_hex(get_background_color()), 0);
     lv_obj_set_style_border_width(content, 0, 0);
     lv_obj_set_scroll_dir(content, LV_DIR_VER);
 
@@ -228,7 +237,7 @@ lv_obj_t *create_screen_base(int screen_id) {
 
     lv_obj_t *screen = lv_obj_create(NULL);
     lv_obj_set_size(screen, SCREEN_WIDTH, SCREEN_HEIGHT);
-    lv_obj_set_style_bg_color(screen, lv_color_hex(COLOR_BG_DARK), 0);
+    lv_obj_set_style_bg_color(screen, lv_color_hex(get_background_color()), 0);
 
     // Disable scrolling
     lv_obj_set_scrollbar_mode(screen, LV_SCROLLBAR_MODE_OFF);

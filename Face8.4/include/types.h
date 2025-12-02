@@ -33,6 +33,11 @@ typedef struct {
     lv_obj_t *status_bar;  // Reference to the status bar
     bool menu_item_selected[MAX_STATUS_ICONS];  // Track which menu items are selected
     lv_obj_t *status_icons[MAX_STATUS_ICONS];  // Status bar icon objects
+    uint32_t bg_color;  // Current background color
+    uint32_t title_bar_color;  // Current title bar color
+    uint32_t status_bar_color;  // Current status bar color
+    uint32_t button_color;  // Current button background color
+    uint32_t button_border_color;  // Current button border color
 } AppState;
 
 typedef struct {

@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <stdint.h>
+
 // ============================================================================
 // SCREEN CONFIGURATION
 // ============================================================================
@@ -96,8 +98,17 @@
 // CONFIGURATION MANAGEMENT FUNCTIONS
 // ============================================================================
 
-// Save status bar configuration to YAML file
+// Save status bar configuration to JSON file
 int save_status_bar_config(void);
+
+// Save and load theme configuration
+int save_theme_config(void);
+int load_theme_config(void);
+uint32_t get_background_color(void);
+uint32_t get_title_bar_color(void);
+uint32_t get_status_bar_color(void);
+uint32_t get_button_color(void);
+uint32_t get_button_border_color(void);
 
 // Load status bar configuration from YAML file
 int load_status_bar_config(void);

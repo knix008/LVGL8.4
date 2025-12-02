@@ -157,7 +157,7 @@ static lv_obj_t *create_korean_input_content(lv_obj_t *parent) {
     lv_obj_t *content = lv_obj_create(parent);
     lv_obj_set_size(content, SCREEN_WIDTH, SCREEN_HEIGHT - TITLE_BAR_HEIGHT - STATUS_BAR_HEIGHT);
     lv_obj_align(content, LV_ALIGN_TOP_MID, 0, TITLE_BAR_HEIGHT);
-    lv_obj_set_style_bg_color(content, lv_color_hex(COLOR_BG_DARK), 0);
+    lv_obj_set_style_bg_color(content, lv_color_hex(get_background_color()), 0);
     lv_obj_set_style_border_width(content, 0, 0);
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -232,7 +232,7 @@ static lv_obj_t *create_korean_input_content(lv_obj_t *parent) {
         lv_obj_set_pos(btn,
             positions[i][0] * (btn_width + btn_spacing),
             positions[i][1] * (btn_height + btn_spacing));
-        apply_button_style(btn, COLOR_BUTTON_BG);
+        apply_button_style(btn, 0);
 
         lv_obj_t *label = lv_label_create(btn);
         lv_label_set_text(label, utf8_text);
@@ -264,7 +264,7 @@ static lv_obj_t *create_korean_input_content(lv_obj_t *parent) {
     lv_obj_t *mode_btn = lv_btn_create(ctrl_container);
     lv_obj_set_size(mode_btn, ctrl_btn_width, ctrl_btn_height);
     lv_obj_set_pos(mode_btn, 0, 0);
-    apply_button_style(mode_btn, COLOR_BUTTON_BG);
+    apply_button_style(mode_btn, 0);
 
     lv_obj_t *mode_btn_label = lv_label_create(mode_btn);
     lv_label_set_text(mode_btn_label, "모드");
@@ -277,7 +277,7 @@ static lv_obj_t *create_korean_input_content(lv_obj_t *parent) {
     lv_obj_t *clear_btn = lv_btn_create(ctrl_container);
     lv_obj_set_size(clear_btn, ctrl_btn_width, ctrl_btn_height);
     lv_obj_set_pos(clear_btn, ctrl_btn_width + ctrl_btn_spacing, 0);
-    apply_button_style(clear_btn, COLOR_BUTTON_BG);
+    apply_button_style(clear_btn, 0);
 
     lv_obj_t *clear_btn_label = lv_label_create(clear_btn);
     lv_label_set_text(clear_btn_label, "지우기");
@@ -290,7 +290,7 @@ static lv_obj_t *create_korean_input_content(lv_obj_t *parent) {
     lv_obj_t *enter_btn = lv_btn_create(ctrl_container);
     lv_obj_set_size(enter_btn, ctrl_btn_width, ctrl_btn_height);
     lv_obj_set_pos(enter_btn, (ctrl_btn_width + ctrl_btn_spacing) * 2, 0);
-    apply_button_style(enter_btn, COLOR_BUTTON_BG);
+    apply_button_style(enter_btn, 0);
 
     lv_obj_t *enter_label = lv_label_create(enter_btn);
     lv_label_set_text(enter_label, "Enter");

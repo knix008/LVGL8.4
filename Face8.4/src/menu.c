@@ -110,7 +110,7 @@ static lv_obj_t *create_menu_content(lv_obj_t *parent) {
     lv_obj_t *content = lv_obj_create(parent);
     lv_obj_set_size(content, SCREEN_WIDTH, SCREEN_HEIGHT - TITLE_BAR_HEIGHT - STATUS_BAR_HEIGHT);
     lv_obj_align(content, LV_ALIGN_TOP_MID, 0, TITLE_BAR_HEIGHT);
-    lv_obj_set_style_bg_color(content, lv_color_hex(COLOR_BG_DARK), 0);
+    lv_obj_set_style_bg_color(content, lv_color_hex(get_background_color()), 0);
     lv_obj_set_style_border_width(content, 0, 0);
 
     // Allow only vertical scrolling
@@ -122,7 +122,7 @@ static lv_obj_t *create_menu_content(lv_obj_t *parent) {
         lv_obj_t *btn = lv_btn_create(content);
         lv_obj_set_size(btn, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT);
         lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, OFFSET_BUTTON_START_Y + i * (MENU_BUTTON_HEIGHT + MENU_BUTTON_MARGIN));
-        apply_button_style(btn, COLOR_BUTTON_BG);
+        apply_button_style(btn, 0);
 
         // Create image on the left side of the button
         lv_obj_t *img = lv_img_create(btn);

@@ -47,7 +47,7 @@ int init_fonts(void) {
 
     if (lv_ft_font_init(&info)) {
         app_state.font_20 = info.font;
-        fprintf(stderr, "NotoSansKR font loaded successfully\n");
+        //fprintf(stderr, "NotoSansKR font loaded successfully\n");
     } else {
         fprintf(stderr, "Warning: Failed to load NotoSansKR font\n");
         app_state.font_20 = NULL;

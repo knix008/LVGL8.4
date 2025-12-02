@@ -24,12 +24,21 @@ INCLUDES = -I. -I$(LVGL_DIR)
 ALL_CFLAGS = $(CFLAGS) $(INCLUDES) $(SDL_CFLAGS) $(FREETYPE_CFLAGS)
 ALL_LIBS = $(LVGL_LIB) $(SDL_LIBS) $(FREETYPE_LIBS) $(JPEG_LIBS) $(LDFLAGS)
 
+# Build directory
+BUILD_DIR = build
 TARGET = system
 SRC_DIR = src
-SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/home.c $(SRC_DIR)/menu.c $(SRC_DIR)/screen.c $(SRC_DIR)/style.c $(SRC_DIR)/init.c $(SRC_DIR)/info.c $(SRC_DIR)/admin.c $(SRC_DIR)/network.c $(SRC_DIR)/korean.c $(SRC_DIR)/chunjiin.c $(SRC_DIR)/keypad.c $(SRC_DIR)/navigation.c $(SRC_DIR)/config.c $(SRC_DIR)/face.c $(SRC_DIR)/border.c
-OBJS = $(SRC_DIR)/main.o $(SRC_DIR)/home.o $(SRC_DIR)/menu.o $(SRC_DIR)/screen.o $(SRC_DIR)/style.o $(SRC_DIR)/init.o $(SRC_DIR)/info.o $(SRC_DIR)/admin.o $(SRC_DIR)/network.o $(SRC_DIR)/korean.o $(SRC_DIR)/chunjiin.o $(SRC_DIR)/keypad.o $(SRC_DIR)/navigation.o $(SRC_DIR)/config.o $(SRC_DIR)/face.o $(SRC_DIR)/border.o
 
-all: check_setup $(TARGET)
+# Source files
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+# Object files in build directory
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
+
+all: check_setup $(BUILD_DIR) $(TARGET)
+	@echo "Build complete."
+
+$(BUILD_DIR):
+	@mkdir -p $(BUILD_DIR)
 
 check_setup:
 	@if [ ! -f "lv_conf.h" ]; then \
@@ -42,15 +51,16 @@ check_setup:
 	fi
 
 $(TARGET): $(OBJS)
-	@echo "Linking $@..."
-	$(CC) -o $(TARGET) $(OBJS) $(ALL_LIBS)
+	@echo "Linking $(TARGET)..."
+	@$(CC) -o $(TARGET) $(OBJS) $(ALL_LIBS)
 
-%.o: %.c
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@echo "Compiling $<..."
-	$(CC) $(ALL_CFLAGS) -c $< -o $@
+	@$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -f $(TARGET)
+	rm -rf $(BUILD_DIR)
 
 clean-lvgl:
 	@echo "Cleaning LVGL build directory..."

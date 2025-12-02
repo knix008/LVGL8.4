@@ -206,3 +206,206 @@ int load_status_bar_config(void) {
     free(content);
     return 0;
 }
+
+// ============================================================================
+// THEME CONFIGURATION
+// ============================================================================
+
+/**
+ * Get the current background color from app state or default
+ */
+uint32_t get_background_color(void) {
+    return app_state.bg_color ? app_state.bg_color : COLOR_BG_DARK;
+}
+
+/**
+ * Get the current title bar color from app state or default
+ */
+uint32_t get_title_bar_color(void) {
+    return app_state.title_bar_color ? app_state.title_bar_color : COLOR_BG_TITLE;
+}
+
+/**
+ * Get the current status bar color from app state or default
+ */
+uint32_t get_status_bar_color(void) {
+    return app_state.status_bar_color ? app_state.status_bar_color : COLOR_BG_TITLE;
+}
+
+/**
+ * Get the current button color from app state or default
+ */
+uint32_t get_button_color(void) {
+    return app_state.button_color ? app_state.button_color : COLOR_BUTTON_BG;
+}
+
+/**
+ * Get the current button border color from app state or default
+ */
+uint32_t get_button_border_color(void) {
+    return app_state.button_border_color ? app_state.button_border_color : COLOR_BORDER;
+}
+
+/**
+ * Save theme configuration including background color
+ */
+int save_theme_config(void) {
+    if (ensure_config_directory() != 0) {
+        return -1;
+    }
+
+    // Read existing config
+    char* existing_config = read_file_contents(STATUS_BAR_CONFIG_FILE);
+    
+    // Extract all sections except theme
+    char status_bar_section[1024] = "";
+    char border_section[2048] = "";
+    
+    if (existing_config) {
+        // Extract status_bar section
+        const char* sb_start = strstr(existing_config, "\"status_bar\"");
+        if (sb_start) {
+            const char* brace = strchr(sb_start, '{');
+            if (brace) {
+                int depth = 1;
+                const char* p = brace + 1;
+                while (*p && depth > 0) {
+                    if (*p == '{') depth++;
+                    else if (*p == '}') depth--;
+                    p++;
+                }
+                if (depth == 0) {
+                    size_t len = p - sb_start;
+                    if (len < sizeof(status_bar_section) - 1) {
+                        strncpy(status_bar_section, sb_start, len);
+                        status_bar_section[len] = '\0';
+                    }
+                }
+            }
+        }
+        
+        // Extract border section
+        const char* border_start = strstr(existing_config, "\"border\"");
+        if (border_start) {
+            const char* brace = strchr(border_start, '{');
+            if (brace) {
+                int depth = 1;
+                const char* p = brace + 1;
+                while (*p && depth > 0) {
+                    if (*p == '{') depth++;
+                    else if (*p == '}') depth--;
+                    p++;
+                }
+                if (depth == 0) {
+                    size_t len = p - border_start;
+                    if (len < sizeof(border_section) - 1) {
+                        strncpy(border_section, border_start, len);
+                        border_section[len] = '\0';
+                    }
+                }
+            }
+        }
+        free(existing_config);
+    }
+
+    FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "w");
+    if (!file) {
+        fprintf(stderr, "Error: Failed to open config file for writing\n");
+        return -1;
+    }
+
+    fprintf(file, "{\n");
+    
+    // Write status_bar section if exists
+    if (status_bar_section[0] != '\0') {
+        fprintf(file, "  %s,\n", status_bar_section);
+    }
+    
+    // Write border section if exists
+    if (border_section[0] != '\0') {
+        fprintf(file, "  %s,\n", border_section);
+    }
+    
+    // Write theme section
+    fprintf(file, "  \"theme\": {\n");
+    fprintf(file, "    \"background_color\": \"0x%06X\",\n", app_state.bg_color);
+    fprintf(file, "    \"title_bar_color\": \"0x%06X\",\n", app_state.title_bar_color);
+    fprintf(file, "    \"status_bar_color\": \"0x%06X\",\n", app_state.status_bar_color);
+    fprintf(file, "    \"button_color\": \"0x%06X\",\n", app_state.button_color);
+    fprintf(file, "    \"button_border_color\": \"0x%06X\"\n", app_state.button_border_color);
+    fprintf(file, "  }\n");
+    fprintf(file, "}\n");
+
+    fclose(file);
+    return 0;
+}
+
+/**
+ * Load theme configuration
+ */
+int load_theme_config(void) {
+    char* content = read_file_contents(STATUS_BAR_CONFIG_FILE);
+    
+    if (!content) {
+        app_state.bg_color = COLOR_BG_DARK;
+        app_state.title_bar_color = COLOR_BG_TITLE;
+        app_state.status_bar_color = COLOR_BG_TITLE;
+        app_state.button_color = COLOR_BUTTON_BG;
+        app_state.button_border_color = COLOR_BORDER;
+        return 0;
+    }
+
+    // Find theme section
+    const char* theme = find_json_value(content, "theme");
+    if (theme && *theme == '{') {
+        const char* bg_color = find_json_value(theme, "background_color");
+        if (bg_color) {
+            // Skip quotes if present
+            while (*bg_color && (*bg_color == '\"' || isspace(*bg_color))) bg_color++;
+            app_state.bg_color = strtoul(bg_color, NULL, 0);
+        } else {
+            app_state.bg_color = COLOR_BG_DARK;
+        }
+        
+        const char* title_color = find_json_value(theme, "title_bar_color");
+        if (title_color) {
+            while (*title_color && (*title_color == '\"' || isspace(*title_color))) title_color++;
+            app_state.title_bar_color = strtoul(title_color, NULL, 0);
+        } else {
+            app_state.title_bar_color = COLOR_BG_TITLE;
+        }
+        
+        const char* status_color = find_json_value(theme, "status_bar_color");
+        if (status_color) {
+            while (*status_color && (*status_color == '\"' || isspace(*status_color))) status_color++;
+            app_state.status_bar_color = strtoul(status_color, NULL, 0);
+        } else {
+            app_state.status_bar_color = COLOR_BG_TITLE;
+        }
+        
+        const char* button_color = find_json_value(theme, "button_color");
+        if (button_color) {
+            while (*button_color && (*button_color == '\"' || isspace(*button_color))) button_color++;
+            app_state.button_color = strtoul(button_color, NULL, 0);
+        } else {
+            app_state.button_color = COLOR_BUTTON_BG;
+        }
+        
+        const char* button_border = find_json_value(theme, "button_border_color");
+        if (button_border) {
+            while (*button_border && (*button_border == '\"' || isspace(*button_border))) button_border++;
+            app_state.button_border_color = strtoul(button_border, NULL, 0);
+        } else {
+            app_state.button_border_color = COLOR_BORDER;
+        }
+    } else {
+        app_state.bg_color = COLOR_BG_DARK;
+        app_state.title_bar_color = COLOR_BG_TITLE;
+        app_state.status_bar_color = COLOR_BG_TITLE;
+        app_state.button_color = COLOR_BUTTON_BG;
+        app_state.button_border_color = COLOR_BORDER;
+    }
+
+    free(content);
+    return 0;
+}

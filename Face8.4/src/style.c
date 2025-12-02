@@ -43,9 +43,14 @@ static void circle_hit_test_event_cb(lv_event_t *e) {
  * @param bg_color The background color in hex format
  */
 void apply_button_style(lv_obj_t *btn, uint32_t bg_color) {
-    lv_obj_set_style_bg_color(btn, lv_color_hex(bg_color), 0);
+    extern AppState app_state;
+    // Use dynamic colors if available, otherwise use passed color or defaults
+    uint32_t button_bg = app_state.button_color ? app_state.button_color : (bg_color ? bg_color : COLOR_BUTTON_BG);
+    uint32_t border_color = app_state.button_border_color ? app_state.button_border_color : COLOR_BORDER;
+    
+    lv_obj_set_style_bg_color(btn, lv_color_hex(button_bg), 0);
     lv_obj_set_style_border_width(btn, 1, 0);
-    lv_obj_set_style_border_color(btn, lv_color_hex(COLOR_BORDER), 0);
+    lv_obj_set_style_border_color(btn, lv_color_hex(border_color), 0);
 }
 
 void apply_circle_button_style(lv_obj_t *btn, uint32_t bg_color) {
