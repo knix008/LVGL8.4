@@ -17,7 +17,7 @@ border:
     purple: 0x8A2BE2
     white: 0xFFFFFF
   widths:
-    thin: 4
-    default: 8
+    thin: 3
+    default: 5
     thick: 12
     extra_thick: 16
