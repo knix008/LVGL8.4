@@ -60,6 +60,25 @@
 #define OPACITY_PRESSED 60   // 60% opacity when pressed
 
 // ============================================================================
+// BORDER CONFIGURATION
+// ============================================================================
+
+// Default border colors
+#define BORDER_COLOR_GREEN 0x00FF00
+#define BORDER_COLOR_RED 0xFF0000
+#define BORDER_COLOR_BLUE 0x0000FF
+#define BORDER_COLOR_YELLOW 0xFFFF00
+#define BORDER_COLOR_ORANGE 0xFF5733
+#define BORDER_COLOR_PURPLE 0x8A2BE2
+#define BORDER_COLOR_WHITE 0xFFFFFF
+
+// Default border settings
+#define BORDER_WIDTH_DEFAULT 8
+#define BORDER_WIDTH_THIN 4
+#define BORDER_WIDTH_THICK 12
+#define BORDER_WIDTH_EXTRA_THICK 16
+
+// ============================================================================
 // CHUNJIIN KEYBOARD
 // ============================================================================
 
