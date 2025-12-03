@@ -3,8 +3,8 @@
     "admin": true,
     "network": true,
     "korean_input": true,
-    "info": true,
-    "face": true
+    "info": false,
+    "face": false
   },
   "border": {
     "default_color": "0x00FF00",
@@ -24,13 +24,5 @@
       "thick": 12,
       "extra_thick": 16
     }
-  },
-  "theme": {
-    "background_color": "0x1A3A1A",
-    "title_bar_color": "0x500A0A",
-    "status_bar_color": "0x3A0A3A",
-    "button_color": "0x1A1A1A",
-    "button_border_color": "0x888888",
-    "language": "ko"
   }
 }
