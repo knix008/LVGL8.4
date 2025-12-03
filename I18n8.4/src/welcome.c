@@ -1,4 +1,5 @@
 #include "../include/welcome.h"
+#include "../include/config.h"
 #include "../include/label.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -171,11 +172,11 @@ const char* welcome_get_message(void) {
     int hour = timeinfo->tm_hour;
 
     // Select message based on time period
-    if (hour >= 5 && hour < 12) {
+    if (hour >= WELCOME_MORNING_START_HOUR && hour < WELCOME_MORNING_END_HOUR) {
         return welcome_messages.morning;
-    } else if (hour >= 12 && hour < 18) {
+    } else if (hour >= WELCOME_AFTERNOON_START_HOUR && hour < WELCOME_AFTERNOON_END_HOUR) {
         return welcome_messages.afternoon;
-    } else if (hour >= 18 && hour < 22) {
+    } else if (hour >= WELCOME_EVENING_START_HOUR && hour < WELCOME_EVENING_END_HOUR) {
         return welcome_messages.evening;
     } else {
         return welcome_messages.night;

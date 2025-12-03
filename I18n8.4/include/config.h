@@ -28,6 +28,26 @@
 #define COLOR_TEXT 0xFFFFFF
 #define COLOR_TRANSPARENT 128
 
+// Predefined theme colors for color picker
+#define COLOR_BG_LIGHT_GRAY 0x333333
+#define COLOR_BG_BLACK 0x000000
+#define COLOR_TITLE_DARK 0x1F1F1F
+#define COLOR_TITLE_GRAY 0x404040
+#define COLOR_STATUS_DARK 0x222222
+#define COLOR_STATUS_GRAY 0x333333
+#define COLOR_BUTTON_DARK 0x1A1A1A
+#define COLOR_BUTTON_GRAY 0x2A2A2A
+#define COLOR_BORDER_DIM 0x555555
+#define COLOR_BORDER_BRIGHT 0xAAAAAA
+
+// Welcome message colors animation
+#define WELCOME_COLOR_WHITE 0xFFFFFF
+#define WELCOME_COLOR_PINK 0xFF6B9D
+#define WELCOME_COLOR_RED_PINK 0xC44569
+#define WELCOME_COLOR_GOLD 0xF8B500
+#define WELCOME_COLOR_CYAN 0x00D4FF
+#define WELCOME_COLOR_GREEN 0x00FF88
+
 // ============================================================================
 // APPLICATION CONFIGURATION
 // ============================================================================
@@ -149,9 +169,45 @@ int load_status_bar_config(void);
 
 // Update intervals (milliseconds)
 #define UPDATE_INTERVAL_TIMER 1000
+#define WELCOME_MESSAGE_UPDATE_INTERVAL 60000
+#define WELCOME_COLOR_UPDATE_INTERVAL 5000
 
 // Frame timing (milliseconds)
 #define FRAME_DELAY_MS 1
+
+// ============================================================================
+// ADMIN SCREEN CONFIGURATION
+// ============================================================================
+
+// Color picker button dimensions
+#define ADMIN_COLOR_BUTTON_WIDTH 60
+#define ADMIN_COLOR_BUTTON_HEIGHT 40
+#define ADMIN_COLOR_BUTTON_SPACING 5
+
+// Admin screen layout
+#define ADMIN_COLOR_SECTION_LABEL_Y_OFFSET 30
+#define ADMIN_COLOR_BUTTON_Y_OFFSET 10
+#define ADMIN_BORDER_SECTION_Y 415
+#define ADMIN_LANGUAGE_SECTION_Y 470
+#define ADMIN_LANGUAGE_BUTTONS_Y 505
+#define ADMIN_LANGUAGE_INFO_Y 550
+
+// ============================================================================
+// WELCOME MESSAGE CONFIGURATION
+// ============================================================================
+
+// Time periods for welcome messages (24-hour format)
+#define WELCOME_MORNING_START_HOUR 5
+#define WELCOME_MORNING_END_HOUR 12
+#define WELCOME_AFTERNOON_START_HOUR 12
+#define WELCOME_AFTERNOON_END_HOUR 18
+#define WELCOME_EVENING_START_HOUR 18
+#define WELCOME_EVENING_END_HOUR 22
+
+// Welcome message display
+#define WELCOME_MESSAGE_CONTAINER_HEIGHT 120
+#define WELCOME_MESSAGE_Y_POSITION 150
+#define WELCOME_MESSAGE_FONT_SIZE 30
 
 // ============================================================================
 // SCREEN IDS

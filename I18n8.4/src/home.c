@@ -147,15 +147,14 @@ static void create_main_status_bar(void) {
 
 // Color palette for welcome message animation
 static const uint32_t welcome_colors[] = {
-    0xFFFFFF,  // White
-    0xFF6B9D,  // Pink
-    0xC44569,  // Red-Pink
-    0xF8B500,  // Gold
-    0x00D4FF,  // Cyan
-    0x00FF88,  // Green
-    0xFF6B9D   // Pink (cycle back)
+    WELCOME_COLOR_WHITE,
+    WELCOME_COLOR_PINK,
+    WELCOME_COLOR_RED_PINK,
+    WELCOME_COLOR_GOLD,
+    WELCOME_COLOR_CYAN,
+    WELCOME_COLOR_GREEN
 };
-#define WELCOME_COLOR_COUNT 6
+#define WELCOME_COLOR_COUNT (sizeof(welcome_colors) / sizeof(welcome_colors[0]))
 
 static int color_index = 0;
 
@@ -222,8 +221,8 @@ void create_gui(void) {
     // Available space: TITLE_BAR_HEIGHT (60px) to (SCREEN_HEIGHT - STATUS_BAR_HEIGHT = 580px)
     // Upper 1/3 position: 60 + (580 - 60) / 3 = 233px
     lv_obj_t *welcome_container = lv_obj_create(app_state.screen);
-    lv_obj_set_size(welcome_container, SCREEN_WIDTH, 120);
-    lv_obj_set_pos(welcome_container, 0, 150);
+    lv_obj_set_size(welcome_container, SCREEN_WIDTH, WELCOME_MESSAGE_CONTAINER_HEIGHT);
+    lv_obj_set_pos(welcome_container, 0, WELCOME_MESSAGE_Y_POSITION);
     lv_obj_set_style_bg_color(welcome_container, lv_color_hex(get_background_color()), 0);
     lv_obj_set_style_bg_opa(welcome_container, LV_OPA_TRANSP, 0);  // Transparent background
     lv_obj_set_style_border_width(welcome_container, 0, 0);
@@ -252,10 +251,10 @@ void create_gui(void) {
     // Load and display welcome message
     if (welcome_load() == 0) {
         update_welcome_message();
-        // Create timer to update welcome message every 60 seconds
-        lv_timer_create(welcome_message_timer_callback, 60000, NULL);
-        // Create timer to change welcome message color every 5 seconds
-        lv_timer_create(welcome_color_timer_callback, 5000, NULL);
+        // Create timer to update welcome message based on time period
+        lv_timer_create(welcome_message_timer_callback, WELCOME_MESSAGE_UPDATE_INTERVAL, NULL);
+        // Create timer to change welcome message color periodically
+        lv_timer_create(welcome_color_timer_callback, WELCOME_COLOR_UPDATE_INTERVAL, NULL);
     } else {
         printf("Warning: Failed to load welcome messages\n");
     }
