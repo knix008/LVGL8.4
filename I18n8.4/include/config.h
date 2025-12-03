@@ -210,6 +210,15 @@ int load_status_bar_config(void);
 #define WELCOME_MESSAGE_FONT_SIZE 30
 
 // ============================================================================
+// FILE BUFFER SIZES (Static Memory Allocation)
+// ============================================================================
+
+#define MAX_WELCOME_JSON_SIZE 8192      // Maximum size for welcome.json
+#define MAX_LABELS_JSON_SIZE 65536      // Maximum size for language label JSONs
+#define MAX_CONFIG_JSON_SIZE 16384      // Maximum size for config.json
+#define MAX_FILE_CONTENT_SIZE 16384     // General maximum file content size
+
+// ============================================================================
 // SCREEN IDS
 // ============================================================================
 

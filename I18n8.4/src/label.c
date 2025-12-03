@@ -209,26 +209,26 @@ int load_labels(void) {
         return -1;
     }
 
-    // Read file
+    // Read file with boundary checking
     fseek(file, 0, SEEK_END);
     long size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* content = malloc(size + 1);
-    if (!content) {
+    // Check file size against maximum buffer
+    if (size > MAX_LABELS_JSON_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: Failed to allocate memory for language.json\n");
+        fprintf(stderr, "Error: language.json exceeds maximum size (%ld > %d)\n",
+                size, MAX_LABELS_JSON_SIZE - 1);
         return -1;
     }
 
+    static char content[MAX_LABELS_JSON_SIZE];
     size_t bytes_read = fread(content, 1, size, file);
     content[bytes_read] = '\0';
     fclose(file);
 
     // Parse JSON
     parse_json_object(content, "");
-
-    free(content);
 
     if (label_count == 0) {
         fprintf(stderr, "Error: No labels loaded from language.json\n");
@@ -271,18 +271,20 @@ int set_language(const char* language) {
         return -1;
     }
 
-    // Read file
+    // Read file with boundary checking
     fseek(file, 0, SEEK_END);
     long size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* content = malloc(size + 1);
-    if (!content) {
+    // Check file size against maximum buffer
+    if (size > MAX_LABELS_JSON_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: Failed to allocate memory for language.json\n");
+        fprintf(stderr, "Error: language.json exceeds maximum size (%ld > %d)\n",
+                size, MAX_LABELS_JSON_SIZE - 1);
         return -1;
     }
 
+    static char content[MAX_LABELS_JSON_SIZE];
     size_t bytes_read = fread(content, 1, size, file);
     content[bytes_read] = '\0';
     fclose(file);
@@ -307,8 +309,6 @@ int set_language(const char* language) {
             parse_json_object(lang_start, "");
         }
     }
-
-    free(content);
 
     if (label_count == 0) {
         fprintf(stderr, "Error: No labels loaded for language: %s\n", language);

@@ -40,6 +40,7 @@ static const char* skip_whitespace(const char* str) {
 }
 
 // Read entire file into memory
+// Uses thread-local static buffer instead of malloc for safety
 static char* read_file_contents(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (!file) return NULL;
@@ -48,12 +49,15 @@ static char* read_file_contents(const char* filename) {
     long size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* content = malloc(size + 1);
-    if (!content) {
+    // Check file size against maximum buffer
+    if (size > MAX_FILE_CONTENT_SIZE - 1) {
         fclose(file);
+        fprintf(stderr, "Error: File %s exceeds maximum size (%ld > %d)\n",
+                filename, size, MAX_FILE_CONTENT_SIZE - 1);
         return NULL;
     }
 
+    static char content[MAX_FILE_CONTENT_SIZE];
     size_t bytes_read = fread(content, 1, size, file);
     content[bytes_read] = '\0';
     fclose(file);
@@ -129,12 +133,11 @@ int save_status_bar_config(void) {
                 }
             }
         }
-        free(existing_config);
     }
 
     FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "w");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config file for writing: %s\n", 
+        fprintf(stderr, "Error: Failed to open config file for writing: %s\n",
                 STATUS_BAR_CONFIG_FILE);
         return -1;
     }
@@ -203,7 +206,6 @@ int load_status_bar_config(void) {
         }
     }
 
-    free(content);
     return 0;
 }
 
@@ -305,7 +307,6 @@ int save_theme_config(void) {
                 }
             }
         }
-        free(existing_config);
     }
 
     FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "w");
@@ -315,7 +316,7 @@ int save_theme_config(void) {
     }
 
     fprintf(file, "{\n");
-    
+
     // Write status_bar section if exists
     if (status_bar_section[0] != '\0') {
         fprintf(file, "  %s,\n", status_bar_section);
@@ -430,6 +431,5 @@ int load_theme_config(void) {
         app_state.current_language[3] = '\0';
     }
 
-    free(content);
     return 0;
 }

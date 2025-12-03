@@ -107,18 +107,20 @@ int welcome_load(void) {
         return -1;
     }
 
-    // Read file
+    // Read file with boundary checking
     fseek(file, 0, SEEK_END);
     long size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* content = malloc(size + 1);
-    if (!content) {
+    // Check file size against maximum buffer
+    if (size > MAX_WELCOME_JSON_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: Failed to allocate memory for welcome.json\n");
+        fprintf(stderr, "Error: welcome.json exceeds maximum size (%ld > %d)\n",
+                size, MAX_WELCOME_JSON_SIZE - 1);
         return -1;
     }
 
+    static char content[MAX_WELCOME_JSON_SIZE];
     size_t bytes_read = fread(content, 1, size, file);
     content[bytes_read] = '\0';
     fclose(file);
@@ -130,7 +132,6 @@ int welcome_load(void) {
 
     if (!lang_pos) {
         fprintf(stderr, "Error: Language section not found in welcome.json\n");
-        free(content);
         return -1;
     }
 
@@ -138,13 +139,11 @@ int welcome_load(void) {
     lang_pos += strlen(lang_search);
     lang_pos = skip_whitespace(lang_pos);
     if (*lang_pos != ':') {
-        free(content);
         return -1;
     }
     lang_pos++;
     lang_pos = skip_whitespace(lang_pos);
     if (*lang_pos != '{') {
-        free(content);
         return -1;
     }
 
@@ -156,7 +155,6 @@ int welcome_load(void) {
     find_key_value(lang_pos, "evening", welcome_messages.evening, sizeof(welcome_messages.evening));
     find_key_value(lang_pos, "night", welcome_messages.night, sizeof(welcome_messages.night));
 
-    free(content);
     messages_loaded = 1;
     return 0;
 }
