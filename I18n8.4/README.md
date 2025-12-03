@@ -911,13 +911,39 @@ The system automatically composes Korean syllables from consonant and vowel inpu
 
 ## Version
 
-- **Application**: 4.3 (With Welcome Messages & Code Refactoring Phase 1)
+- **Application**: 4.4 (With Static Memory Allocation & Security Hardening)
 - **LVGL**: 8.4
 - **SDL2**: Latest stable
 - **FreeType**: Latest stable
 - **Last Updated**: 2025-12-03
 
 ### Changelog
+
+#### v4.4 (2025-12-03) - Static Memory Allocation & Security Hardening
+- **Memory Safety**: Eliminated all dynamic memory allocation (malloc/free)
+  - Replaced with fixed-size static buffers for all file I/O operations
+  - Prevents buffer overflow and memory leak vulnerabilities
+  - No more memory management overhead or fragmentation
+- **Buffer Size Configuration**: Added centralized buffer size constants
+  - `MAX_WELCOME_JSON_SIZE` (8 KB) - Welcome message configuration
+  - `MAX_LABELS_JSON_SIZE` (64 KB) - Language labels and translations
+  - `MAX_CONFIG_JSON_SIZE` (16 KB) - Application configuration
+  - `MAX_FILE_CONTENT_SIZE` (16 KB) - General-purpose file reading
+- **Boundary Checking**: Comprehensive validation before file operations
+  - All file reads validate size against maximum buffer before processing
+  - Graceful error handling for files exceeding maximum size
+  - Error messages logged to stderr for debugging
+- **Files Refactored**: 4 files modified, 7 malloc/free calls removed
+  - `src/welcome.c`: Welcome message JSON loading (1 malloc → static buffer)
+  - `src/label.c`: Language JSON loading (2 malloc → static buffers)
+  - `src/config.c`: Configuration file reading (4 malloc/free calls → static buffer)
+  - `include/config.h`: Added 4 buffer size constants
+- **Security Benefits**:
+  - Eliminates buffer overflow attacks via oversized files
+  - Prevents heap fragmentation attacks
+  - Removes use-after-free and double-free vulnerabilities
+  - Predictable memory layout for embedded systems
+- **Build Status**: 0 errors, 0 warnings
 
 #### v4.3 (2025-12-03) - Welcome Messages & Code Refactoring Phase 1
 - **Welcome Message Feature**: Time-based and language-aware greeting messages
