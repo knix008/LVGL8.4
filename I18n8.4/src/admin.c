@@ -6,6 +6,7 @@
 #include "../include/navigation.h"
 #include "../include/label.h"
 #include "../include/home.h"
+#include "../include/welcome.h"
 #include <stdio.h>
 
 // External reference to app state

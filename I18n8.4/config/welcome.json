@@ -1,0 +1,14 @@
+{
+  "ko": {
+    "morning": "좋은 아침입니다! 좋은 하루 되세요.",
+    "afternoon": "좋은 오후입니다!",
+    "evening": "좋은 저녁입니다!",
+    "night": "안녕하세요!"
+  },
+  "en": {
+    "morning": "Good morning! Have a great day.",
+    "afternoon": "Good afternoon!",
+    "evening": "Good evening!",
+    "night": "Hello!"
+  }
+}

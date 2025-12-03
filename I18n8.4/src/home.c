@@ -5,6 +5,7 @@
 #include "../include/screen.h"
 #include "../include/label.h"
 #include "../include/slideshow.h"
+#include "../include/welcome.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -141,6 +142,44 @@ static void create_main_status_bar(void) {
 }
 
 // ============================================================================
+// WELCOME MESSAGE
+// ============================================================================
+
+// Color palette for welcome message animation
+static const uint32_t welcome_colors[] = {
+    0xFFFFFF,  // White
+    0xFF6B9D,  // Pink
+    0xC44569,  // Red-Pink
+    0xF8B500,  // Gold
+    0x00D4FF,  // Cyan
+    0x00FF88,  // Green
+    0xFF6B9D   // Pink (cycle back)
+};
+#define WELCOME_COLOR_COUNT 6
+
+static int color_index = 0;
+
+static void update_welcome_message(void) {
+    if (app_state.welcome_message_label) {
+        lv_label_set_text(app_state.welcome_message_label, welcome_get_message());
+    }
+}
+
+static void welcome_message_timer_callback(lv_timer_t *timer) {
+    (void)timer;
+    update_welcome_message();
+}
+
+static void welcome_color_timer_callback(lv_timer_t *timer) {
+    (void)timer;
+    if (app_state.welcome_message_label) {
+        color_index = (color_index + 1) % WELCOME_COLOR_COUNT;
+        lv_obj_set_style_text_color(app_state.welcome_message_label,
+                                     lv_color_hex(welcome_colors[color_index]), 0);
+    }
+}
+
+// ============================================================================
 // LANGUAGE UPDATE
 // ============================================================================
 
@@ -151,6 +190,9 @@ void update_home_screen_labels(void) {
     if (app_state.exit_button_label) {
         lv_label_set_text(app_state.exit_button_label, get_label("home_screen.exit_button"));
     }
+    // Reload welcome messages when language changes
+    welcome_load();
+    update_welcome_message();
 }
 
 // ============================================================================
@@ -175,6 +217,48 @@ void create_gui(void) {
     // Create title bar and status bar first (they will be on top)
     create_main_title_bar();
     create_main_status_bar();
+
+    // Create welcome message container in the upper 1/3
+    // Available space: TITLE_BAR_HEIGHT (60px) to (SCREEN_HEIGHT - STATUS_BAR_HEIGHT = 580px)
+    // Upper 1/3 position: 60 + (580 - 60) / 3 = 233px
+    lv_obj_t *welcome_container = lv_obj_create(app_state.screen);
+    lv_obj_set_size(welcome_container, SCREEN_WIDTH, 120);
+    lv_obj_set_pos(welcome_container, 0, 150);
+    lv_obj_set_style_bg_color(welcome_container, lv_color_hex(get_background_color()), 0);
+    lv_obj_set_style_bg_opa(welcome_container, LV_OPA_TRANSP, 0);  // Transparent background
+    lv_obj_set_style_border_width(welcome_container, 0, 0);
+    lv_obj_set_scrollbar_mode(welcome_container, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(welcome_container, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Create welcome message label
+    app_state.welcome_message_label = lv_label_create(welcome_container);
+    lv_label_set_long_mode(app_state.welcome_message_label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(app_state.welcome_message_label, SCREEN_WIDTH - 20);
+
+    // Style: 30pt bold text, white color, centered, transparent background
+    lv_obj_set_style_text_color(app_state.welcome_message_label, lv_color_hex(COLOR_TEXT), 0);
+    lv_obj_set_style_text_align(app_state.welcome_message_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_bg_color(app_state.welcome_message_label, lv_color_hex(get_background_color()), 0);
+    lv_obj_set_style_bg_opa(app_state.welcome_message_label, LV_OPA_TRANSP, 0);  // Transparent background
+
+    // Apply bold 30pt Korean font
+    if (app_state.font_24_bold) {
+        lv_obj_set_style_text_font(app_state.welcome_message_label, app_state.font_24_bold, 0);
+    }
+
+    // Vertically center the label within its container
+    lv_obj_align(app_state.welcome_message_label, LV_ALIGN_CENTER, 0, 0);
+
+    // Load and display welcome message
+    if (welcome_load() == 0) {
+        update_welcome_message();
+        // Create timer to update welcome message every 60 seconds
+        lv_timer_create(welcome_message_timer_callback, 60000, NULL);
+        // Create timer to change welcome message color every 5 seconds
+        lv_timer_create(welcome_color_timer_callback, 5000, NULL);
+    } else {
+        printf("Warning: Failed to load welcome messages\n");
+    }
 
     // Initialize slideshow
     if (slideshow_init(app_state.screen) != 0) {

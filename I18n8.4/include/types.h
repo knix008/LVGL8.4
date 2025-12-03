@@ -30,6 +30,7 @@ typedef struct {
     lv_obj_t *title_label;
     lv_obj_t *current_title_label;
     lv_font_t *font_20;
+    lv_font_t *font_24_bold;  // Bold 24pt font for welcome message
     lv_obj_t *status_bar;  // Reference to the status bar
     bool menu_item_selected[MAX_STATUS_ICONS];  // Track which menu items are selected
     lv_obj_t *status_icons[MAX_STATUS_ICONS];  // Status bar icon objects
@@ -41,6 +42,7 @@ typedef struct {
     char current_language[4];  // Current language code ("ko" or "en")
     lv_obj_t *menu_button_label;  // Reference to menu button label for language updates
     lv_obj_t *exit_button_label;  // Reference to exit button label for language updates
+    lv_obj_t *welcome_message_label;  // Reference to welcome message label for updates
 } AppState;
 
 typedef struct {

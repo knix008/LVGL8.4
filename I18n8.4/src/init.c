@@ -33,7 +33,7 @@ extern AppState app_state;
 /**
  * Initializes custom fonts used by the application.
  * Loads NotoSansKR font for Korean text support.
- * 
+ *
  * @return 0 on success, -1 on failure
  */
 int init_fonts(void) {
@@ -41,6 +41,7 @@ int init_fonts(void) {
         fprintf(stderr, "Warning: FreeType initialization failed\n");
     }
 
+    // Load regular font (14pt)
     static lv_ft_info_t info;
     info.name = "assets/fonts/NotoSansKR-Regular.ttf";
     info.weight = FONT_SIZE;
@@ -52,6 +53,20 @@ int init_fonts(void) {
     } else {
         fprintf(stderr, "Warning: Failed to load NotoSansKR font\n");
         app_state.font_20 = NULL;
+    }
+
+    // Load bold font (30pt for welcome message)
+    static lv_ft_info_t info_bold;
+    info_bold.name = "assets/fonts/NotoSansKR-Bold.ttf";
+    info_bold.weight = 30;
+    info_bold.style = FT_FONT_STYLE_NORMAL;
+
+    if (lv_ft_font_init(&info_bold)) {
+        app_state.font_24_bold = info_bold.font;
+        //fprintf(stderr, "NotoSansKR-Bold 30pt font loaded successfully\n");
+    } else {
+        fprintf(stderr, "Warning: Failed to load NotoSansKR-Bold 30pt font\n");
+        app_state.font_24_bold = NULL;
     }
 
     return 0;
