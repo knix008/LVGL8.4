@@ -377,8 +377,8 @@ static void refresh_admin_screen_timer_cb(lv_timer_t *timer) {
         }
     }
 
-    // Navigate to menu first, then back to admin to reload with new labels
-    show_screen(SCREEN_MENU);
+    // Reload the current admin screen (stay on admin screen after language change)
+    show_screen(SCREEN_ADMIN);
 }
 
 // Helper to create language button
