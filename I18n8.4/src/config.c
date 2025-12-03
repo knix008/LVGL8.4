@@ -1,5 +1,6 @@
 #include "../include/config.h"
 #include "../include/types.h"
+#include "../include/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@ static int ensure_config_directory(void) {
 
     if (stat(CONFIG_DIR, &st) == -1) {
         if (mkdir(CONFIG_DIR, 0755) == -1) {
-            fprintf(stderr, "Error: Failed to create config directory: %s\n", strerror(errno));
+            log_error("Failed to create config directory: %s", strerror(errno));
             return -1;
         }
     }
@@ -52,8 +53,8 @@ static char* read_file_contents(const char* filename) {
     // Check file size against maximum buffer
     if (size > MAX_FILE_CONTENT_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: File %s exceeds maximum size (%ld > %d)\n",
-                filename, size, MAX_FILE_CONTENT_SIZE - 1);
+        log_error("File %s exceeds maximum size (%ld > %d)",
+                  filename, size, MAX_FILE_CONTENT_SIZE - 1);
         return NULL;
     }
 
@@ -137,8 +138,8 @@ int save_status_bar_config(void) {
 
     FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "w");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config file for writing: %s\n",
-                STATUS_BAR_CONFIG_FILE);
+        log_error("Failed to open config file for writing: %s",
+                  STATUS_BAR_CONFIG_FILE);
         return -1;
     }
 
@@ -311,7 +312,7 @@ int save_theme_config(void) {
 
     FILE *file = fopen(STATUS_BAR_CONFIG_FILE, "w");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config file for writing\n");
+        log_error("Failed to open config file for writing");
         return -1;
     }
 

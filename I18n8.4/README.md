@@ -2,7 +2,6 @@
 
 A modern LVGL 8.4 application featuring a hierarchical menu system with breadcrumb navigation, icon-based status bar, absolute path navigation support, Chunjiin Korean input method, and internationalization support with dynamic welcome messages.
 
-> **Note**: For details about recent code quality improvements and refactoring, see [REFACTORING_NOTES.md](REFACTORING_NOTES.md) and [REFACTORING_PHASE1_COMPLETE.md](REFACTORING_PHASE1_COMPLETE.md)
 
 ## Features
 
@@ -911,13 +910,39 @@ The system automatically composes Korean syllables from consonant and vowel inpu
 
 ## Version
 
-- **Application**: 4.4 (With Static Memory Allocation & Security Hardening)
+- **Application**: 4.5 (With Comprehensive Logging System)
 - **LVGL**: 8.4
 - **SDL2**: Latest stable
 - **FreeType**: Latest stable
 - **Last Updated**: 2025-12-03
 
 ### Changelog
+
+#### v4.5 (2025-12-03) - Comprehensive Logging System
+- **Centralized Logging**: All error messages now logged to `log/app.log`
+  - Automatic log directory creation
+  - Timestamped entries: `[YYYY-MM-DD HH:MM:SS] LEVEL: message`
+  - Logs append to file (persistent across restarts)
+- **Log Levels**: 4 levels for different message types
+  - **ERROR** - Critical errors (file I/O, buffer overflow, etc.)
+  - **WARNING** - Non-critical issues (missing resources, fallbacks)
+  - **INFO** - Application state changes and milestones
+  - **DEBUG** - Detailed debugging information (conditional)
+- **Logging API**: Simple printf-style functions
+  - `log_error()`, `log_warning()`, `log_info()`, `log_debug()`
+  - Automatic timestamp and level prefixing
+  - Proper initialization and cleanup in main()
+- **Files Refactored**: 5 files updated with logging
+  - `src/main.c` - Log initialization and cleanup
+  - `src/welcome.c` - 3 error messages logged
+  - `src/label.c` - 5 error/warning/debug messages logged
+  - `src/config.c` - 2 error messages logged
+  - `src/init.c` - 8 error/warning messages logged
+- **Documentation**: Complete logging system guide
+  - [LOGGING_SYSTEM.md](LOGGING_SYSTEM.md) - Full API and usage documentation
+  - Examples for logging different message types
+  - Migration guide for adding logging to new modules
+- **Build Status**: 0 errors, 0 warnings
 
 #### v4.4 (2025-12-03) - Static Memory Allocation & Security Hardening
 - **Memory Safety**: Eliminated all dynamic memory allocation (malloc/free)

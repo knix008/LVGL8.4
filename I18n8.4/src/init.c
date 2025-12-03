@@ -2,6 +2,7 @@
 #include "../include/config.h"
 #include "../include/types.h"
 #include "../include/label.h"
+#include "../include/logger.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "lvgl/lvgl.h"
@@ -38,7 +39,7 @@ extern AppState app_state;
  */
 int init_fonts(void) {
     if (!lv_freetype_init(0, 0, 0)) {
-        fprintf(stderr, "Warning: FreeType initialization failed\n");
+        log_warning("FreeType initialization failed");
     }
 
     // Load regular font (14pt)
@@ -51,7 +52,7 @@ int init_fonts(void) {
         app_state.font_20 = info.font;
         //fprintf(stderr, "NotoSansKR font loaded successfully\n");
     } else {
-        fprintf(stderr, "Warning: Failed to load NotoSansKR font\n");
+        log_warning("Failed to load NotoSansKR font");
         app_state.font_20 = NULL;
     }
 
@@ -65,7 +66,7 @@ int init_fonts(void) {
         app_state.font_24_bold = info_bold.font;
         //fprintf(stderr, "NotoSansKR-Bold 30pt font loaded successfully\n");
     } else {
-        fprintf(stderr, "Warning: Failed to load NotoSansKR-Bold 30pt font\n");
+        log_warning("Failed to load NotoSansKR-Bold 30pt font");
         app_state.font_24_bold = NULL;
     }
 
@@ -129,7 +130,7 @@ static void display_flush_cb(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_
  */
 int init_sdl(void) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
-        fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
+        log_error("Failed to initialize SDL: %s", SDL_GetError());
         return -1;
     }
 
@@ -143,14 +144,14 @@ int init_sdl(void) {
     );
 
     if (window == NULL) {
-        fprintf(stderr, "Failed to create SDL window: %s\n", SDL_GetError());
+        log_error("Failed to create SDL window: %s", SDL_GetError());
         SDL_Quit();
         return -1;
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == NULL) {
-        fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
+        log_error("Failed to create renderer: %s", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
@@ -165,7 +166,7 @@ int init_sdl(void) {
     );
 
     if (texture == NULL) {
-        fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
+        log_error("Failed to create texture: %s", SDL_GetError());
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -207,7 +208,7 @@ int init_lvgl(void) {
     indev = lv_indev_drv_register(&indev_drv);
 
     if (init_fonts() != 0) {
-        fprintf(stderr, "Warning: Font initialization had issues\n");
+        log_warning("Font initialization had issues");
     }
 
     return 0;

@@ -1,6 +1,7 @@
 #include "../include/welcome.h"
 #include "../include/config.h"
 #include "../include/label.h"
+#include "../include/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,7 +104,7 @@ int welcome_load(void) {
 
     FILE* file = fopen("config/welcome.json", "r");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config/welcome.json\n");
+        log_error("Failed to open config/welcome.json");
         return -1;
     }
 
@@ -115,8 +116,8 @@ int welcome_load(void) {
     // Check file size against maximum buffer
     if (size > MAX_WELCOME_JSON_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: welcome.json exceeds maximum size (%ld > %d)\n",
-                size, MAX_WELCOME_JSON_SIZE - 1);
+        log_error("welcome.json exceeds maximum size (%ld > %d)",
+                  size, MAX_WELCOME_JSON_SIZE - 1);
         return -1;
     }
 
@@ -131,7 +132,7 @@ int welcome_load(void) {
     const char* lang_pos = strstr(content, lang_search);
 
     if (!lang_pos) {
-        fprintf(stderr, "Error: Language section not found in welcome.json\n");
+        log_error("Language section not found in welcome.json");
         return -1;
     }
 

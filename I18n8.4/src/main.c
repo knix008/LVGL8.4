@@ -13,6 +13,7 @@
 #include "../include/init.h"
 #include "../include/home.h"
 #include "../include/label.h"
+#include "../include/logger.h"
 
 // ============================================================================
 // GLOBAL APPLICATION STATE
@@ -47,8 +48,15 @@ int main(int argc, char **argv) {
 
     setlocale(LC_ALL, "");
 
+    // Initialize logging system
+    if (log_init() != 0) {
+        fprintf(stderr, "Warning: Failed to initialize logging system\n");
+    }
+
     // Initialize SDL2
     if (init_sdl() != 0) {
+        log_error("Failed to initialize SDL2");
+        log_close();
         return 1;
     }
 
@@ -59,7 +67,7 @@ int main(int argc, char **argv) {
 
     // Load labels (default to Korean)
     if (load_labels() != 0) {
-        fprintf(stderr, "Warning: Failed to load labels, using defaults\n");
+        log_warning("Failed to load labels, using defaults");
     }
 
     // Load configuration
@@ -98,6 +106,9 @@ int main(int argc, char **argv) {
         lv_timer_handler();
         SDL_Delay(FRAME_DELAY_MS);
     }
+
+    // Close logging system
+    log_close();
 
     // Cleanup is handled by the OS on exit
     return 0;

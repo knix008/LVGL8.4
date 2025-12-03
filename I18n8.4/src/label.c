@@ -1,5 +1,6 @@
 #include "../include/label.h"
 #include "../include/config.h"
+#include "../include/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -205,7 +206,7 @@ int load_labels(void) {
 
     FILE* file = fopen("config/language.json", "r");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config/language.json\n");
+        log_error("Failed to open config/language.json");
         return -1;
     }
 
@@ -217,8 +218,8 @@ int load_labels(void) {
     // Check file size against maximum buffer
     if (size > MAX_LABELS_JSON_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: language.json exceeds maximum size (%ld > %d)\n",
-                size, MAX_LABELS_JSON_SIZE - 1);
+        log_error("language.json exceeds maximum size (%ld > %d)",
+                  size, MAX_LABELS_JSON_SIZE - 1);
         return -1;
     }
 
@@ -231,7 +232,7 @@ int load_labels(void) {
     parse_json_object(content, "");
 
     if (label_count == 0) {
-        fprintf(stderr, "Error: No labels loaded from language.json\n");
+        log_error("No labels loaded from language.json");
         return -1;
     }
 
@@ -247,14 +248,14 @@ const char* get_label(const char* key_path) {
 
     // Return key if not found (only show error in debug mode)
     #ifdef DEBUG_LABELS
-    fprintf(stderr, "Warning: Label not found: %s\n", key_path);
+    log_debug("Label not found: %s", key_path);
     #endif
     return key_path;
 }
 
 int set_language(const char* language) {
     if (!language || (strcmp(language, "ko") != 0 && strcmp(language, "en") != 0)) {
-        fprintf(stderr, "Error: Invalid language code: %s\n", language ? language : "NULL");
+        log_error("Invalid language code: %s", language ? language : "NULL");
         return -1;
     }
 
@@ -267,7 +268,7 @@ int set_language(const char* language) {
 
     FILE* file = fopen("config/language.json", "r");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config/language.json\n");
+        log_error("Failed to open config/language.json");
         return -1;
     }
 
@@ -279,8 +280,8 @@ int set_language(const char* language) {
     // Check file size against maximum buffer
     if (size > MAX_LABELS_JSON_SIZE - 1) {
         fclose(file);
-        fprintf(stderr, "Error: language.json exceeds maximum size (%ld > %d)\n",
-                size, MAX_LABELS_JSON_SIZE - 1);
+        log_error("language.json exceeds maximum size (%ld > %d)",
+                  size, MAX_LABELS_JSON_SIZE - 1);
         return -1;
     }
 
@@ -311,7 +312,7 @@ int set_language(const char* language) {
     }
 
     if (label_count == 0) {
-        fprintf(stderr, "Error: No labels loaded for language: %s\n", language);
+        log_error("No labels loaded for language: %s", language);
         return -1;
     }
 
