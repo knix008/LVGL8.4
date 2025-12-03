@@ -97,46 +97,44 @@ void update_title_bar_location(int screen_id) {
  */
 void show_screen(int screen_id) {
     // First check if screen already exists anywhere in the stack
-    for (int i = 0; i < MAX_SCREENS; i++) {
-        if (screen_stack[i].screen && screen_stack[i].screen_id == screen_id) {
-            screen_stack_top = i;
-            lv_scr_load(screen_stack[i].screen);
+    for (int i = 0; i <= screen_stack_top; i++) {
+        if (screen_stack[i].screen_id == screen_id) {
+            if (screen_stack[i].screen) {
+                // Screen exists and is valid
+                screen_stack_top = i;
+                lv_scr_load(screen_stack[i].screen);
 
-            // Move the status bar to this existing screen
-            move_status_bar_to_screen(screen_stack[i].screen, screen_id);
+                // Move the status bar to this existing screen
+                move_status_bar_to_screen(screen_stack[i].screen, screen_id);
 
-            update_title_bar_location(screen_id);
-            return;
+                update_title_bar_location(screen_id);
+                return;
+            } else {
+                // Screen was invalidated (set to NULL during language change)
+                // Recreate it at the same stack position
+                screen_stack_top = i;
+                break;  // Fall through to recreate the screen
+            }
         }
     }
 
-    // Screen doesn't exist, create it
+    // Screen doesn't exist or needs to be recreated
     if (screen_id == SCREEN_MENU) {
         create_menu_screen();
         update_title_bar_location(screen_id);
-    }
-
-    if (screen_id == SCREEN_INFO) {
+    } else if (screen_id == SCREEN_INFO) {
         create_info_screen();
         update_title_bar_location(screen_id);
-    }
-
-    if (screen_id == SCREEN_ADMIN) {
+    } else if (screen_id == SCREEN_ADMIN) {
         create_admin_screen();
         update_title_bar_location(screen_id);
-    }
-
-    if (screen_id == SCREEN_NETWORK) {
+    } else if (screen_id == SCREEN_NETWORK) {
         create_network_screen();
         update_title_bar_location(screen_id);
-    }
-
-    if (screen_id == SCREEN_KOREAN_INPUT) {
+    } else if (screen_id == SCREEN_KOREAN_INPUT) {
         create_korean_input_screen();
         update_title_bar_location(screen_id);
-    }
-
-    if (screen_id == SCREEN_FACE) {
+    } else if (screen_id == SCREEN_FACE) {
         create_face_screen();
         update_title_bar_location(screen_id);
     }
@@ -274,8 +272,20 @@ lv_obj_t *create_screen_base(int screen_id) {
  * @param screen_id The screen ID for stack management
  */
 void finalize_screen(lv_obj_t *screen, int screen_id) {
-    // Add to screen stack
-    if (screen_stack_top + 1 < MAX_SCREENS) {
+    // Check if this screen_id already exists in the stack (might be recreating after invalidation)
+    int existing_position = -1;
+    for (int i = 0; i <= screen_stack_top; i++) {
+        if (screen_stack[i].screen_id == screen_id && !screen_stack[i].screen) {
+            existing_position = i;
+            break;
+        }
+    }
+
+    if (existing_position >= 0) {
+        // Recreate at existing position (screen was invalidated)
+        screen_stack[existing_position].screen = screen;
+    } else if (screen_stack_top + 1 < MAX_SCREENS) {
+        // Add new screen to stack
         screen_stack_top++;
         screen_stack[screen_stack_top].screen = screen;
         screen_stack[screen_stack_top].screen_id = screen_id;

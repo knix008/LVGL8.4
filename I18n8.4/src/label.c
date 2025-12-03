@@ -12,6 +12,7 @@
 #define MAX_LABELS 200
 #define MAX_KEY_LENGTH 256
 #define MAX_VALUE_LENGTH 512
+#define MAX_LANGUAGE_CODE 4
 
 typedef struct {
     char key[MAX_KEY_LENGTH];
@@ -20,6 +21,7 @@ typedef struct {
 
 static LabelEntry labels[MAX_LABELS];
 static int label_count = 0;
+static char current_language[MAX_LANGUAGE_CODE] = "ko";  // Default to Korean
 
 // ============================================================================
 // JSON PARSING HELPERS
@@ -200,39 +202,39 @@ static void parse_json_object(const char* json, const char* prefix) {
 
 int load_labels(void) {
     label_count = 0;
-    
-    FILE* file = fopen("config/label.json", "r");
+
+    FILE* file = fopen("config/language.json", "r");
     if (!file) {
-        fprintf(stderr, "Error: Failed to open config/label.json\n");
+        fprintf(stderr, "Error: Failed to open config/language.json\n");
         return -1;
     }
-    
+
     // Read file
     fseek(file, 0, SEEK_END);
     long size = ftell(file);
     fseek(file, 0, SEEK_SET);
-    
+
     char* content = malloc(size + 1);
     if (!content) {
         fclose(file);
-        fprintf(stderr, "Error: Failed to allocate memory for label.json\n");
+        fprintf(stderr, "Error: Failed to allocate memory for language.json\n");
         return -1;
     }
-    
+
     size_t bytes_read = fread(content, 1, size, file);
     content[bytes_read] = '\0';
     fclose(file);
-    
+
     // Parse JSON
     parse_json_object(content, "");
-    
+
     free(content);
-    
+
     if (label_count == 0) {
-        fprintf(stderr, "Error: No labels loaded from label.json\n");
+        fprintf(stderr, "Error: No labels loaded from language.json\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -242,12 +244,82 @@ const char* get_label(const char* key_path) {
             return labels[i].value;
         }
     }
-    
+
     // Return key if not found (only show error in debug mode)
     #ifdef DEBUG_LABELS
     fprintf(stderr, "Warning: Label not found: %s\n", key_path);
     #endif
     return key_path;
+}
+
+int set_language(const char* language) {
+    if (!language || (strcmp(language, "ko") != 0 && strcmp(language, "en") != 0)) {
+        fprintf(stderr, "Error: Invalid language code: %s\n", language ? language : "NULL");
+        return -1;
+    }
+
+    // Store the language preference
+    strncpy(current_language, language, MAX_LANGUAGE_CODE - 1);
+    current_language[MAX_LANGUAGE_CODE - 1] = '\0';
+
+    // Reload labels from the JSON file
+    label_count = 0;
+
+    FILE* file = fopen("config/language.json", "r");
+    if (!file) {
+        fprintf(stderr, "Error: Failed to open config/language.json\n");
+        return -1;
+    }
+
+    // Read file
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* content = malloc(size + 1);
+    if (!content) {
+        fclose(file);
+        fprintf(stderr, "Error: Failed to allocate memory for language.json\n");
+        return -1;
+    }
+
+    size_t bytes_read = fread(content, 1, size, file);
+    content[bytes_read] = '\0';
+    fclose(file);
+
+    // Parse JSON starting from the language-specific key
+    char lang_prefix[MAX_KEY_LENGTH];
+    snprintf(lang_prefix, sizeof(lang_prefix), "%s", language);
+
+    // Find the language section in the JSON
+    char search_key[256];
+    snprintf(search_key, sizeof(search_key), "\"%s\"", language);
+    const char* lang_start = strstr(content, search_key);
+
+    if (lang_start) {
+        // Move past the key to the value (the opening brace of the language object)
+        lang_start += strlen(search_key);
+        lang_start = skip_whitespace(lang_start);
+        if (*lang_start == ':') {
+            lang_start++;
+            lang_start = skip_whitespace(lang_start);
+            // Now parse the language-specific object
+            parse_json_object(lang_start, "");
+        }
+    }
+
+    free(content);
+
+    if (label_count == 0) {
+        fprintf(stderr, "Error: No labels loaded for language: %s\n", language);
+        return -1;
+    }
+
+    return 0;
+}
+
+const char* get_language(void) {
+    return current_language;
 }
 
 void free_labels(void) {

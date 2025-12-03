@@ -31,7 +31,8 @@ AppState app_state = {
     .title_bar_color = COLOR_BG_TITLE,
     .status_bar_color = COLOR_BG_TITLE,
     .button_color = COLOR_BUTTON_BG,
-    .button_border_color = COLOR_BORDER
+    .button_border_color = COLOR_BORDER,
+    .current_language = "ko"
 };
 ScreenState screen_stack[MAX_SCREENS];
 int screen_stack_top = -1;
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Load labels
+    // Load labels (default to Korean)
     if (load_labels() != 0) {
         fprintf(stderr, "Warning: Failed to load labels, using defaults\n");
     }
@@ -64,6 +65,9 @@ int main(int argc, char **argv) {
     // Load configuration
     load_status_bar_config();
     load_theme_config();
+
+    // Set language based on loaded config
+    set_language(app_state.current_language);
 
     // Create GUI
     create_gui();

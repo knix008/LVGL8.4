@@ -333,10 +333,7 @@ int save_theme_config(void) {
     fprintf(file, "    \"status_bar_color\": \"0x%06X\",\n", app_state.status_bar_color);
     fprintf(file, "    \"button_color\": \"0x%06X\",\n", app_state.button_color);
     fprintf(file, "    \"button_border_color\": \"0x%06X\",\n", app_state.button_border_color);
-    fprintf(file, "    \"button_width\": %d,\n", app_state.button_width);
-    fprintf(file, "    \"button_height\": %d,\n", app_state.button_height);
-    fprintf(file, "    \"button_border_width\": %d,\n", app_state.button_border_width);
-    fprintf(file, "    \"button_border_radius\": %d\n", app_state.button_border_radius);
+    fprintf(file, "    \"language\": \"%s\"\n", app_state.current_language);
     fprintf(file, "  }\n");
     fprintf(file, "}\n");
 
@@ -356,10 +353,6 @@ int load_theme_config(void) {
         app_state.status_bar_color = COLOR_BG_TITLE;
         app_state.button_color = COLOR_BUTTON_BG;
         app_state.button_border_color = COLOR_BORDER;
-        app_state.button_width = 120;
-        app_state.button_height = 50;
-        app_state.button_border_width = 2;
-        app_state.button_border_radius = 10;
         return 0;
     }
 
@@ -406,37 +399,26 @@ int load_theme_config(void) {
         } else {
             app_state.button_border_color = COLOR_BORDER;
         }
-        
-        const char* btn_width = find_json_value(theme, "button_width");
-        if (btn_width) {
-            while (*btn_width && isspace(*btn_width)) btn_width++;
-            app_state.button_width = atoi(btn_width);
+
+        const char* language = find_json_value(theme, "language");
+        if (language) {
+            char lang_buf[4];
+            while (*language && (*language == '\"' || isspace(*language))) language++;
+            int i = 0;
+            while (*language && *language != '\"' && i < 3) {
+                lang_buf[i++] = *language++;
+            }
+            lang_buf[i] = '\0';
+            if (strcmp(lang_buf, "ko") == 0 || strcmp(lang_buf, "en") == 0) {
+                strncpy(app_state.current_language, lang_buf, 3);
+                app_state.current_language[3] = '\0';
+            } else {
+                strncpy(app_state.current_language, "ko", 3);
+                app_state.current_language[3] = '\0';
+            }
         } else {
-            app_state.button_width = 120;
-        }
-        
-        const char* btn_height = find_json_value(theme, "button_height");
-        if (btn_height) {
-            while (*btn_height && isspace(*btn_height)) btn_height++;
-            app_state.button_height = atoi(btn_height);
-        } else {
-            app_state.button_height = 50;
-        }
-        
-        const char* btn_border_width = find_json_value(theme, "button_border_width");
-        if (btn_border_width) {
-            while (*btn_border_width && isspace(*btn_border_width)) btn_border_width++;
-            app_state.button_border_width = atoi(btn_border_width);
-        } else {
-            app_state.button_border_width = 2;
-        }
-        
-        const char* btn_border_radius = find_json_value(theme, "button_border_radius");
-        if (btn_border_radius) {
-            while (*btn_border_radius && isspace(*btn_border_radius)) btn_border_radius++;
-            app_state.button_border_radius = atoi(btn_border_radius);
-        } else {
-            app_state.button_border_radius = 10;
+            strncpy(app_state.current_language, "ko", 3);
+            app_state.current_language[3] = '\0';
         }
     } else {
         app_state.bg_color = COLOR_BG_DARK;
@@ -444,10 +426,8 @@ int load_theme_config(void) {
         app_state.status_bar_color = COLOR_BG_TITLE;
         app_state.button_color = COLOR_BUTTON_BG;
         app_state.button_border_color = COLOR_BORDER;
-        app_state.button_width = 120;
-        app_state.button_height = 50;
-        app_state.button_border_width = 2;
-        app_state.button_border_radius = 10;
+        strncpy(app_state.current_language, "ko", 3);
+        app_state.current_language[3] = '\0';
     }
 
     free(content);

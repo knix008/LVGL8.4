@@ -38,10 +38,9 @@ typedef struct {
     uint32_t status_bar_color;  // Current status bar color
     uint32_t button_color;  // Current button background color
     uint32_t button_border_color;  // Current button border color
-    int button_width;  // Button width
-    int button_height;  // Button height
-    int button_border_width;  // Button border width
-    int button_border_radius;  // Button border radius
+    char current_language[4];  // Current language code ("ko" or "en")
+    lv_obj_t *menu_button_label;  // Reference to menu button label for language updates
+    lv_obj_t *exit_button_label;  // Reference to exit button label for language updates
 } AppState;
 
 typedef struct {

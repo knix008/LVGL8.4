@@ -5,6 +5,7 @@
 #include "../include/screen.h"
 #include "../include/navigation.h"
 #include "../include/label.h"
+#include "../include/home.h"
 #include <stdio.h>
 
 // External reference to app state
@@ -331,96 +332,78 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
 }
 
 // ============================================================================
+// LANGUAGE SELECTION
+// ============================================================================
+
+// Forward declare for timer callback
+static void refresh_admin_screen_timer_cb(lv_timer_t *timer);
+
+// Event handler for language button clicks
+static void language_button_clicked(lv_event_t *e) {
+    const char *language = (const char *)lv_event_get_user_data(e);
+
+    if (!language) return;
+
+    // Update app state and set language
+    if (set_language(language) == 0) {
+        strncpy(app_state.current_language, language, 3);
+        app_state.current_language[3] = '\0';
+
+        // Save configuration
+        save_theme_config();
+
+        // Use a timer to defer screen update to avoid deleting active screen
+        lv_timer_t *timer = lv_timer_create(refresh_admin_screen_timer_cb, 10, NULL);
+        lv_timer_set_repeat_count(timer, 1);
+    }
+}
+
+// Timer callback to refresh all screens after language change
+static void refresh_admin_screen_timer_cb(lv_timer_t *timer) {
+    (void)timer;
+
+    // Get references to screen stack
+    extern ScreenState screen_stack[];
+    extern int screen_stack_top;
+
+    // Update home screen button labels (it's not recreated like other screens)
+    update_home_screen_labels();
+
+    // Mark all non-main screens as invalid (set screen to NULL)
+    // This forces them to be recreated with new labels when navigated to
+    for (int i = 1; i <= screen_stack_top; i++) {  // Start from 1 to skip SCREEN_MAIN
+        if (screen_stack[i].screen) {
+            screen_stack[i].screen = NULL;
+        }
+    }
+
+    // Navigate to menu first, then back to admin to reload with new labels
+    show_screen(SCREEN_MENU);
+}
+
+// Helper to create language button
+static lv_obj_t *create_language_button(lv_obj_t *parent, const char *label_text,
+                                        const char *language_code, int x_pos) {
+    lv_obj_t *btn = lv_btn_create(parent);
+    lv_obj_set_size(btn, 90, 40);
+    lv_obj_set_pos(btn, x_pos, 505);
+    apply_button_style(btn, 0);
+
+    lv_obj_t *label = lv_label_create(btn);
+    lv_label_set_text(label, label_text);
+    apply_label_style(label);
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+
+    // Store language code as user data
+    lv_obj_add_event_cb(btn, language_button_clicked, LV_EVENT_CLICKED, (void *)language_code);
+
+    return btn;
+}
+
+// ============================================================================
 // BUTTON DIMENSION SETTINGS
 // ============================================================================
 
-// Event handler for button width slider
-static void button_width_slider_event(lv_event_t *e) {
-    lv_obj_t *slider = lv_event_get_target(e);
-    lv_obj_t *label = lv_event_get_user_data(e);
-    
-    int32_t value = lv_slider_get_value(slider);
-    app_state.button_width = value;
-    
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%s: %d", get_label("admin_screen.button_width"), value);
-    lv_label_set_text(label, buf);
-    
-    save_theme_config();
-}
-
-// Event handler for button height slider
-static void button_height_slider_event(lv_event_t *e) {
-    lv_obj_t *slider = lv_event_get_target(e);
-    lv_obj_t *label = lv_event_get_user_data(e);
-    
-    int32_t value = lv_slider_get_value(slider);
-    app_state.button_height = value;
-    
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%s: %d", get_label("admin_screen.button_height"), value);
-    lv_label_set_text(label, buf);
-    
-    save_theme_config();
-}
-
-// Event handler for button border width slider
-static void button_border_width_slider_event(lv_event_t *e) {
-    lv_obj_t *slider = lv_event_get_target(e);
-    lv_obj_t *label = lv_event_get_user_data(e);
-    
-    int32_t value = lv_slider_get_value(slider);
-    app_state.button_border_width = value;
-    
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%s: %d", get_label("admin_screen.border_width"), value);
-    lv_label_set_text(label, buf);
-    
-    save_theme_config();
-}
-
-// Event handler for button border radius slider
-static void button_border_radius_slider_event(lv_event_t *e) {
-    lv_obj_t *slider = lv_event_get_target(e);
-    lv_obj_t *label = lv_event_get_user_data(e);
-    
-    int32_t value = lv_slider_get_value(slider);
-    app_state.button_border_radius = value;
-    
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%s: %d", get_label("admin_screen.border_radius"), value);
-    lv_label_set_text(label, buf);
-    
-    save_theme_config();
-}
-
-// Helper to create a slider with label
-static void create_button_setting_slider(lv_obj_t *parent, const char *title, 
-                                         int y_pos, int min_val, int max_val, 
-                                         int current_val, lv_event_cb_t event_cb) {
-    // Label with current value
-    lv_obj_t *label = lv_label_create(parent);
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%s: %d", title, current_val);
-    lv_label_set_text(label, buf);
-    apply_label_style(label);
-    lv_obj_set_pos(label, 10, y_pos);
-    
-    // Slider
-    lv_obj_t *slider = lv_slider_create(parent);
-    lv_obj_set_size(slider, SCREEN_WIDTH - 40, 20);
-    lv_obj_set_pos(slider, 10, y_pos + 30);
-    lv_slider_set_range(slider, min_val, max_val);
-    lv_slider_set_value(slider, current_val, LV_ANIM_OFF);
-    
-    // Style slider
-    lv_obj_set_style_bg_color(slider, lv_color_hex(0x444444), LV_PART_MAIN);
-    lv_obj_set_style_bg_color(slider, lv_color_hex(app_state.button_color), LV_PART_INDICATOR);
-    lv_obj_set_style_bg_color(slider, lv_color_hex(0xFFFFFF), LV_PART_KNOB);
-    
-    // Add event handler
-    lv_obj_add_event_cb(slider, event_cb, LV_EVENT_VALUE_CHANGED, label);
-}
 
 static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_t *content = create_standard_content(parent);
@@ -444,20 +427,17 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     create_color_section(content, get_label("admin_screen.button_color"), 290, COLOR_TARGET_BUTTON);
     create_color_section(content, get_label("admin_screen.button_border_color"), 370, COLOR_TARGET_BUTTON_BORDER);
 
-    // Button dimension settings section
-    lv_obj_t *button_settings_title = lv_label_create(content);
-    lv_label_set_text(button_settings_title, get_label("admin_screen.button_settings_title"));
-    apply_label_style(button_settings_title);
-    lv_obj_set_pos(button_settings_title, 10, 460);
-    
-    create_button_setting_slider(content, get_label("admin_screen.button_width"), 490, 50, 200, 
-                                 app_state.button_width, button_width_slider_event);
-    create_button_setting_slider(content, get_label("admin_screen.button_height"), 570, 30, 100, 
-                                 app_state.button_height, button_height_slider_event);
-    create_button_setting_slider(content, get_label("admin_screen.border_width"), 650, 0, 10, 
-                                 app_state.button_border_width, button_border_width_slider_event);
-    create_button_setting_slider(content, get_label("admin_screen.border_radius"), 730, 0, 30, 
-                                 app_state.button_border_radius, button_border_radius_slider_event);
+    // Language Settings Section
+    lv_obj_t *language_title = lv_label_create(content);
+    lv_label_set_text(language_title, get_label("admin_screen.language_title"));
+    apply_label_style(language_title);
+    lv_obj_set_pos(language_title, 10, 470);
+
+    // Korean button
+    create_language_button(content, get_label("admin_screen.language_korean"), "ko", 10);
+
+    // English button
+    create_language_button(content, get_label("admin_screen.language_english"), "en", 110);
 
     // Info text at bottom
     lv_obj_t *info_label = lv_label_create(content);
@@ -468,7 +448,7 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     if (app_state.font_20) {
         lv_obj_set_style_text_font(info_label, app_state.font_20, 0);
     }
-    lv_obj_set_pos(info_label, CONTENT_PADDING, 820);
+    lv_obj_set_pos(info_label, CONTENT_PADDING, 550);
 
     return content;
 }

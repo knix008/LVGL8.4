@@ -120,6 +120,7 @@ static void create_main_status_bar(void) {
     lv_label_set_text(menu_label, get_label("home_screen.menu_button"));
     apply_label_style(menu_label);
     lv_obj_align(menu_label, LV_ALIGN_CENTER, 0, 0);
+    app_state.menu_button_label = menu_label;  // Store reference for language updates
     lv_obj_add_event_cb(menu_btn, menu_btn_callback, LV_EVENT_CLICKED, NULL);
 
     // Exit button
@@ -135,7 +136,21 @@ static void create_main_status_bar(void) {
     lv_label_set_text(exit_label, get_label("home_screen.exit_button"));
     apply_label_style(exit_label);
     lv_obj_align(exit_label, LV_ALIGN_CENTER, 0, 0);
+    app_state.exit_button_label = exit_label;  // Store reference for language updates
     lv_obj_add_event_cb(exit_btn, exit_btn_callback, LV_EVENT_CLICKED, NULL);
+}
+
+// ============================================================================
+// LANGUAGE UPDATE
+// ============================================================================
+
+void update_home_screen_labels(void) {
+    if (app_state.menu_button_label) {
+        lv_label_set_text(app_state.menu_button_label, get_label("home_screen.menu_button"));
+    }
+    if (app_state.exit_button_label) {
+        lv_label_set_text(app_state.exit_button_label, get_label("home_screen.exit_button"));
+    }
 }
 
 // ============================================================================
