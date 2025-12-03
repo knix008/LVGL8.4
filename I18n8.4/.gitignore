@@ -4,6 +4,7 @@ system
 *.a
 *.so
 *.dylib
+build/
 
 # LVGL build directory
 lvgl/
