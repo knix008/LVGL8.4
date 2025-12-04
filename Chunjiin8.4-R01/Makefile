@@ -29,6 +29,7 @@ $(TARGET): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
+	rm -f *.txt *.log
 
 # Clean everything including LVGL build artifacts
 clean-all: clean
