@@ -123,6 +123,8 @@ int save_status_bar_config(void);
 // Save and load theme configuration
 int save_theme_config(void);
 int load_theme_config(void);
+int load_font_config(void);
+int save_font_config(void);
 uint32_t get_background_color(void);
 uint32_t get_title_bar_color(void);
 uint32_t get_status_bar_color(void);

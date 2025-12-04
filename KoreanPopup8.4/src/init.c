@@ -43,24 +43,38 @@ int init_fonts(void) {
         log_warning("FreeType initialization failed");
     }
 
-    // Load regular font
+    // Load title bar font
     static lv_ft_info_t info;
     info.name = FONT_PATH_REGULAR;
-    info.weight = FONT_SIZE_REGULAR;
+    info.weight = app_state.font_size_title_bar;
     info.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info)) {
         app_state.font_20 = info.font;
-        //fprintf(stderr, "NotoSansKR font loaded successfully\n");
+        //fprintf(stderr, "NotoSansKR title bar font loaded successfully\n");
     } else {
-        log_warning("Failed to load NotoSansKR font");
+        log_warning("Failed to load NotoSansKR title bar font");
         app_state.font_20 = NULL;
+    }
+
+    // Load button font
+    static lv_ft_info_t info_button;
+    info_button.name = FONT_PATH_REGULAR;
+    info_button.weight = app_state.font_size_button_label;
+    info_button.style = FT_FONT_STYLE_NORMAL;
+
+    if (lv_ft_font_init(&info_button)) {
+        app_state.font_button = info_button.font;
+        //fprintf(stderr, "NotoSansKR button font loaded successfully\n");
+    } else {
+        log_warning("Failed to load NotoSansKR button font");
+        app_state.font_button = NULL;
     }
 
     // Load bold font (for welcome message)
     static lv_ft_info_t info_bold;
     info_bold.name = FONT_PATH_BOLD;
-    info_bold.weight = FONT_SIZE_BOLD;
+    info_bold.weight = app_state.font_size_bold;
     info_bold.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info_bold)) {

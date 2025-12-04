@@ -14,6 +14,7 @@
 #include "../include/home.h"
 #include "../include/label.h"
 #include "../include/logger.h"
+#include "../include/font.h"
 
 // ============================================================================
 // GLOBAL APPLICATION STATE
@@ -25,6 +26,7 @@ AppState app_state = {
     .title_label = NULL,
     .current_title_label = NULL,
     .font_20 = NULL,
+    .font_button = NULL,
     .status_bar = NULL,
     .menu_item_selected = {false, false, false, false, false},
     .status_icons = {NULL, NULL, NULL, NULL, NULL},
@@ -33,7 +35,11 @@ AppState app_state = {
     .status_bar_color = COLOR_BG_TITLE,
     .button_color = COLOR_BUTTON_BG,
     .button_border_color = COLOR_BORDER,
-    .current_language = "ko"
+    .current_language = "ko",
+    .font_size_title_bar = FONT_SIZE_TITLE_BAR,
+    .font_size_label = FONT_SIZE_REGULAR,
+    .font_size_button_label = FONT_SIZE_BUTTON,
+    .font_size_bold = FONT_SIZE_BOLD
 };
 ScreenState screen_stack[MAX_SCREENS];
 int screen_stack_top = -1;
@@ -73,6 +79,7 @@ int main(int argc, char **argv) {
     // Load configuration
     load_status_bar_config();
     load_theme_config();
+    load_font_config();
 
     // Set language based on loaded config
     set_language(app_state.current_language);

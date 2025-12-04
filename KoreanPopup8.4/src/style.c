@@ -85,6 +85,19 @@ void apply_label_style(lv_obj_t *label) {
     }
 }
 
+/**
+ * Applies button label styling with 20px font.
+ * 
+ * @param label The label object to style
+ */
+void apply_button_label_style(lv_obj_t *label) {
+    extern AppState app_state;
+    lv_obj_set_style_text_color(label, lv_color_hex(COLOR_TEXT), 0);
+    if (app_state.font_button) {
+        lv_obj_set_style_text_font(label, app_state.font_button, 0);
+    }
+}
+
 void apply_bar_style(lv_obj_t *bar, uint32_t bg_color) {
     lv_obj_set_style_bg_color(bar, lv_color_hex(bg_color), 0);
     lv_obj_set_style_bg_opa(bar, COLOR_TRANSPARENT, 0);

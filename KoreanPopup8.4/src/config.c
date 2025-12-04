@@ -1,6 +1,7 @@
 #include "../include/config.h"
 #include "../include/types.h"
 #include "../include/logger.h"
+#include "../include/font.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -434,3 +435,70 @@ int load_theme_config(void) {
 
     return 0;
 }
+
+
+// ============================================================================
+// FONT CONFIGURATION
+// ============================================================================
+
+int load_font_config(void) {
+    char* content = read_file_contents(STATUS_BAR_CONFIG_FILE);
+    
+    if (!content){
+        app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
+        app_state.font_size_label = FONT_SIZE_REGULAR;
+        app_state.font_size_button_label = FONT_SIZE_BUTTON;
+        app_state.font_size_bold = FONT_SIZE_BOLD;
+        return 0;
+    }
+
+    // Find fonts section
+    const char* fonts = find_json_value(content, "fonts");
+    if (fonts && *fonts == '{') {
+        const char* title_bar_size = find_json_value(fonts, "title_bar_size");
+        if (title_bar_size) {
+            while (*title_bar_size && !isdigit(*title_bar_size))title_bar_size++;
+            app_state.font_size_title_bar = atoi(title_bar_size);
+        } else {
+            app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
+        }
+        
+        const char* label_size = find_json_value(fonts, "label_size");
+        if (label_size) {
+            while (*label_size && !isdigit(*label_size))label_size++;
+            app_state.font_size_label = atoi(label_size);
+        } else {
+            app_state.font_size_label = FONT_SIZE_REGULAR;
+        }
+        
+        const char* button_label_size = find_json_value(fonts, "button_label_size");
+        if (button_label_size) {
+            while (*button_label_size && !isdigit(*button_label_size))button_label_size++;
+            app_state.font_size_button_label = atoi(button_label_size);
+        } else {
+            app_state.font_size_button_label = FONT_SIZE_BUTTON;
+        }
+        
+        const char* bold_size = find_json_value(fonts, "bold_size");
+        if (bold_size) {
+            while (*bold_size && !isdigit(*bold_size))bold_size++;
+            app_state.font_size_bold = atoi(bold_size);
+        } else {
+            app_state.font_size_bold = FONT_SIZE_BOLD;
+        }
+    } else {
+        app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
+        app_state.font_size_label = FONT_SIZE_REGULAR;
+        app_state.font_size_button_label = FONT_SIZE_BUTTON;
+        app_state.font_size_bold = FONT_SIZE_BOLD;
+    }
+
+    return 0;
+}
+
+int save_font_config(void) {
+    // Font config is saved as part of the main config file
+    // This function ensures the fonts section is updated when saving
+    return save_theme_config();
+}
+
