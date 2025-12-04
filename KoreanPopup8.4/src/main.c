@@ -103,8 +103,12 @@ int main(int argc, char **argv) {
             last_time = current_time;
         }
 
-        lv_timer_handler();
-        SDL_Delay(FRAME_DELAY_MS);
+        uint32_t sleep_time = lv_timer_handler();
+        
+        // Only delay if LVGL has no pending tasks
+        if (sleep_time > 0) {
+            SDL_Delay(sleep_time < FRAME_DELAY_MS ? sleep_time : FRAME_DELAY_MS);
+        }
     }
 
     // Close logging system
