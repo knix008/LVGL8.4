@@ -1,0 +1,41 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+qwerty
+
+# LVGL library (can be cloned with setup.sh)
+lvgl/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Keep assets directory with TTF fonts (NotoSansKR)
+# Do not ignore .ttf files in assets/
+!assets/
+!assets/*.ttf
+
+# Build directories
+build/
+dist/
+bin/
+
+# Debug files
+*.log
+*.dSYM/
+
