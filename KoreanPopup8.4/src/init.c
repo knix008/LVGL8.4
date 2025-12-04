@@ -3,6 +3,7 @@
 #include "../include/types.h"
 #include "../include/label.h"
 #include "../include/logger.h"
+#include "../include/font.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "lvgl/lvgl.h"
@@ -42,10 +43,10 @@ int init_fonts(void) {
         log_warning("FreeType initialization failed");
     }
 
-    // Load regular font (14pt)
+    // Load regular font
     static lv_ft_info_t info;
-    info.name = "assets/fonts/NotoSansKR-Regular.ttf";
-    info.weight = FONT_SIZE;
+    info.name = FONT_PATH_REGULAR;
+    info.weight = FONT_SIZE_REGULAR;
     info.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info)) {
@@ -56,17 +57,17 @@ int init_fonts(void) {
         app_state.font_20 = NULL;
     }
 
-    // Load bold font (30pt for welcome message)
+    // Load bold font (for welcome message)
     static lv_ft_info_t info_bold;
-    info_bold.name = "assets/fonts/NotoSansKR-Bold.ttf";
-    info_bold.weight = 30;
+    info_bold.name = FONT_PATH_BOLD;
+    info_bold.weight = FONT_SIZE_BOLD;
     info_bold.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info_bold)) {
         app_state.font_24_bold = info_bold.font;
-        //fprintf(stderr, "NotoSansKR-Bold 30pt font loaded successfully\n");
+        //fprintf(stderr, "NotoSansKR-Bold font loaded successfully\n");
     } else {
-        log_warning("Failed to load NotoSansKR-Bold 30pt font");
+        log_warning("Failed to load NotoSansKR-Bold font");
         app_state.font_24_bold = NULL;
     }
 
