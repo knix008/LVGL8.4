@@ -2,6 +2,7 @@
 #include <wchar.h>
 #include <stdint.h>
 #include "../include/chunjiin.h"
+#include "../include/input.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

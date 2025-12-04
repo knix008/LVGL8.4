@@ -94,66 +94,12 @@ void hangul_init(HangulState *hangul);
  */
 void init_engnum(ChunjiinState *state);
 
-// ============================================================================
-// INPUT PROCESSING FUNCTIONS
-// ============================================================================
-
 /**
  * Process input and update state
  * @param state Pointer to ChunjiinState structure
  * @param input Input button number (0-11)
  */
 void chunjiin_process_input(ChunjiinState *state, int input);
-
-/**
- * Process Hangul input
- * @param state Pointer to ChunjiinState structure
- * @param input Input button number
- */
-void hangul_make(ChunjiinState *state, int input);
-
-/**
- * Process English input
- * @param state Pointer to ChunjiinState structure
- * @param input Input button number
- */
-void eng_make(ChunjiinState *state, int input);
-
-/**
- * Process number input
- * @param state Pointer to ChunjiinState structure
- * @param input Input button number
- */
-void num_make(ChunjiinState *state, int input);
-
-/**
- * Process special character input
- * @param state Pointer to ChunjiinState structure
- * @param input Input button number
- */
-void special_make(ChunjiinState *state, int input);
-
-// ============================================================================
-// TEXT OPERATIONS
-// ============================================================================
-
-/**
- * Write Hangul character to text buffer
- * @param state Pointer to ChunjiinState structure
- */
-void write_hangul(ChunjiinState *state);
-
-/**
- * Write English/number character to text buffer
- * @param state Pointer to ChunjiinState structure
- */
-void write_engnum(ChunjiinState *state);
-
-/**
- * Delete character at cursor position
- * @param state Pointer to ChunjiinState structure
- */
-void delete_char(ChunjiinState *state);
 
 // ============================================================================
 // UNICODE & HANGUL PROCESSING

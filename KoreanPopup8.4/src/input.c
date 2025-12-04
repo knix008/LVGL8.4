@@ -1,4 +1,5 @@
 #include "../include/chunjiin.h"
+#include "../include/input.h"
 #include "../include/config.h"
 #include <string.h>
 #include <wchar.h>

@@ -5,6 +5,7 @@
 #include "../include/screen.h"
 #include "../include/navigation.h"
 #include "../include/chunjiin.h"
+#include "../include/input.h"
 #include "../include/border.h"
 #include "../include/label.h"
 #include <string.h>
