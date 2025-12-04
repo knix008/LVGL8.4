@@ -369,6 +369,10 @@ Icon images are configured in [include/config.h](include/config.h):
 #define IMG_INFO "A:assets/images/Info.png"
 #define IMG_NETWORK "A:assets/images/network.png"
 #define IMG_KOREAN "A:assets/images/korean.png"
+#define IMG_FACE "A:assets/images/face.png"
+#define IMG_PLUS "A:assets/images/plus.png"
+#define IMG_MINUS "A:assets/images/minus.png"
+#define IMG_CANCEL "A:assets/images/cancel_button_40x40.png"
 ```
 
 ### Font Configuration
@@ -888,8 +892,9 @@ The Korean input screen supports multiple input modes accessible via the "모드
 
 - **Real-time text composition**: Characters are composed as you type
 - **Mode indicator**: Shows current input mode at the top of screen
-- **Text display area**: 100px height display with text wrapping
+- **Text display area**: 60px height compact display with text wrapping
 - **Centered keyboard**: Horizontally centered button grid
+- **Image-based close button**: Cancel button (40x40px) with transparent circular style
 - **Control buttons**: Mode switch, Clear ("지우기"), and Enter
 - **Enter button**: Displays input result in popup with styled message box
   - Black transparent background (50% opacity)
@@ -910,13 +915,31 @@ The system automatically composes Korean syllables from consonant and vowel inpu
 
 ## Version
 
-- **Application**: 4.5 (With Comprehensive Logging System)
+- **Application**: 4.6 (Korean Popup UI Improvements)
 - **LVGL**: 8.4
 - **SDL2**: Latest stable
 - **FreeType**: Latest stable
-- **Last Updated**: 2025-12-03
+- **Last Updated**: 2025-12-04
 
 ### Changelog
+
+#### v4.6 (2025-12-04) - Korean Popup UI Improvements
+- **Korean Input Popup Enhancements**: Improved visual design and usability
+  - Replaced text-based close button ("X") with image button
+  - Added cancel_button.png (40x40px) with circular transparent style
+  - Reduced text display area height from 80px to 60px for more compact layout
+  - Moved text display down 10px for better visual balance
+  - Close button uses same styling as other image buttons (back button, status icons)
+  - Applied `apply_circle_button_style()` for consistent circular hit testing
+- **Image Assets**: New cancel button image
+  - Original: `cancel_button.png` (256x256px)
+  - Resized: `cancel_button_40x40.png` (40x40px) for popup use
+  - Added `IMG_CANCEL` definition in config.h
+- **UI Consistency**: Close button now matches design pattern of other image buttons
+  - Transparent background with visual feedback on press
+  - Centered image alignment within button
+  - Circular hit testing for better touch interaction
+- **Build Status**: 0 errors, 0 warnings
 
 #### v4.5 (2025-12-03) - Comprehensive Logging System
 - **Centralized Logging**: All error messages now logged to `log/app.log`
