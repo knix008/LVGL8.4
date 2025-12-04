@@ -40,10 +40,10 @@ fi
 # Clone LVGL if not present
 if [ ! -d "lvgl" ]; then
     echo ""
-    echo "Cloning LVGL v8.4..."
+    echo "Cloning LVGL v8.4.0 release..."
     git clone https://github.com/lvgl/lvgl.git
     cd lvgl
-    git checkout release/v8.4
+    git checkout v8.4.0
     cd ..
 else
     echo ""

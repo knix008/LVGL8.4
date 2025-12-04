@@ -1,10 +1,10 @@
 {
   "status_bar": {
     "admin": true,
-    "network": true,
+    "network": false,
     "korean_input": true,
     "info": true,
-    "face": true
+    "face": false
   },
   "border": {
     "default_color": "0x00FF00",
