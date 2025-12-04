@@ -3,6 +3,10 @@
 #include <string.h>
 #include <wchar.h>
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 // Helper function to convert wide char to lowercase
 static wchar_t towlower_simple(wchar_t ch) {
     if (ch >= L'A' && ch <= L'Z') {
@@ -10,6 +14,10 @@ static wchar_t towlower_simple(wchar_t ch) {
     }
     return ch;
 }
+
+// ============================================================================
+// NUMBER INPUT PROCESSING
+// ============================================================================
 
 // num_make function (lines 381-391 in Java)
 void num_make(ChunjiinState *state, int input) {
@@ -25,6 +33,10 @@ void num_make(ChunjiinState *state, int input) {
 
     state->flag_initengnum = true;
 }
+
+// ============================================================================
+// SPECIAL CHARACTER INPUT PROCESSING
+// ============================================================================
 
 // special_make function for special characters
 void special_make(ChunjiinState *state, int input) {
@@ -91,6 +103,10 @@ void special_make(ChunjiinState *state, int input) {
     }
 }
 
+// ============================================================================
+// ENGLISH INPUT PROCESSING
+// ============================================================================
+
 // eng_make function (lines 325-380 in Java)
 void eng_make(ChunjiinState *state, int input) {
     if (state->cursor_pos >= MAX_TEXT_LEN) return;
@@ -155,6 +171,10 @@ void eng_make(ChunjiinState *state, int input) {
         }
     }
 }
+
+// ============================================================================
+// HANGUL INPUT PROCESSING
+// ============================================================================
 
 // hangul_make function (lines 392-788 in Java)
 void hangul_make(ChunjiinState *state, int input) {
@@ -506,6 +526,10 @@ void hangul_make(ChunjiinState *state, int input) {
         }
     }
 }
+
+// ============================================================================
+// TEXT WRITING FUNCTIONS
+// ============================================================================
 
 // write_hangul function (lines 151-254 in Java, the hangul mode branch)
 void write_hangul(ChunjiinState *state) {

@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
 char* wchar_to_utf8(const wchar_t *wstr, size_t max_len) {
     if (wstr == NULL) {
         return "";
@@ -37,6 +41,10 @@ char* wchar_to_utf8(const wchar_t *wstr, size_t max_len) {
     return buffer;
 }
 
+// ============================================================================
+// INITIALIZATION FUNCTIONS
+// ============================================================================
+
 void chunjiin_init(ChunjiinState *state) {
     hangul_init(&state->hangul);
     state->now_mode = MODE_HANGUL;
@@ -65,6 +73,10 @@ void init_engnum(ChunjiinState *state) {
     state->flag_engdelete = false;
 }
 
+// ============================================================================
+// INPUT PROCESSING FUNCTIONS
+// ============================================================================
+
 void chunjiin_process_input(ChunjiinState *state, int input) {
     if (input < 0 || input > 11) return;
 
@@ -83,6 +95,10 @@ void chunjiin_process_input(ChunjiinState *state, int input) {
     }
 }
 
+// ============================================================================
+// TEXT OPERATIONS
+// ============================================================================
+
 void delete_char(ChunjiinState *state) {
     if (state->cursor_pos <= 0) return;
 
@@ -93,6 +109,10 @@ void delete_char(ChunjiinState *state) {
     state->cursor_pos--;
     CLAMP_CURSOR(state);
 }
+
+// ============================================================================
+// UNICODE & HANGUL PROCESSING
+// ============================================================================
 
 int get_unicode(HangulState *hangul, const wchar_t *real_jong) {
     // Compatibility Jamo arrays for standalone display
@@ -239,6 +259,10 @@ void check_double(const wchar_t *jong, const wchar_t *jong2, wchar_t *result) {
         if (wcscmp(jong2, L"ㅅ") == 0) wcscpy(result, L"ㅄ");
     }
 }
+
+// ============================================================================
+// MODE MANAGEMENT
+// ============================================================================
 
 void change_mode(ChunjiinState *state) {
     state->now_mode = (state->now_mode == MODE_SPECIAL) ? MODE_HANGUL : state->now_mode + 1;

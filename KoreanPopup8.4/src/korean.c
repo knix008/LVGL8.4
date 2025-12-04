@@ -10,13 +10,13 @@
 #include <string.h>
 
 // ============================================================================
-// GLOBAL STATE
+// MODULE STATE
 // ============================================================================
 
 static ChunjiinState chunjiin_state;
-static lv_obj_t *text_display;
-static lv_obj_t *mode_label;
-static lv_obj_t *keyboard_buttons[12];
+static lv_obj_t *text_display;        // Text display in keyboard popup
+static lv_obj_t *mode_label;          // Mode indicator label
+static lv_obj_t *keyboard_buttons[12]; // Keyboard button references
 static lv_obj_t *keyboard_popup = NULL;  // The keyboard popup overlay
 static lv_obj_t *text_input_box = NULL;  // The text input box on main screen
 

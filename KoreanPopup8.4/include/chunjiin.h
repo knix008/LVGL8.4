@@ -1,7 +1,3 @@
-#define CLAMP_CURSOR(state) do { \
-    if ((state)->cursor_pos > MAX_TEXT_LEN) (state)->cursor_pos = MAX_TEXT_LEN; \
-    if ((state)->cursor_pos < 0) (state)->cursor_pos = 0; \
-} while(0)
 #ifndef CHUNJIIN_H
 #define CHUNJIIN_H
 
@@ -9,7 +5,26 @@
 #include <stdbool.h>
 #include <wchar.h>
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 #define MAX_TEXT_LEN 1024
+#define CHUNJIIN_SPACE_KEY 10
+#define CHUNJIIN_DELETE_KEY 11
+
+// ============================================================================
+// MACROS
+// ============================================================================
+
+#define CLAMP_CURSOR(state) do { \
+    if ((state)->cursor_pos > MAX_TEXT_LEN) (state)->cursor_pos = MAX_TEXT_LEN; \
+    if ((state)->cursor_pos < 0) (state)->cursor_pos = 0; \
+} while(0)
+
+// ============================================================================
+// TYPES & ENUMERATIONS
+// ============================================================================
 
 typedef enum {
     MODE_HANGUL = 0,
@@ -20,59 +35,162 @@ typedef enum {
 } InputMode;
 
 typedef struct {
-    wchar_t chosung[16];      // 초성
-    wchar_t jungsung[16];     // 중성
-    wchar_t jongsung[16];     // 종성
-    wchar_t jongsung2[16];    // 종성2 (겹받침)
-    int step;                 // 현재 단계 (0:초성, 1:중성, 2:종성, 3:겹받침)
-    bool flag_writing;        // 작성 중 플래그
-    bool flag_dotused;        // 점(·, ‥) 사용 플래그
-    bool flag_doubled;        // 겹받침 플래그
-    bool flag_addcursor;      // 커서 추가 플래그
-    bool flag_space;          // 스페이스 플래그
+    wchar_t chosung[16];      // 초성 (initial consonant)
+    wchar_t jungsung[16];     // 중성 (medial vowel)
+    wchar_t jongsung[16];     // 종성 (final consonant)
+    wchar_t jongsung2[16];    // 종성2 (double final consonant)
+    int step;                 // Current step (0: cho, 1: jung, 2: jong, 3: double jong)
+    bool flag_writing;        // Currently writing flag
+    bool flag_dotused;        // Dot (·, ‥) used flag
+    bool flag_doubled;        // Double consonant flag
+    bool flag_addcursor;      // Add cursor flag
+    bool flag_space;          // Space flag
 } HangulState;
 
 typedef struct {
     HangulState hangul;
     InputMode now_mode;
 
-    wchar_t engnum[16];       // 영문/숫자 버퍼
-    bool flag_initengnum;     // 영문/숫자 초기화 플래그
-    bool flag_engdelete;      // 영문 삭제 플래그
-    bool flag_upper;          // 대문자 플래그
+    wchar_t engnum[16];       // English/number buffer
+    bool flag_initengnum;     // English/number initialization flag
+    bool flag_engdelete;      // English delete flag
+    bool flag_upper;          // Uppercase flag
 
-    wchar_t text_buffer[MAX_TEXT_LEN];  // 텍스트 버퍼
-    int cursor_pos;           // 커서 위치
+    wchar_t text_buffer[MAX_TEXT_LEN];  // Text buffer
+    int cursor_pos;           // Cursor position
 } ChunjiinState;
 
-// wchar_t to UTF-8 conversion
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Convert wide character string to UTF-8
+ * @param wstr Wide character string to convert
+ * @param max_len Maximum length of the wide string
+ * @return UTF-8 encoded string (static buffer, not thread-safe)
+ */
 char* wchar_to_utf8(const wchar_t *wstr, size_t max_len);
 
-// 초기화 함수
+// ============================================================================
+// INITIALIZATION FUNCTIONS
+// ============================================================================
+
+/**
+ * Initialize Chunjiin state
+ * @param state Pointer to ChunjiinState structure
+ */
 void chunjiin_init(ChunjiinState *state);
+
+/**
+ * Initialize Hangul state
+ * @param hangul Pointer to HangulState structure
+ */
 void hangul_init(HangulState *hangul);
+
+/**
+ * Initialize English/number buffer
+ * @param state Pointer to ChunjiinState structure
+ */
 void init_engnum(ChunjiinState *state);
 
-// 입력 처리 함수
+// ============================================================================
+// INPUT PROCESSING FUNCTIONS
+// ============================================================================
+
+/**
+ * Process input and update state
+ * @param state Pointer to ChunjiinState structure
+ * @param input Input button number (0-11)
+ */
 void chunjiin_process_input(ChunjiinState *state, int input);
+
+/**
+ * Process Hangul input
+ * @param state Pointer to ChunjiinState structure
+ * @param input Input button number
+ */
 void hangul_make(ChunjiinState *state, int input);
+
+/**
+ * Process English input
+ * @param state Pointer to ChunjiinState structure
+ * @param input Input button number
+ */
 void eng_make(ChunjiinState *state, int input);
+
+/**
+ * Process number input
+ * @param state Pointer to ChunjiinState structure
+ * @param input Input button number
+ */
 void num_make(ChunjiinState *state, int input);
+
+/**
+ * Process special character input
+ * @param state Pointer to ChunjiinState structure
+ * @param input Input button number
+ */
 void special_make(ChunjiinState *state, int input);
 
-// 텍스트 처리 함수
+// ============================================================================
+// TEXT OPERATIONS
+// ============================================================================
+
+/**
+ * Write Hangul character to text buffer
+ * @param state Pointer to ChunjiinState structure
+ */
 void write_hangul(ChunjiinState *state);
+
+/**
+ * Write English/number character to text buffer
+ * @param state Pointer to ChunjiinState structure
+ */
 void write_engnum(ChunjiinState *state);
+
+/**
+ * Delete character at cursor position
+ * @param state Pointer to ChunjiinState structure
+ */
 void delete_char(ChunjiinState *state);
 
-// 유니코드 처리 함수
+// ============================================================================
+// UNICODE & HANGUL PROCESSING
+// ============================================================================
+
+/**
+ * Get Unicode code point for Hangul character
+ * @param hangul Pointer to HangulState structure
+ * @param real_jong Final consonant string
+ * @return Unicode code point
+ */
 int get_unicode(HangulState *hangul, const wchar_t *real_jong);
+
+/**
+ * Check and create double final consonant
+ * @param jong First final consonant
+ * @param jong2 Second final consonant
+ * @param result Output buffer for double consonant
+ */
 void check_double(const wchar_t *jong, const wchar_t *jong2, wchar_t *result);
 
-// 모드 변경
+// ============================================================================
+// MODE MANAGEMENT
+// ============================================================================
+
+/**
+ * Change input mode (Hangul -> English -> Number -> Special)
+ * @param state Pointer to ChunjiinState structure
+ */
 void change_mode(ChunjiinState *state);
 
-// 버튼 텍스트 가져오기
+/**
+ * Get button text for current mode
+ * @param mode Current input mode
+ * @param button_num Button number (0-11)
+ * @return Wide character string for button label
+ */
 const wchar_t* get_button_text(InputMode mode, int button_num);
 
 #endif // CHUNJIIN_H
