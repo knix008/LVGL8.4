@@ -121,22 +121,4 @@ int get_unicode(HangulState *hangul, const wchar_t *real_jong);
  */
 void check_double(const wchar_t *jong, const wchar_t *jong2, wchar_t *result);
 
-// ============================================================================
-// MODE MANAGEMENT
-// ============================================================================
-
-/**
- * Change input mode (Hangul -> English -> Number -> Special)
- * @param state Pointer to ChunjiinState structure
- */
-void change_mode(ChunjiinState *state);
-
-/**
- * Get button text for current mode
- * @param mode Current input mode
- * @param button_num Button number (0-11)
- * @return Wide character string for button label
- */
-const wchar_t* get_button_text(InputMode mode, int button_num);
-
 #endif // CHUNJIIN_H

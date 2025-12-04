@@ -57,4 +57,26 @@ void write_engnum(ChunjiinState *state);
  */
 void delete_char(ChunjiinState *state);
 
+// ============================================================================
+// MODE MANAGEMENT
+// ============================================================================
+
+/**
+ * Change input mode (Hangul -> English -> Number -> Special)
+ * @param state Pointer to ChunjiinState structure
+ */
+void change_mode(ChunjiinState *state);
+
+// ============================================================================
+// BUTTON TEXT MANAGEMENT
+// ============================================================================
+
+/**
+ * Get button text for current mode
+ * @param mode Current input mode
+ * @param button_num Button number (0-11)
+ * @return Wide character string for button label
+ */
+const wchar_t* get_button_text(InputMode mode, int button_num);
+
 #endif // INPUT_H
