@@ -1,0 +1,173 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.ko
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+*.dSYM/
+*.su
+*.idb
+
+# Compiled Dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+chunjiin
+a.out
+
+# Debug information files
+*.dwo
+
+# Build directories
+build/
+bin/
+obj/
+dist/
+
+# Editor and IDE files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+.project
+.cproject
+.settings/
+
+# OS specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# GTK/GLib cache files
+*.gresource
+*.compiled
+gschemas.compiled
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+.tmp/
+temp/
+*.temp
+
+# Core dumps
+core
+core.*
+vgcore.*
+
+# Dependency directories
+.deps/
+.libs/
+
+# Autotools
+autom4te.cache/
+config.log
+config.status
+configure
+Makefile.in
+aclocal.m4
+compile
+depcomp
+install-sh
+missing
+*.m4
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake
+!CMakeLists.txt
+
+# PKG-CONFIG
+*.pc
+
+# Coverage files
+*.gcov
+*.gcda
+*.gcno
+coverage/
+htmlcov/
+
+# Valgrind output
+massif.out.*
+callgrind.out.*
+
+# Claude AI workspace
+.claude/
+
+# Test files (optional)
+test_output/
+*.test
+test/test_chunjiin
+test/test_chunjiin_extra
+*.txt
+
+# LVGL directory and build artifacts
+lvgl/
+
+# Compiler warnings and errors
+*.err
+*.warn
+
+# Profiling data
+gmon.out
+perf.data
+perf.data.old
+
+# Memory analysis
+*.suppressions
+
+# Generated documentation
+docs/_build/
+docs/html/
+docs/latex/
+
+# QtCreator
+*.pro.user*
+*.qbs.user*
+
+# Vim
+.vim/
+.netrwhist
+Session.vim
