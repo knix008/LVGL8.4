@@ -82,10 +82,50 @@ void update_title_bar_location(int screen_id) {
         strncat(breadcrumb, name, sizeof(breadcrumb) - strlen(breadcrumb) - 1);
     }
 
-    if (app_state.current_title_label) {
-        lv_label_set_text(app_state.current_title_label, breadcrumb);
-    } else if (app_state.title_label) {
-        lv_label_set_text(app_state.title_label, breadcrumb);
+    // Get the label to update
+    lv_obj_t *label = app_state.current_title_label ? app_state.current_title_label : app_state.title_label;
+    
+    if (label) {
+        // Calculate available width for title label
+        // Back button width + spacing: (TITLE_BAR_HEIGHT - BACK_BUTTON_PADDING) + PADDING_HORIZONTAL * 2
+        // Plus some padding on the right
+        lv_coord_t available_width = SCREEN_WIDTH - (TITLE_BAR_HEIGHT - BACK_BUTTON_PADDING) - (PADDING_HORIZONTAL * 3);
+        
+        // Set the text temporarily to measure it
+        lv_label_set_text(label, breadcrumb);
+        lv_obj_update_layout(label);
+        
+        lv_coord_t text_width = lv_obj_get_width(label);
+        
+        // If text overflows, truncate from the left with "... > "
+        if (text_width > available_width) {
+            static char truncated[MAX_BREADCRUMB_LENGTH];
+            const char *ellipsis = "... > ";
+            
+            // Find the position to start truncating by looking for " > " separators
+            const char *pos = breadcrumb;
+            
+            // Find separators from left to right
+            while ((pos = strstr(pos, " > ")) != NULL) {
+                pos += 3;  // Move past " > "
+                
+                // Try truncating at this point
+                snprintf(truncated, sizeof(truncated), "%s%s", ellipsis, pos);
+                lv_label_set_text(label, truncated);
+                lv_obj_update_layout(label);
+                text_width = lv_obj_get_width(label);
+                
+                if (text_width <= available_width) {
+                    break;
+                }
+            }
+            
+            // If still too long even after truncating, use the truncated version anyway
+            lv_label_set_text(label, truncated);
+        } else {
+            // Text fits, use original
+            lv_label_set_text(label, breadcrumb);
+        }
     }
 }
 

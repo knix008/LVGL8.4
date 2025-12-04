@@ -53,7 +53,7 @@
 // ============================================================================
 
 #define MAX_SCREENS 10
-#define FONT_SIZE 14
+#define FONT_SIZE 16
 #define MAX_BREADCRUMB_LENGTH 256
 #define MAX_TITLE_LENGTH 256
 

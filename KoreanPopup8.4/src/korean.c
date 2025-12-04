@@ -224,7 +224,8 @@ static void create_keyboard_popup_content(void) {
     lv_obj_t *keyboard_container = lv_obj_create(keyboard_popup);
     lv_obj_set_size(keyboard_container, 260, 460);
     lv_obj_align(keyboard_container, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(keyboard_container, lv_color_hex(get_background_color()), 0);
+    lv_obj_set_style_bg_color(keyboard_container, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(keyboard_container, LV_OPA_70, 0);
     lv_obj_set_style_border_color(keyboard_container, lv_color_hex(get_button_border_color()), 0);
     lv_obj_set_style_border_width(keyboard_container, 2, 0);
     lv_obj_clear_flag(keyboard_container, LV_OBJ_FLAG_SCROLLABLE);
