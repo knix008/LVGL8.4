@@ -240,14 +240,13 @@ static void create_keyboard_popup_content(void) {
 
     // Close button (X) in top-right corner with 5px gap from top and right
     lv_obj_t *close_btn = lv_btn_create(keyboard_container);
-    lv_obj_set_size(close_btn, 35, 35);
+    lv_obj_set_size(close_btn, 40, 40);
     lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -1, 1);
-    apply_button_style(close_btn, 0);
+    apply_circle_button_style(close_btn, 0);
 
-    lv_obj_t *close_label = lv_label_create(close_btn);
-    lv_label_set_text(close_label, "X");
-    apply_label_style(close_label);
-    lv_obj_center(close_label);
+    lv_obj_t *close_img = lv_img_create(close_btn);
+    lv_img_set_src(close_img, IMG_CANCEL);
+    lv_obj_align(close_img, LV_ALIGN_CENTER, 0, 0);
 
     lv_obj_add_event_cb(close_btn, close_btn_callback, LV_EVENT_CLICKED, NULL);
 
@@ -261,8 +260,8 @@ static void create_keyboard_popup_content(void) {
 
     // Text display area - width matches the three-button grid width
     lv_obj_t *text_container = lv_obj_create(keyboard_container);
-    lv_obj_set_size(text_container, grid_width, 80);
-    lv_obj_align(text_container, LV_ALIGN_TOP_MID, 0, y_offset);
+    lv_obj_set_size(text_container, grid_width, 60);
+    lv_obj_align(text_container, LV_ALIGN_TOP_MID, 0, y_offset + 10);
     apply_button_style(text_container, 0);
     lv_obj_set_style_pad_all(text_container, 10, 0);
     lv_obj_clear_flag(text_container, LV_OBJ_FLAG_SCROLLABLE);
@@ -274,7 +273,7 @@ static void create_keyboard_popup_content(void) {
     lv_label_set_text(text_display, "");
     lv_obj_align(text_display, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    y_offset += 90;
+    y_offset += 80;
 
     lv_obj_t *button_grid = lv_obj_create(keyboard_container);
     lv_obj_set_size(button_grid, grid_width, grid_height);

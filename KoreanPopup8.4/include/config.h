@@ -146,6 +146,7 @@ int load_status_bar_config(void);
 #define IMG_FACE "A:assets/images/face.png"
 #define IMG_PLUS "A:assets/images/plus.png"
 #define IMG_MINUS "A:assets/images/minus.png"
+#define IMG_CANCEL "A:assets/images/cancel_button_40x40.png"
 
 // ============================================================================
 // GUI LAYOUT CONFIGURATION
