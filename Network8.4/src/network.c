@@ -502,7 +502,7 @@ static void create_ip_popup_content(void) {
         lv_obj_center(label_backspace);
         lv_obj_add_event_cb(btn_backspace, backspace_callback, LV_EVENT_CLICKED, NULL);
 
-        y_offset += btn_size * 5 + btn_spacing * 4 + 20;
+        y_offset += btn_size * 5 + btn_spacing * 4 + 10;
     } else {
         // IPv6 Keypad: 0-9, A-F, colon, backspace, clear
         int grid_width = btn_size * 4 + btn_spacing * 3;
@@ -586,19 +586,23 @@ static void create_ip_popup_content(void) {
         lv_obj_center(label_backspace);
         lv_obj_add_event_cb(btn_backspace, backspace_callback, LV_EVENT_CLICKED, NULL);
 
-        y_offset += btn_size * 5 + btn_spacing * 4 + 20;
+        y_offset += btn_size * 5 + btn_spacing * 4 + 10;
     }
 
     // Control buttons (Save, Cancel)
+    int btn_width = 115;
+    int btn_gap = 10;
+    int total_width = btn_width * 2 + btn_gap;
+
     lv_obj_t *ctrl_container = lv_obj_create(ip_container);
-    lv_obj_set_size(ctrl_container, 240, 40);
+    lv_obj_set_size(ctrl_container, total_width, 40);
     lv_obj_align(ctrl_container, LV_ALIGN_TOP_MID, 0, y_offset);
     lv_obj_set_style_bg_opa(ctrl_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(ctrl_container, 0, 0);
     lv_obj_set_style_pad_all(ctrl_container, 0, 0);
 
     lv_obj_t *save_btn = lv_btn_create(ctrl_container);
-    lv_obj_set_size(save_btn, 115, 40);
+    lv_obj_set_size(save_btn, btn_width, 40);
     lv_obj_set_pos(save_btn, 0, 0);
     apply_button_style(save_btn, 0);
     lv_obj_set_style_bg_color(save_btn, lv_color_hex(0x00AA00), 0);
@@ -610,8 +614,8 @@ static void create_ip_popup_content(void) {
     lv_obj_add_event_cb(save_btn, save_ip_callback, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *cancel_btn = lv_btn_create(ctrl_container);
-    lv_obj_set_size(cancel_btn, 115, 40);
-    lv_obj_set_pos(cancel_btn, 125, 0);
+    lv_obj_set_size(cancel_btn, btn_width, 40);
+    lv_obj_set_pos(cancel_btn, btn_width + btn_gap, 0);
     apply_button_style(cancel_btn, 0);
     lv_obj_set_style_bg_color(cancel_btn, lv_color_hex(0xAA0000), 0);
 
