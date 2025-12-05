@@ -30,13 +30,27 @@ A modern LVGL 8.4 application featuring a hierarchical menu system with breadcru
   - Positioned in the upper 1/3 of the screen
   - Auto-updates every 60 seconds based on current time period
   - Configured via `config/welcome.json`
+- **Network Configuration**: Full IPv4/IPv6 address management
+  - Separate IP configuration file (`config/ip_config.json`)
+  - IPv4 and IPv6 address input with validation
+  - On/off switch for IP type selection (Green=IPv4, Red=IPv6)
+  - Dedicated keypads for IPv4 (0-9, .) and IPv6 (0-9, A-F, :)
+  - Real-time address display with auto-scrolling
+  - Visual error feedback with red border indication
+  - Persistent configuration storage
+- **Language Configuration**: Multi-language support
+  - Language setting stored in `config.json`
+  - Loads at application startup
+  - Changes via Admin screen persist across restarts
+  - Supports Korean (ko) and English (en)
 - **Multiple Screens**: Navigate between different application sections
   - Main Screen (홈): Home screen with background image and date/time
   - Menu Screen (메뉴): Main menu with icon buttons
   - Info Screen (정보): Application information
-  - Admin Screen (관리자 설정): Admin settings
-  - Network Screen (네트워크 설정): Network configuration
+  - Admin Screen (관리자 설정): Admin settings and language selection
+  - Network Screen (네트워크 설정): IPv4/IPv6 address configuration
   - Korean Input Screen (한글 입력): Chunjiin Korean text input method
+  - Face Screen: Customizable face screen
 - **Korean Input Method**: Full Chunjiin (천지인) implementation
   - Mode switching: Hangul (한글), English (upper/lower), Numbers, Special characters
   - 12-button keyboard layout matching standard Chunjiin input
@@ -915,15 +929,50 @@ The system automatically composes Korean syllables from consonant and vowel inpu
 
 ## Version
 
-- **Application**: 4.6 (Korean Popup UI Improvements)
+- **Application**: 4.7 (Network Configuration & IP Management)
 - **LVGL**: 8.4
 - **SDL2**: Latest stable
 - **FreeType**: Latest stable
-- **Last Updated**: 2025-12-04
+- **Last Updated**: 2025-12-05
 
 ### Changelog
 
-#### v4.6 (2025-12-04) - Korean Popup UI Improvements
+#### v4.7 (2025-12-05) - Network Configuration & IP Management
+- **IP Configuration System**: Complete IPv4/IPv6 address management
+  - Separate configuration file (`config/ip_config.json`) for IP settings
+  - Support for both IPv4 and IPv6 addresses
+  - On/off switch UI for toggling between IPv4 and IPv6 modes
+  - Switch colors: Green (IPv4 OFF), Red (IPv6 ON)
+  - Real-time type switching with appropriate keypad layouts
+- **IP Input Interface**: Full-featured IP address input popup
+  - IPv4 keypad: Numbers 0-9, dot (.), backspace, clear
+  - IPv6 keypad: Hexadecimal 0-9, A-F, colon (:), backspace, clear
+  - Displays current IP address in text box when opened
+  - Auto-scrolling text display for long IPv6 addresses
+  - Visual feedback with red border on validation errors
+- **IP Address Validation**: Comprehensive input validation
+  - IPv4 format validation (xxx.xxx.xxx.xxx)
+  - IPv6 format validation (supports full and shortened notation)
+  - Empty input detection
+  - Error messages with localized text
+  - Red border indication on application window for errors
+  - Auto-removal of red border when error popup is closed
+- **Configuration Management**:
+  - Load IP settings at startup from `ip_config.json`
+  - Save IP configuration on successful validation
+  - Separate from main `config.json` for modularity
+  - Persistent storage across application restarts
+- **Bug Fixes**:
+  - Fixed JSON parsing issue where `"ipv6"` field was matching `"type": "ipv6"` value
+  - Corrected IPv6 address loading to search for `"ipv6":` with colon
+  - Fixed temporary buffer initialization to display current addresses
+  - Resolved font naming issues (font_16 → font_20, font_18_bold → font_24_bold)
+- **UI Improvements**:
+  - Labels positioned near switch for better clarity
+  - Compact 220px container width for IP type selector
+  - Scrolling text display for long IPv6 addresses
+  - Consistent styling with application theme
+- **Build Status**: 0 errors, 0 warnings
 - **Korean Input Popup Enhancements**: Improved visual design and usability
   - Replaced text-based close button ("X") with image button
   - Added cancel_button.png (40x40px) with circular transparent style
