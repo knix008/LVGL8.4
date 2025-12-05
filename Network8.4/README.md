@@ -1,6 +1,6 @@
 # LVGL Menu Application with Korean Input
 
-A modern LVGL 8.4 application featuring a hierarchical menu system with breadcrumb navigation, icon-based status bar, absolute path navigation support, Chunjiin Korean input method, and internationalization support with dynamic welcome messages.
+A modern LVGL 8.4 application featuring a hierarchical menu system with breadcrumb navigation, icon-based status bar, absolute path navigation support, Chunjiin Korean input method with visual cursor, network configuration, and internationalization support. Built with 100% static memory allocation for embedded systems safety.
 
 
 ## Features
@@ -35,6 +35,8 @@ A modern LVGL 8.4 application featuring a hierarchical menu system with breadcru
   - IPv4 and IPv6 address input with validation
   - On/off switch for IP type selection (Green=IPv4, Red=IPv6)
   - Dedicated keypads for IPv4 (0-9, .) and IPv6 (0-9, A-F, :)
+  - **Blinking cursor** with 500ms interval showing insertion point
+  - Character insertion at cursor position (not just append)
   - Real-time address display with auto-scrolling
   - Visual error feedback with red border indication
   - Persistent configuration storage
@@ -54,8 +56,10 @@ A modern LVGL 8.4 application featuring a hierarchical menu system with breadcru
 - **Korean Input Method**: Full Chunjiin (천지인) implementation
   - Mode switching: Hangul (한글), English (upper/lower), Numbers, Special characters
   - 12-button keyboard layout matching standard Chunjiin input
-  - Real-time text composition and display
+  - **Blinking cursor** with UTF-8 support for multi-byte characters
+  - Real-time text composition and display with cursor positioning
   - Support for consonants, vowels, and syllable combination
+  - Character insertion at cursor position
   - Enter button to display input result in popup and clear text area
 - **Navigation Controls**:
   - Back Button: Navigate back through the hierarchy
@@ -929,13 +933,50 @@ The system automatically composes Korean syllables from consonant and vowel inpu
 
 ## Version
 
-- **Application**: 4.7 (Network Configuration & IP Management)
+- **Application**: 4.8 (Cursor Support & Memory Safety)
 - **LVGL**: 8.4
 - **SDL2**: Latest stable
 - **FreeType**: Latest stable
 - **Last Updated**: 2025-12-05
 
 ### Changelog
+
+#### v4.8 (2025-12-05) - Cursor Support & Memory Safety
+- **Cursor Implementation**: Added visual cursor to all input popups
+  - **IP Address Input Popup**: Blinking cursor with 500ms interval
+    - Shows cursor position for both IPv4 and IPv6 input
+    - Cursor moves as characters are inserted at position
+    - Supports text insertion at cursor (not just append)
+    - Backspace deletes character before cursor
+    - Empty field shows blinking cursor
+  - **Korean Input Popup**: Smart cursor with UTF-8 support
+    - Handles multi-byte Korean characters (Hangul)
+    - Converts wide-character cursor position to UTF-8 byte position
+    - Works with all input modes (Korean, English, Number, Special)
+    - Empty field shows blinking cursor
+    - Cursor blinks at 500ms intervals for visibility
+- **Cursor Features**:
+  - Visual feedback using `|` character
+  - Blinking animation for better visibility
+  - Automatic timer management (starts when popup opens, stops when closes)
+  - Proper cursor positioning during character insertion
+  - Real-time display updates with cursor
+- **Memory Safety Enhancement**: Eliminated last malloc/free calls
+  - Replaced dynamic allocation in `load_ip_config()` with static buffer
+  - Added 512-byte static buffer for IP configuration file reading
+  - Added bounds checking to prevent buffer overflow
+  - Falls back to defaults if file exceeds buffer size
+  - Application now 100% free of dynamic memory allocation
+- **Security Benefits**:
+  - No malloc failures possible
+  - No memory leaks
+  - No use-after-free vulnerabilities
+  - No double-free vulnerabilities
+  - Predictable memory layout for embedded systems
+- **Files Modified**: 2 files updated
+  - `src/network.c`: Added cursor to IP input, removed malloc/free (319 lines changed)
+  - `src/korean.c`: Added cursor to Korean input (104 lines changed)
+- **Build Status**: 0 errors, 0 warnings
 
 #### v4.7 (2025-12-05) - Network Configuration & IP Management
 - **IP Configuration System**: Complete IPv4/IPv6 address management

@@ -181,7 +181,7 @@ static void update_popup_ip_display(void) {
             if (cursor_visible) {
                 lv_label_set_text(ip_input_display, "|");
             } else {
-                lv_label_set_text(ip_input_display, "e.g. 2001:db8::1");
+                lv_label_set_text(ip_input_display, "e.g. 2001:0db8:85a3::7334");
             }
         }
     }
@@ -811,14 +811,21 @@ int load_ip_config(void) {
         return 0;
     }
 
+    // Use static buffer instead of malloc for memory safety
+    static char content[512];  // IP config file is small (type + 2 IP addresses)
+
     // Read file content
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char* content = (char*)malloc(file_size + 1);
-    if (!content) {
+    // Ensure file size doesn't exceed buffer
+    if (file_size >= (long)sizeof(content)) {
         fclose(fp);
+        // Use defaults if file is too large
+        ip_config.type = IP_TYPE_IPV4;
+        strcpy(ip_config.ipv4, "192.168.1.100");
+        strcpy(ip_config.ipv6, "2001:0db8:85a3:0000:0000:8a2e:0370:7334");
         return -1;
     }
 
@@ -873,7 +880,6 @@ int load_ip_config(void) {
         }
     }
 
-    free(content);
     return 0;
 }
 
