@@ -21,12 +21,94 @@ static lv_obj_t *keyboard_buttons[12]; // Keyboard button references
 static lv_obj_t *keyboard_popup = NULL;  // The keyboard popup overlay
 static lv_obj_t *text_input_box = NULL;  // The text input box on main screen
 
+// Cursor state
+static bool cursor_visible = true;
+static lv_timer_t *cursor_timer = NULL;
+
 // ============================================================================
 // FORWARD DECLARATIONS
 // ============================================================================
 
 static void show_keyboard_popup(void);
 static void hide_keyboard_popup(void);
+static void update_text_display_with_cursor(void);
+
+// ============================================================================
+// CURSOR ANIMATION
+// ============================================================================
+
+static void cursor_blink_callback(lv_timer_t *timer) {
+    (void)timer;
+    cursor_visible = !cursor_visible;
+    update_text_display_with_cursor();
+}
+
+static void start_cursor_timer(void) {
+    if (cursor_timer) {
+        lv_timer_del(cursor_timer);
+    }
+    cursor_visible = true;
+    cursor_timer = lv_timer_create(cursor_blink_callback, 500, NULL);
+}
+
+static void stop_cursor_timer(void) {
+    if (cursor_timer) {
+        lv_timer_del(cursor_timer);
+        cursor_timer = NULL;
+    }
+    cursor_visible = true;
+}
+
+// ============================================================================
+// TEXT DISPLAY UPDATE
+// ============================================================================
+
+static void update_text_display_with_cursor(void) {
+    if (!text_display) return;
+
+    // Get current text from chunjiin state
+    char *utf8_text = wchar_to_utf8(chunjiin_state.text_buffer, MAX_TEXT_LEN);
+
+    // Build display string with cursor
+    static char display_text[MAX_TEXT_LEN * 4 + 2];  // UTF-8 can be up to 4 bytes per char + cursor
+
+    // Handle empty text buffer
+    if (!utf8_text || utf8_text[0] == '\0') {
+        if (cursor_visible) {
+            strcpy(display_text, "|");
+        } else {
+            display_text[0] = '\0';
+        }
+        lv_label_set_text(text_display, display_text);
+        return;
+    }
+
+    // Convert cursor position from wide char to UTF-8 byte position
+    int byte_pos = 0;
+    int wchar_count = 0;
+    const wchar_t *wstr = chunjiin_state.text_buffer;
+
+    while (wstr[wchar_count] != L'\0' && wchar_count < chunjiin_state.cursor_pos) {
+        wchar_count++;
+    }
+
+    // Convert up to cursor position to get byte offset
+    char *partial = wchar_to_utf8(wstr, wchar_count);
+    if (partial) {
+        byte_pos = strlen(partial);
+    }
+
+    if (cursor_visible) {
+        // Insert cursor at byte position
+        strncpy(display_text, utf8_text, byte_pos);
+        display_text[byte_pos] = '|';
+        strcpy(display_text + byte_pos + 1, utf8_text + byte_pos);
+    } else {
+        strcpy(display_text, utf8_text);
+    }
+
+    lv_label_set_text(text_display, display_text);
+}
 
 // ============================================================================
 // EVENT CALLBACKS
@@ -71,6 +153,9 @@ static void mode_switch_callback(lv_event_t *e) {
             lv_label_set_text(label, utf8_text);
         }
     }
+
+    // Update text display with cursor
+    update_text_display_with_cursor();
 }
 
 static void keyboard_btn_callback(lv_event_t *e) {
@@ -78,12 +163,12 @@ static void keyboard_btn_callback(lv_event_t *e) {
 
     chunjiin_process_input(&chunjiin_state, btn_num);
 
-    // Update text displays (both popup and main input box)
-    char *utf8_text = wchar_to_utf8(chunjiin_state.text_buffer, MAX_TEXT_LEN);
-    if (text_display) {
-        lv_label_set_text(text_display, utf8_text);
-    }
+    // Update popup text display with cursor
+    update_text_display_with_cursor();
+
+    // Update main input box (without cursor)
     if (text_input_box) {
+        char *utf8_text = wchar_to_utf8(chunjiin_state.text_buffer, MAX_TEXT_LEN);
         lv_label_set_text(text_input_box, utf8_text);
     }
 }
@@ -91,9 +176,10 @@ static void keyboard_btn_callback(lv_event_t *e) {
 static void clear_btn_callback(lv_event_t *e) {
     (void)e;
     chunjiin_init(&chunjiin_state);
-    if (text_display) {
-        lv_label_set_text(text_display, "");
-    }
+
+    // Update popup text display with cursor
+    update_text_display_with_cursor();
+
     if (text_input_box) {
         lv_label_set_text(text_input_box, "");
     }
@@ -132,13 +218,10 @@ static void enter_btn_callback(lv_event_t *e) {
         lv_label_set_text(text_input_box, text_copy);
     }
 
-    // Clear the chunjiin state and popup text display
+    // Clear the chunjiin state
     chunjiin_init(&chunjiin_state);
-    if (text_display) {
-        lv_label_set_text(text_display, "");
-    }
 
-    // Hide the keyboard popup
+    // Hide the keyboard popup (this will stop cursor timer)
     hide_keyboard_popup();
 
     // Only show message box if there's text
@@ -370,6 +453,9 @@ static void create_keyboard_popup_content(void) {
     lv_obj_center(enter_label);
 
     lv_obj_add_event_cb(enter_btn, enter_btn_callback, LV_EVENT_CLICKED, NULL);
+
+    // Initialize text display with cursor
+    update_text_display_with_cursor();
 }
 
 static void show_keyboard_popup(void) {
@@ -380,9 +466,15 @@ static void show_keyboard_popup(void) {
     }
     // Create new popup on current screen
     create_keyboard_popup_content();
+
+    // Start cursor blinking animation
+    start_cursor_timer();
 }
 
 static void hide_keyboard_popup(void) {
+    // Stop cursor timer
+    stop_cursor_timer();
+
     if (keyboard_popup) {
         lv_obj_del(keyboard_popup);
         keyboard_popup = NULL;
