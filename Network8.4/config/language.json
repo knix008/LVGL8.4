@@ -1,0 +1,206 @@
+{
+  "ko": {
+    "menu_items": {
+      "admin": "관리자 설정",
+      "network": "네트워크 설정",
+      "korean_input": "한글 입력",
+      "info": "정보",
+      "face": "얼굴인식"
+    },
+    "home_screen": {
+      "menu_button": "메뉴",
+      "exit_button": "종료"
+    },
+    "screen_names": {
+      "home": "홈",
+      "menu": "메뉴",
+      "info": "정보"
+    },
+    "admin_screen": {
+      "title": "테마 색상 설정",
+      "background_color": "배경 색상",
+      "title_bar_color": "제목 막대 색상",
+      "status_bar_color": "상태 막대 색상",
+      "button_color": "버튼 색상",
+      "button_border_color": "버튼 테두리 색상",
+      "language_title": "언어 설정",
+      "language_korean": "한글",
+      "language_english": "English",
+      "info_text": "\n선택한 설정이 자동 저장되며 즉시 적용됩니다.\n",
+      "colors": {
+        "dark_gray": "어두운 회색",
+        "black": "검정",
+        "navy": "남색",
+        "dark_green": "진한 녹색",
+        "blue": "파랑",
+        "red": "빨강",
+        "purple": "자주색",
+        "gray": "회색",
+        "dark_blue": "진한 파랑",
+        "white": "흰색",
+        "green": "초록"
+      }
+    },
+    "korean_input_screen": {
+      "mode_button": "모드",
+      "clear_button": "지우기",
+      "enter_button": "입력",
+      "space_button": "공백",
+      "instruction": "텍스트 박스를 클릭하여 키보드를 표시하세요",
+      "modes": {
+        "korean": "한글",
+        "number": "숫자",
+        "special": "특수문자"
+      }
+    },
+    "info_screen": {
+      "title": "애플리케이션 정보",
+      "app_name": "이름: LVGL Menu",
+      "version": "버전: 8.4",
+      "description_label": "설명:",
+      "description_text": "LVGL 기반의 메뉴 시스템입니다.\n한글 입력을 지원합니다.",
+      "copyright": "저작권: 2024"
+    },
+    "network_screen": {
+      "title": "네트워크 설정",
+      "ip_address_title": "IP 주소",
+      "ip_config_instruction": "위의 박스를 눌러서 IP 주소를 설정하세요",
+      "ip_popup_title": "IP 주소",
+      "ipv4_button": "IPv4",
+      "ipv6_button": "IPv6",
+      "clear_button": "지우기",
+      "backspace_button": "뒤로",
+      "back_button": "< 뒤로",
+      "save_button": "저장",
+      "cancel_button": "취소",
+      "error_title": "오류",
+      "error_empty": "IP 주소를 입력하세요",
+      "error_invalid_ipv4": "잘못된 IPv4 형식입니다\n예: 192.168.1.100",
+      "error_invalid_ipv6": "잘못된 IPv6 형식입니다\n예: 2001:db8::1",
+      "ok_button": "확인",
+      "wifi_settings": "Wi-Fi 설정",
+      "wifi_ssid": "SSID: MyNetwork",
+      "wifi_status": "상태: 연결됨",
+      "ethernet_settings": "이더넷 설정",
+      "ethernet_ip": "IP: 192.168.1.100",
+      "ethernet_status": "상태: 비활성",
+      "vpn_settings": "VPN 설정",
+      "vpn_status": "상태: 비활성"
+    },
+    "face_screen": {
+      "title": "얼굴 인식",
+      "description": "얼굴 인식과 관련된 화면입니다."
+    },
+    "days_of_week": {
+      "sunday": "일요일",
+      "monday": "월요일",
+      "tuesday": "화요일",
+      "wednesday": "수요일",
+      "thursday": "목요일",
+      "friday": "금요일",
+      "saturday": "토요일"
+    }
+  },
+  "en": {
+    "menu_items": {
+      "admin": "Admin Settings",
+      "network": "Network Settings",
+      "korean_input": "Korean Input",
+      "info": "Information",
+      "face": "Face Recognition"
+    },
+    "home_screen": {
+      "menu_button": "Menu",
+      "exit_button": "Exit"
+    },
+    "screen_names": {
+      "home": "Home",
+      "menu": "Menu",
+      "info": "Info"
+    },
+    "admin_screen": {
+      "title": "Theme Color Settings",
+      "background_color": "Background Color",
+      "title_bar_color": "Title Bar Color",
+      "status_bar_color": "Status Bar Color",
+      "button_color": "Button Color",
+      "button_border_color": "Button Border Color",
+      "language_title": "Language Settings",
+      "language_korean": "한글",
+      "language_english": "English",
+      "info_text": "\nSettings are saved automatically and \napplied immediately.\n",
+      "colors": {
+        "dark_gray": "Dark Gray",
+        "black": "Black",
+        "navy": "Navy",
+        "dark_green": "Dark Green",
+        "blue": "Blue",
+        "red": "Red",
+        "purple": "Purple",
+        "gray": "Gray",
+        "dark_blue": "Dark Blue",
+        "white": "White",
+        "green": "Green"
+      }
+    },
+    "korean_input_screen": {
+      "mode_button": "Mode",
+      "clear_button": "Clear",
+      "enter_button": "Enter",
+      "space_button": "Space",
+      "instruction": "Click the text box to show the keyboard",
+      "modes": {
+        "korean": "Korean",
+        "number": "Number",
+        "special": "Special"
+      }
+    },
+    "info_screen": {
+      "title": "Application Information",
+      "app_name": "Name: LVGL Menu",
+      "version": "Version: 8.4",
+      "description_label": "Description:",
+      "description_text": "A menu system based on LVGL.\nSupports Korean input.",
+      "copyright": "Copyright: 2024"
+    },
+    "network_screen": {
+      "title": "Network Settings",
+      "ip_address_title": "IP Address",
+      "ip_config_instruction": "Tap the box above to configure IP address",
+      "ip_popup_title": "IP Address",
+      "ipv4_button": "IPv4",
+      "ipv6_button": "IPv6",
+      "clear_button": "CLR",
+      "backspace_button": "Backspace",
+      "back_button": "< Back",
+      "save_button": "Save",
+      "cancel_button": "Cancel",
+      "error_title": "Error",
+      "error_empty": "Please enter an IP address",
+      "error_invalid_ipv4": "Invalid IPv4 format\nExample: 192.168.1.100",
+      "error_invalid_ipv6": "Invalid IPv6 format\nExample: 2001:db8::1",
+      "ok_button": "OK",
+      "wifi_settings": "Wi-Fi Settings",
+      "wifi_ssid": "SSID: MyNetwork",
+      "wifi_status": "Status: Connected",
+      "ethernet_settings": "Ethernet Settings",
+      "ethernet_ip": "IP: 192.168.1.100",
+      "ethernet_status": "Status: Inactive",
+      "vpn_settings": "VPN Settings",
+      "vpn_status": "Status: Inactive"
+    },
+    "face_screen": {
+      "title": "Face Recognition",
+      "description": "Face recognition related screen."
+    },
+    "days_of_week": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    }
+  }
+}
