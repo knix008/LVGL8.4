@@ -5,6 +5,7 @@
 #include "../include/screen.h"
 #include "../include/navigation.h"
 #include "../include/label.h"
+#include "../include/border.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -257,6 +258,8 @@ static void cancel_btn_callback(lv_event_t *e) {
 static void error_msgbox_event_cb(lv_event_t *e) {
     lv_obj_t *mbox = lv_event_get_current_target(e);
     lv_obj_del(mbox);
+    // Remove the red border when error message is closed
+    remove_border();
 }
 
 static void save_ip_callback(lv_event_t *e) {
@@ -292,6 +295,9 @@ static void save_ip_callback(lv_event_t *e) {
         update_ip_display_label();
         hide_ip_popup();
     } else {
+        // Show red border to indicate error
+        show_red_border();
+        
         // Show error message with localized text
         // Create message box on the active screen (which is the IP popup)
         lv_obj_t *scr = lv_scr_act();
