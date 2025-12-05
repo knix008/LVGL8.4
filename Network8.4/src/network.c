@@ -23,8 +23,7 @@ static ip_config_t ip_config = {
 static lv_obj_t *ip_popup = NULL;
 static lv_obj_t *ip_display_label = NULL;
 static lv_obj_t *ip_input_display = NULL;
-static lv_obj_t *ipv4_toggle_btn = NULL;
-static lv_obj_t *ipv6_toggle_btn = NULL;
+static lv_obj_t *ip_type_switch = NULL;
 
 // Temporary input buffers
 static char temp_ipv4[16] = "";
@@ -158,13 +157,14 @@ static void ip_edit_btn_callback(lv_event_t *e) {
 }
 
 static void ip_type_toggle_callback(lv_event_t *e) {
-    lv_obj_t *btn = lv_event_get_target(e);
+    lv_obj_t *sw = lv_event_get_target(e);
     ip_type_t old_type = ip_config.type;
 
-    if (btn == ipv4_toggle_btn) {
-        ip_config.type = IP_TYPE_IPV4;
-    } else if (btn == ipv6_toggle_btn) {
+    // Switch OFF = IPv4, Switch ON = IPv6
+    if (lv_obj_has_state(sw, LV_STATE_CHECKED)) {
         ip_config.type = IP_TYPE_IPV6;
+    } else {
+        ip_config.type = IP_TYPE_IPV4;
     }
 
     // Only recreate if type actually changed
@@ -387,42 +387,42 @@ static void create_ip_popup_content(void) {
     y_offset += 30;
 
     // IPv4/IPv6 toggle buttons
+    // IP Type Switch Container
     lv_obj_t *toggle_container = lv_obj_create(ip_container);
-    lv_obj_set_size(toggle_container, 240, 40);
+    lv_obj_set_size(toggle_container, 220, 50);
     lv_obj_align(toggle_container, LV_ALIGN_TOP_MID, 0, y_offset);
     lv_obj_set_style_bg_opa(toggle_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(toggle_container, 0, 0);
     lv_obj_set_style_pad_all(toggle_container, 0, 0);
 
-    ipv4_toggle_btn = lv_btn_create(toggle_container);
-    lv_obj_set_size(ipv4_toggle_btn, 115, 40);
-    lv_obj_set_pos(ipv4_toggle_btn, 0, 0);
-    apply_button_style(ipv4_toggle_btn, 0);
-
-    lv_obj_t *ipv4_label = lv_label_create(ipv4_toggle_btn);
+    // IPv4 Label (left of switch)
+    lv_obj_t *ipv4_label = lv_label_create(toggle_container);
     lv_label_set_text(ipv4_label, get_label("network_screen.ipv4_button"));
     apply_label_style(ipv4_label);
-    lv_obj_center(ipv4_label);
-    lv_obj_add_event_cb(ipv4_toggle_btn, ip_type_toggle_callback, LV_EVENT_CLICKED, NULL);
+    lv_obj_align(ipv4_label, LV_ALIGN_LEFT_MID, 10, 0);
 
-    ipv6_toggle_btn = lv_btn_create(toggle_container);
-    lv_obj_set_size(ipv6_toggle_btn, 115, 40);
-    lv_obj_set_pos(ipv6_toggle_btn, 125, 0);
-    apply_button_style(ipv6_toggle_btn, 0);
+    // Switch
+    ip_type_switch = lv_switch_create(toggle_container);
+    lv_obj_set_size(ip_type_switch, 60, 30);
+    lv_obj_align(ip_type_switch, LV_ALIGN_CENTER, 0, 0);
+    
+    // Style switch colors - green for OFF (IPv4), red for ON (IPv6)
+    lv_obj_set_style_bg_color(ip_type_switch, lv_color_hex(0x00FF00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ip_type_switch, lv_color_hex(0xFF0000), LV_PART_INDICATOR | LV_STATE_CHECKED);
+    
+    lv_obj_add_event_cb(ip_type_switch, ip_type_toggle_callback, LV_EVENT_VALUE_CHANGED, NULL);
 
-    lv_obj_t *ipv6_label = lv_label_create(ipv6_toggle_btn);
+    // IPv6 Label (right of switch)
+    lv_obj_t *ipv6_label = lv_label_create(toggle_container);
     lv_label_set_text(ipv6_label, get_label("network_screen.ipv6_button"));
     apply_label_style(ipv6_label);
-    lv_obj_center(ipv6_label);
-    lv_obj_add_event_cb(ipv6_toggle_btn, ip_type_toggle_callback, LV_EVENT_CLICKED, NULL);
+    lv_obj_align(ipv6_label, LV_ALIGN_RIGHT_MID, -10, 0);
 
-    // Set initial button colors based on current type
-    if (ip_config.type == IP_TYPE_IPV4) {
-        lv_obj_set_style_bg_color(ipv4_toggle_btn, lv_color_hex(0x00AA00), 0);
-        lv_obj_set_style_bg_color(ipv6_toggle_btn, lv_color_hex(get_button_color()), 0);
+    // Set initial switch state based on current type
+    if (ip_config.type == IP_TYPE_IPV6) {
+        lv_obj_add_state(ip_type_switch, LV_STATE_CHECKED);
     } else {
-        lv_obj_set_style_bg_color(ipv4_toggle_btn, lv_color_hex(get_button_color()), 0);
-        lv_obj_set_style_bg_color(ipv6_toggle_btn, lv_color_hex(0x00AA00), 0);
+        lv_obj_clear_state(ip_type_switch, LV_STATE_CHECKED);
     }
 
     y_offset += 50;
@@ -642,10 +642,11 @@ static void create_ip_popup_content(void) {
     lv_obj_center(cancel_label);
     lv_obj_add_event_cb(cancel_btn, cancel_btn_callback, LV_EVENT_CLICKED, NULL);
 
-    // Initialize display
+    // Initialize temp buffers with current IP addresses BEFORE updating display
     strcpy(temp_ipv4, ip_config.ipv4);
     strcpy(temp_ipv6, ip_config.ipv6);
 
+    // Update display to show current IP address
     update_popup_ip_display();
 }
 
@@ -718,40 +719,38 @@ int load_ip_config(void) {
     }
 
     // Parse ipv4 address
-    const char* ipv4_start = strstr(content, "\"ipv4\"");
+    const char* ipv4_start = strstr(content, "\"ipv4\":");
     if (ipv4_start) {
-        const char* colon = strchr(ipv4_start, ':');
-        if (colon) {
-            const char* quote_start = strchr(colon, '"');
-            if (quote_start) {
-                quote_start++;
-                const char* quote_end = strchr(quote_start, '"');
-                if (quote_end) {
-                    int len = quote_end - quote_start;
-                    if (len < 16) {
-                        strncpy(ip_config.ipv4, quote_start, len);
-                        ip_config.ipv4[len] = '\0';
-                    }
+        // Skip past "ipv4":
+        const char* value_start = ipv4_start + 7; // length of "ipv4":
+        const char* quote_start = strchr(value_start, '"');
+        if (quote_start) {
+            quote_start++;
+            const char* quote_end = strchr(quote_start, '"');
+            if (quote_end) {
+                int len = quote_end - quote_start;
+                if (len < 16) {
+                    strncpy(ip_config.ipv4, quote_start, len);
+                    ip_config.ipv4[len] = '\0';
                 }
             }
         }
     }
 
     // Parse ipv6 address
-    const char* ipv6_start = strstr(content, "\"ipv6\"");
+    const char* ipv6_start = strstr(content, "\"ipv6\":");
     if (ipv6_start) {
-        const char* colon = strchr(ipv6_start, ':');
-        if (colon) {
-            const char* quote_start = strchr(colon, '"');
-            if (quote_start) {
-                quote_start++;
-                const char* quote_end = strchr(quote_start, '"');
-                if (quote_end) {
-                    int len = quote_end - quote_start;
-                    if (len < 40) {
-                        strncpy(ip_config.ipv6, quote_start, len);
-                        ip_config.ipv6[len] = '\0';
-                    }
+        // Skip past "ipv6":
+        const char* value_start = ipv6_start + 7; // length of "ipv6":
+        const char* quote_start = strchr(value_start, '"');
+        if (quote_start) {
+            quote_start++;
+            const char* quote_end = strchr(quote_start, '"');
+            if (quote_end) {
+                int len = quote_end - quote_start;
+                if (len < 40) {
+                    strncpy(ip_config.ipv6, quote_start, len);
+                    ip_config.ipv6[len] = '\0';
                 }
             }
         }
@@ -793,7 +792,7 @@ static lv_obj_t *create_network_content(lv_obj_t *parent) {
     lv_obj_add_event_cb(ip_display_container, ip_edit_btn_callback, LV_EVENT_CLICKED, NULL);
 
     ip_display_label = lv_label_create(ip_display_container);
-    lv_label_set_long_mode(ip_display_label, LV_LABEL_LONG_DOT);
+    lv_label_set_long_mode(ip_display_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_width(ip_display_label, SCREEN_WIDTH - CONTENT_WIDTH_LARGE_PADDING - 20);
     apply_label_style(ip_display_label);
     lv_obj_align(ip_display_label, LV_ALIGN_LEFT_MID, 0, 0);
