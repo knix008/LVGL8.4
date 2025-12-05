@@ -32,5 +32,19 @@
     "button_color": "0x1A1A1A",
     "button_border_color": "0x888888",
     "language": "en"
+  },
+  "fonts": {
+    "title": {
+      "name": "NotoSansKR-Bold.ttf",
+      "size": 16
+    },
+    "status_bar": {
+      "name": "NotoSansKR-Regular.ttf",
+      "size": 14
+    },
+    "button_label": {
+      "name": "NotoSansKR-Medium.ttf",
+      "size": 20
+    }
   }
 }

@@ -323,12 +323,12 @@ int save_theme_config(void) {
     if (status_bar_section[0] != '\0') {
         fprintf(file, "  %s,\n", status_bar_section);
     }
-    
+
     // Write border section if exists
     if (border_section[0] != '\0') {
         fprintf(file, "  %s,\n", border_section);
     }
-    
+
     // Write theme section
     fprintf(file, "  \"theme\": {\n");
     fprintf(file, "    \"background_color\": \"0x%06X\",\n", app_state.bg_color);
@@ -337,6 +337,22 @@ int save_theme_config(void) {
     fprintf(file, "    \"button_color\": \"0x%06X\",\n", app_state.button_color);
     fprintf(file, "    \"button_border_color\": \"0x%06X\",\n", app_state.button_border_color);
     fprintf(file, "    \"language\": \"%s\"\n", app_state.current_language);
+    fprintf(file, "  },\n");
+
+    // Write fonts section
+    fprintf(file, "  \"fonts\": {\n");
+    fprintf(file, "    \"title\": {\n");
+    fprintf(file, "      \"name\": \"%s\",\n", app_state.font_name_title);
+    fprintf(file, "      \"size\": %d\n", app_state.font_size_title_bar);
+    fprintf(file, "    },\n");
+    fprintf(file, "    \"status_bar\": {\n");
+    fprintf(file, "      \"name\": \"%s\",\n", app_state.font_name_status_bar);
+    fprintf(file, "      \"size\": %d\n", app_state.font_size_label);
+    fprintf(file, "    },\n");
+    fprintf(file, "    \"button_label\": {\n");
+    fprintf(file, "      \"name\": \"%s\",\n", app_state.font_name_button_label);
+    fprintf(file, "      \"size\": %d\n", app_state.font_size_button_label);
+    fprintf(file, "    }\n");
     fprintf(file, "  }\n");
     fprintf(file, "}\n");
 
@@ -443,54 +459,124 @@ int load_theme_config(void) {
 
 int load_font_config(void) {
     char* content = read_file_contents(STATUS_BAR_CONFIG_FILE);
-    
+
     if (!content){
         app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
         app_state.font_size_label = FONT_SIZE_REGULAR;
         app_state.font_size_button_label = FONT_SIZE_BUTTON;
         app_state.font_size_bold = FONT_SIZE_BOLD;
+        strncpy(app_state.font_name_title, "NotoSansKR-Bold.ttf", 63);
+        strncpy(app_state.font_name_status_bar, "NotoSansKR-Regular.ttf", 63);
+        strncpy(app_state.font_name_button_label, "NotoSansKR-Medium.ttf", 63);
+        app_state.font_name_title[63] = '\0';
+        app_state.font_name_status_bar[63] = '\0';
+        app_state.font_name_button_label[63] = '\0';
         return 0;
     }
 
     // Find fonts section
     const char* fonts = find_json_value(content, "fonts");
     if (fonts && *fonts == '{') {
-        const char* title_bar_size = find_json_value(fonts, "title_bar_size");
-        if (title_bar_size) {
-            while (*title_bar_size && !isdigit(*title_bar_size))title_bar_size++;
-            app_state.font_size_title_bar = atoi(title_bar_size);
+        // Parse title font
+        const char* title = find_json_value(fonts, "title");
+        if (title && *title == '{') {
+            const char* title_name = find_json_value(title, "name");
+            if (title_name) {
+                while (*title_name && (*title_name == '\"' || isspace(*title_name))) title_name++;
+                int i = 0;
+                while (*title_name && *title_name != '\"' && i < 63) {
+                    app_state.font_name_title[i++] = *title_name++;
+                }
+                app_state.font_name_title[i] = '\0';
+            } else {
+                strncpy(app_state.font_name_title, "NotoSansKR-Bold.ttf", 63);
+                app_state.font_name_title[63] = '\0';
+            }
+
+            const char* title_size = find_json_value(title, "size");
+            if (title_size) {
+                while (*title_size && !isdigit(*title_size)) title_size++;
+                app_state.font_size_title_bar = atoi(title_size);
+            } else {
+                app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
+            }
         } else {
+            strncpy(app_state.font_name_title, "NotoSansKR-Bold.ttf", 63);
+            app_state.font_name_title[63] = '\0';
             app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
         }
-        
-        const char* label_size = find_json_value(fonts, "label_size");
-        if (label_size) {
-            while (*label_size && !isdigit(*label_size))label_size++;
-            app_state.font_size_label = atoi(label_size);
+
+        // Parse status_bar font
+        const char* status_bar = find_json_value(fonts, "status_bar");
+        if (status_bar && *status_bar == '{') {
+            const char* status_name = find_json_value(status_bar, "name");
+            if (status_name) {
+                while (*status_name && (*status_name == '\"' || isspace(*status_name))) status_name++;
+                int i = 0;
+                while (*status_name && *status_name != '\"' && i < 63) {
+                    app_state.font_name_status_bar[i++] = *status_name++;
+                }
+                app_state.font_name_status_bar[i] = '\0';
+            } else {
+                strncpy(app_state.font_name_status_bar, "NotoSansKR-Regular.ttf", 63);
+                app_state.font_name_status_bar[63] = '\0';
+            }
+
+            const char* status_size = find_json_value(status_bar, "size");
+            if (status_size) {
+                while (*status_size && !isdigit(*status_size)) status_size++;
+                app_state.font_size_label = atoi(status_size);
+            } else {
+                app_state.font_size_label = FONT_SIZE_REGULAR;
+            }
         } else {
+            strncpy(app_state.font_name_status_bar, "NotoSansKR-Regular.ttf", 63);
+            app_state.font_name_status_bar[63] = '\0';
             app_state.font_size_label = FONT_SIZE_REGULAR;
         }
-        
-        const char* button_label_size = find_json_value(fonts, "button_label_size");
-        if (button_label_size) {
-            while (*button_label_size && !isdigit(*button_label_size))button_label_size++;
-            app_state.font_size_button_label = atoi(button_label_size);
+
+        // Parse button_label font
+        const char* button_label = find_json_value(fonts, "button_label");
+        if (button_label && *button_label == '{') {
+            const char* button_name = find_json_value(button_label, "name");
+            if (button_name) {
+                while (*button_name && (*button_name == '\"' || isspace(*button_name))) button_name++;
+                int i = 0;
+                while (*button_name && *button_name != '\"' && i < 63) {
+                    app_state.font_name_button_label[i++] = *button_name++;
+                }
+                app_state.font_name_button_label[i] = '\0';
+            } else {
+                strncpy(app_state.font_name_button_label, "NotoSansKR-Medium.ttf", 63);
+                app_state.font_name_button_label[63] = '\0';
+            }
+
+            const char* button_size = find_json_value(button_label, "size");
+            if (button_size) {
+                while (*button_size && !isdigit(*button_size)) button_size++;
+                app_state.font_size_button_label = atoi(button_size);
+            } else {
+                app_state.font_size_button_label = FONT_SIZE_BUTTON;
+            }
         } else {
+            strncpy(app_state.font_name_button_label, "NotoSansKR-Medium.ttf", 63);
+            app_state.font_name_button_label[63] = '\0';
             app_state.font_size_button_label = FONT_SIZE_BUTTON;
         }
-        
-        const char* bold_size = find_json_value(fonts, "bold_size");
-        if (bold_size) {
-            while (*bold_size && !isdigit(*bold_size))bold_size++;
-            app_state.font_size_bold = atoi(bold_size);
-        } else {
-            app_state.font_size_bold = FONT_SIZE_BOLD;
-        }
+
+        // Keep bold size for backward compatibility
+        app_state.font_size_bold = FONT_SIZE_BOLD;
     } else {
         app_state.font_size_title_bar = FONT_SIZE_TITLE_BAR;
         app_state.font_size_label = FONT_SIZE_REGULAR;
         app_state.font_size_button_label = FONT_SIZE_BUTTON;
         app_state.font_size_bold = FONT_SIZE_BOLD;
+        strncpy(app_state.font_name_title, "NotoSansKR-Bold.ttf", 63);
+        strncpy(app_state.font_name_status_bar, "NotoSansKR-Regular.ttf", 63);
+        strncpy(app_state.font_name_button_label, "NotoSansKR-Medium.ttf", 63);
+        app_state.font_name_title[63] = '\0';
+        app_state.font_name_status_bar[63] = '\0';
+        app_state.font_name_button_label[63] = '\0';
     }
 
     return 0;

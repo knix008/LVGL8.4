@@ -43,35 +43,43 @@ int init_fonts(void) {
         log_warning("FreeType initialization failed");
     }
 
+    // Build full path for title font
+    static char title_font_path[128];
+    snprintf(title_font_path, sizeof(title_font_path), "assets/fonts/%s", app_state.font_name_title);
+
     // Load title bar font
     static lv_ft_info_t info;
-    info.name = FONT_PATH_REGULAR;
+    info.name = title_font_path;
     info.weight = app_state.font_size_title_bar;
     info.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info)) {
         app_state.font_20 = info.font;
-        //fprintf(stderr, "NotoSansKR title bar font loaded successfully\n");
+        //fprintf(stderr, "Title bar font loaded successfully: %s at size %d\n", title_font_path, app_state.font_size_title_bar);
     } else {
-        log_warning("Failed to load NotoSansKR title bar font");
+        log_warning("Failed to load title bar font: %s", title_font_path);
         app_state.font_20 = NULL;
     }
 
+    // Build full path for button font
+    static char button_font_path[128];
+    snprintf(button_font_path, sizeof(button_font_path), "assets/fonts/%s", app_state.font_name_button_label);
+
     // Load button font
     static lv_ft_info_t info_button;
-    info_button.name = FONT_PATH_REGULAR;
+    info_button.name = button_font_path;
     info_button.weight = app_state.font_size_button_label;
     info_button.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info_button)) {
         app_state.font_button = info_button.font;
-        //fprintf(stderr, "NotoSansKR button font loaded successfully\n");
+        //fprintf(stderr, "Button font loaded successfully: %s at size %d\n", button_font_path, app_state.font_size_button_label);
     } else {
-        log_warning("Failed to load NotoSansKR button font");
+        log_warning("Failed to load button font: %s", button_font_path);
         app_state.font_button = NULL;
     }
 
-    // Load bold font (for welcome message)
+    // Load bold font (for welcome message) - still using FONT_PATH_BOLD for backward compatibility
     static lv_ft_info_t info_bold;
     info_bold.name = FONT_PATH_BOLD;
     info_bold.weight = app_state.font_size_bold;
@@ -79,9 +87,9 @@ int init_fonts(void) {
 
     if (lv_ft_font_init(&info_bold)) {
         app_state.font_24_bold = info_bold.font;
-        //fprintf(stderr, "NotoSansKR-Bold font loaded successfully\n");
+        //fprintf(stderr, "Bold font loaded successfully\n");
     } else {
-        log_warning("Failed to load NotoSansKR-Bold font");
+        log_warning("Failed to load bold font");
         app_state.font_24_bold = NULL;
     }
 

@@ -39,7 +39,10 @@ AppState app_state = {
     .font_size_title_bar = FONT_SIZE_TITLE_BAR,
     .font_size_label = FONT_SIZE_REGULAR,
     .font_size_button_label = FONT_SIZE_BUTTON,
-    .font_size_bold = FONT_SIZE_BOLD
+    .font_size_bold = FONT_SIZE_BOLD,
+    .font_name_title = "NotoSansKR-Bold.ttf",
+    .font_name_status_bar = "NotoSansKR-Regular.ttf",
+    .font_name_button_label = "NotoSansKR-Medium.ttf"
 };
 ScreenState screen_stack[MAX_SCREENS];
 int screen_stack_top = -1;

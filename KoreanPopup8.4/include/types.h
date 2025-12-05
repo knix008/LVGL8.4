@@ -45,6 +45,9 @@ typedef struct {
     int font_size_label;       // Font size for labels
     int font_size_button_label; // Font size for button labels
     int font_size_bold;        // Font size for bold text
+    char font_name_title[64];       // Font name for title
+    char font_name_status_bar[64];  // Font name for status bar
+    char font_name_button_label[64]; // Font name for button label
     lv_obj_t *menu_button_label;  // Reference to menu button label for language updates
     lv_obj_t *exit_button_label;  // Reference to exit button label for language updates
     lv_obj_t *welcome_message_label;  // Reference to welcome message label for updates
