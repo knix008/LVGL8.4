@@ -112,6 +112,7 @@
 
 #define CONFIG_DIR "config"
 #define STATUS_BAR_CONFIG_FILE "config/config.json"
+#define IP_CONFIG_FILE "config/ip_config.json"
 
 // ============================================================================
 // CONFIGURATION MANAGEMENT FUNCTIONS

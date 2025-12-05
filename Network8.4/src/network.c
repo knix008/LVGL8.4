@@ -319,12 +319,29 @@ static void save_ip_callback(lv_event_t *e) {
             lv_obj_t *text = lv_msgbox_get_text(mbox);
             if (text) {
                 lv_obj_set_style_text_color(text, lv_color_hex(0xFFFFFF), 0);
+                extern AppState app_state;
+                if (app_state.font_20) {
+                    lv_obj_set_style_text_font(text, app_state.font_20, 0);
+                }
             }
 
             // Style the title
             lv_obj_t *title = lv_msgbox_get_title(mbox);
             if (title) {
                 lv_obj_set_style_text_color(title, lv_color_hex(0xFF6666), 0);
+                extern AppState app_state;
+                if (app_state.font_24_bold) {
+                    lv_obj_set_style_text_font(title, app_state.font_24_bold, 0);
+                }
+            }
+
+            // Style the buttons
+            lv_obj_t *btns_obj = lv_msgbox_get_btns(mbox);
+            if (btns_obj) {
+                extern AppState app_state;
+                if (app_state.font_20) {
+                    lv_obj_set_style_text_font(btns_obj, app_state.font_20, 0);
+                }
             }
 
             // Add event callback to close only the message box when OK is clicked
@@ -651,120 +668,24 @@ static void hide_ip_popup(void) {
 // CONFIGURATION PERSISTENCE
 // ============================================================================
 
-// Helper function to extract a JSON section
-static int extract_json_section(const char* json, const char* section_name, char* output, size_t output_size) {
-    if (!json || !section_name || !output) return -1;
-
-    char search[256];
-    snprintf(search, sizeof(search), "\"%s\"", section_name);
-
-    const char* section_start = strstr(json, search);
-    if (!section_start) return -1;
-
-    const char* brace = strchr(section_start, '{');
-    if (!brace) return -1;
-
-    int depth = 1;
-    const char* p = brace + 1;
-    while (*p && depth > 0) {
-        if (*p == '{') depth++;
-        else if (*p == '}') depth--;
-        p++;
-    }
-
-    if (depth == 0) {
-        size_t len = p - section_start;
-        if (len < output_size - 1) {
-            strncpy(output, section_start, len);
-            output[len] = '\0';
-            return 0;
-        }
-    }
-
-    return -1;
-}
-
-// Helper function to read entire file
-static char* read_config_file(void) {
-    FILE* fp = fopen(STATUS_BAR_CONFIG_FILE, "r");
-    if (!fp) return NULL;
-
-    fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    if (size > MAX_CONFIG_JSON_SIZE - 1) {
-        fclose(fp);
-        return NULL;
-    }
-
-    static char content[MAX_CONFIG_JSON_SIZE];
-    size_t bytes_read = fread(content, 1, size, fp);
-    content[bytes_read] = '\0';
-    fclose(fp);
-
-    return content;
-}
-
 int save_ip_config(void) {
-    // Read existing config to preserve other sections
-    char* existing_config = read_config_file();
-
-    // Extract sections to preserve
-    char status_bar_section[1024] = "";
-    char border_section[2048] = "";
-    char theme_section[1024] = "";
-    char fonts_section[2048] = "";
-
-    if (existing_config) {
-        extract_json_section(existing_config, "status_bar", status_bar_section, sizeof(status_bar_section));
-        extract_json_section(existing_config, "border", border_section, sizeof(border_section));
-        extract_json_section(existing_config, "theme", theme_section, sizeof(theme_section));
-        extract_json_section(existing_config, "fonts", fonts_section, sizeof(fonts_section));
-    }
-
-    FILE *fp = fopen(STATUS_BAR_CONFIG_FILE, "w");
+    FILE *fp = fopen(IP_CONFIG_FILE, "w");
     if (!fp) return -1;
 
     fprintf(fp, "{\n");
-
-    // Write status_bar section if exists
-    if (status_bar_section[0] != '\0') {
-        fprintf(fp, "  %s,\n", status_bar_section);
-    }
-
-    // Write border section if exists
-    if (border_section[0] != '\0') {
-        fprintf(fp, "  %s,\n", border_section);
-    }
-
-    // Write ip_config section
-    fprintf(fp, "  \"ip_config\": {\n");
-    fprintf(fp, "    \"type\": \"%s\",\n", ip_config.type == IP_TYPE_IPV4 ? "ipv4" : "ipv6");
-    fprintf(fp, "    \"ipv4\": \"%s\",\n", ip_config.ipv4);
-    fprintf(fp, "    \"ipv6\": \"%s\"\n", ip_config.ipv6);
-    fprintf(fp, "  }");
-
-    // Write theme section if exists
-    if (theme_section[0] != '\0') {
-        fprintf(fp, ",\n  %s", theme_section);
-    }
-
-    // Write fonts section if exists
-    if (fonts_section[0] != '\0') {
-        fprintf(fp, ",\n  %s", fonts_section);
-    }
-
-    fprintf(fp, "\n}\n");
+    fprintf(fp, "  \"type\": \"%s\",\n", ip_config.type == IP_TYPE_IPV4 ? "ipv4" : "ipv6");
+    fprintf(fp, "  \"ipv4\": \"%s\",\n", ip_config.ipv4);
+    fprintf(fp, "  \"ipv6\": \"%s\"\n", ip_config.ipv6);
+    fprintf(fp, "}\n");
 
     fclose(fp);
     return 0;
 }
 
 int load_ip_config(void) {
-    // Read config file
-    char* content = read_config_file();
-    if (!content) {
+    // Read IP config file
+    FILE *fp = fopen(IP_CONFIG_FILE, "r");
+    if (!fp) {
         // Use defaults
         ip_config.type = IP_TYPE_IPV4;
         strcpy(ip_config.ipv4, "192.168.1.100");
@@ -772,24 +693,32 @@ int load_ip_config(void) {
         return 0;
     }
 
-    // Extract ip_config section
-    char ip_section[512];
-    if (extract_json_section(content, "ip_config", ip_section, sizeof(ip_section)) != 0) {
-        // IP config section doesn't exist, use defaults
-        return 0;
+    // Read file content
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char* content = (char*)malloc(file_size + 1);
+    if (!content) {
+        fclose(fp);
+        return -1;
     }
 
+    size_t bytes_read = fread(content, 1, file_size, fp);
+    content[bytes_read] = '\0';
+    fclose(fp);
+
     // Parse type
-    if (strstr(ip_section, "\"type\"")) {
-        if (strstr(ip_section, "ipv4")) {
+    if (strstr(content, "\"type\"")) {
+        if (strstr(content, "ipv4")) {
             ip_config.type = IP_TYPE_IPV4;
-        } else if (strstr(ip_section, "ipv6")) {
+        } else if (strstr(content, "ipv6")) {
             ip_config.type = IP_TYPE_IPV6;
         }
     }
 
     // Parse ipv4 address
-    const char* ipv4_start = strstr(ip_section, "\"ipv4\"");
+    const char* ipv4_start = strstr(content, "\"ipv4\"");
     if (ipv4_start) {
         const char* colon = strchr(ipv4_start, ':');
         if (colon) {
@@ -809,7 +738,7 @@ int load_ip_config(void) {
     }
 
     // Parse ipv6 address
-    const char* ipv6_start = strstr(ip_section, "\"ipv6\"");
+    const char* ipv6_start = strstr(content, "\"ipv6\"");
     if (ipv6_start) {
         const char* colon = strchr(ipv6_start, ':');
         if (colon) {
@@ -828,6 +757,7 @@ int load_ip_config(void) {
         }
     }
 
+    free(content);
     return 0;
 }
 
