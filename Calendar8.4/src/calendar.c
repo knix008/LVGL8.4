@@ -1,4 +1,5 @@
 #include "../include/calendar.h"
+#include "../include/label.h"
 #include "lvgl/lvgl.h"
 #include <string.h>
 #include <stdio.h>
@@ -446,39 +447,55 @@ int calendar_get_day_of_week(const calendar_date_t* date) {
 
 // Get month name
 const char* calendar_get_month_name(int month) {
-    static const char* months[] = {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
+    static const char* month_keys[] = {
+        "months.january", "months.february", "months.march", "months.april",
+        "months.may", "months.june", "months.july", "months.august",
+        "months.september", "months.october", "months.november", "months.december"
     };
     
     if (month < 1 || month > 12) return "Unknown";
-    return months[month - 1];
+    return get_label(month_keys[month - 1]);
 }
 
 // Get abbreviated month name (JAN, FEB, etc.)
 const char* calendar_get_month_abbr(int month) {
-    static const char* months_abbr[] = {
-        "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    static const char* month_abbr_keys[] = {
+        "months_abbr.january", "months_abbr.february", "months_abbr.march", "months_abbr.april",
+        "months_abbr.may", "months_abbr.june", "months_abbr.july", "months_abbr.august",
+        "months_abbr.september", "months_abbr.october", "months_abbr.november", "months_abbr.december"
     };
     
     if (month < 1 || month > 12) return "???";
-    return months_abbr[month - 1];
+    return get_label(month_abbr_keys[month - 1]);
 }
 
 // Get day name
 const char* calendar_get_day_name(int day_of_week) {
-    static const char* days[] = {
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    static const char* day_keys[] = {
+        "days_of_week.sunday", "days_of_week.monday", "days_of_week.tuesday", 
+        "days_of_week.wednesday", "days_of_week.thursday", "days_of_week.friday", "days_of_week.saturday"
     };
     
     if (day_of_week < 0 || day_of_week > 6) return "Unknown";
-    return days[day_of_week];
+    return get_label(day_keys[day_of_week]);
 }
 
 // Format date string
 void calendar_format_date_string(const calendar_date_t* date, char* buffer, size_t buffer_size) {
     if (!date || !buffer || buffer_size == 0) return;
     
-    snprintf(buffer, buffer_size, "%04d-%02d-%02d", date->year, date->month, date->day);
+    const char* year_suffix = get_label("date_format.year_suffix");
+    const char* month_suffix = get_label("date_format.month_suffix");
+    const char* day_suffix = get_label("date_format.day_suffix");
+    
+    // Check if we're using Korean format (has suffixes)
+    if (strlen(year_suffix) > 0 && strlen(month_suffix) > 0 && strlen(day_suffix) > 0) {
+        // Korean format: YYYY년 MM월 DD일
+        snprintf(buffer, buffer_size, "%04d%s %02d%s %02d%s", 
+                 date->year, year_suffix, date->month, month_suffix, date->day, day_suffix);
+    } else {
+        // English format: Month DD, YYYY
+        const char* month_name = calendar_get_month_name(date->month);
+        snprintf(buffer, buffer_size, "%s %d, %d", month_name, date->day, date->year);
+    }
 } 
