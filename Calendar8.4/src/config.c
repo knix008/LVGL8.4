@@ -449,8 +449,12 @@ int save_theme_config(void) {
     fprintf(file, "    \"status_bar_color\": \"0x%06X\",\n", app_state.status_bar_color);
     fprintf(file, "    \"button_color\": \"0x%06X\",\n", app_state.button_color);
     fprintf(file, "    \"button_border_color\": \"0x%06X\",\n", app_state.button_border_color);
-    fprintf(file, "    \"language\": \"%s\",\n", app_state.current_language);
-    fprintf(file, "    \"calendar_date\": \"%04d-%02d-%02d\"\n", app_state.calendar_date.year, app_state.calendar_date.month, app_state.calendar_date.day);
+    fprintf(file, "    \"language\": \"%s\"\n", app_state.current_language);
+    fprintf(file, "  },\n");
+
+    // Write calendar section
+    fprintf(file, "  \"calendar\": {\n");
+    fprintf(file, "    \"selected_date\": \"%04d-%02d-%02d\"\n", app_state.calendar_date.year, app_state.calendar_date.month, app_state.calendar_date.day);
     fprintf(file, "  },\n");
 
     // Write fonts section
@@ -560,11 +564,24 @@ int load_theme_config(void) {
             app_state.current_language[3] = '\0';
         }
 
-        const char* calendar_date = find_json_value(theme, "calendar_date");
-        if (calendar_date) {
+    } else {
+        app_state.bg_color = COLOR_BG_DARK;
+        app_state.title_bar_color = COLOR_BG_TITLE;
+        app_state.status_bar_color = COLOR_BG_TITLE;
+        app_state.button_color = COLOR_BUTTON_BG;
+        app_state.button_border_color = COLOR_BORDER;
+        strncpy(app_state.current_language, "ko", 3);
+        app_state.current_language[3] = '\0';
+    }
+
+    // Load calendar configuration from separate section
+    const char* calendar_section = find_json_value(content, "calendar");
+    if (calendar_section && *calendar_section == '{') {
+        const char* selected_date = find_json_value(calendar_section, "selected_date");
+        if (selected_date) {
             int year, month, day;
-            while (*calendar_date && (*calendar_date == '\"' || isspace(*calendar_date))) calendar_date++;
-            if (sscanf(calendar_date, "%d-%d-%d", &year, &month, &day) == 3) {
+            while (*selected_date && (*selected_date == '\"' || isspace(*selected_date))) selected_date++;
+            if (sscanf(selected_date, "%d-%d-%d", &year, &month, &day) == 3) {
                 app_state.calendar_date.year = year;
                 app_state.calendar_date.month = month;
                 app_state.calendar_date.day = day;
@@ -585,14 +602,7 @@ int load_theme_config(void) {
             app_state.calendar_date.day = tm->tm_mday;
         }
     } else {
-        app_state.bg_color = COLOR_BG_DARK;
-        app_state.title_bar_color = COLOR_BG_TITLE;
-        app_state.status_bar_color = COLOR_BG_TITLE;
-        app_state.button_color = COLOR_BUTTON_BG;
-        app_state.button_border_color = COLOR_BORDER;
-        strncpy(app_state.current_language, "ko", 3);
-        app_state.current_language[3] = '\0';
-        // Initialize calendar date with current system date
+        // Initialize with current system date if calendar section not found
         time_t t = time(NULL);
         struct tm *tm = localtime(&t);
         app_state.calendar_date.year = tm->tm_year + 1900;
