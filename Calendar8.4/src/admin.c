@@ -670,6 +670,7 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_set_style_border_width(calendar_display, 2, 0);
     lv_obj_set_style_text_color(calendar_display, lv_color_white(), 0);
     lv_obj_set_style_pad_all(calendar_display, 8, 0);
+    lv_obj_set_style_text_align(calendar_display, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_size(calendar_display, 280, 50);
     lv_obj_align(calendar_display, LV_ALIGN_TOP_MID, 0, 60);
     if (app_state.font_20) {
@@ -807,40 +808,22 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     apply_label_style(calendar_title);
     lv_obj_set_pos(calendar_title, CONTENT_PADDING, 40);
 
-    // Calendar date display (clickable to open popup)
-    calendar_display_label = lv_label_create(content);
-    lv_obj_set_style_bg_color(calendar_display_label, lv_color_white(), 0);
-    lv_obj_set_style_bg_opa(calendar_display_label, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_color(calendar_display_label, lv_color_hex(app_state.button_border_color), 0);
-    lv_obj_set_style_border_width(calendar_display_label, 2, 0);
-    lv_obj_set_style_radius(calendar_display_label, 5, 0);
-    lv_obj_set_style_pad_all(calendar_display_label, 8, 0);
-    lv_obj_set_style_text_align(calendar_display_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_long_mode(calendar_display_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_size(calendar_display_label, 260, 35);
-    lv_obj_set_pos(calendar_display_label, CONTENT_PADDING, 65);
-    lv_obj_set_flex_flow(calendar_display_label, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(calendar_display_label, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // Calendar date display button (clickable to open popup)
+    lv_obj_t *calendar_btn = lv_btn_create(content);
+    lv_obj_set_size(calendar_btn, 260, 50);
+    lv_obj_set_pos(calendar_btn, CONTENT_PADDING, 65);
+    apply_button_style(calendar_btn, app_state.button_color);
+    
+    // Create label inside the button for the calendar text
+    calendar_display_label = lv_label_create(calendar_btn);
+    lv_obj_set_style_text_color(calendar_display_label, lv_color_white(), 0);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(calendar_display_label, app_state.font_20, 0);
     }
+    lv_obj_center(calendar_display_label);
     
-    // Make the calendar display clickable
-    lv_obj_add_flag(calendar_display_label, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(calendar_display_label, show_calendar_popup, LV_EVENT_CLICKED, NULL);
-    
-    // Add visual feedback for clickable area
-    lv_obj_set_style_bg_color(calendar_display_label, lv_color_hex(0xF5F5F5), LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(calendar_display_label, lv_color_hex(0xE0E0E0), LV_STATE_PRESSED);
-    
-    // Instruction label
-    lv_obj_t *instruction_label = lv_label_create(content);
-    lv_label_set_text(instruction_label, get_label("admin_screen.calendar_instruction"));
-    lv_obj_set_style_text_color(instruction_label, lv_color_hex(0x888888), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(instruction_label, app_state.font_20, 0);
-    }
-    lv_obj_set_pos(instruction_label, CONTENT_PADDING, 105);
+    // Add click event to button
+    lv_obj_add_event_cb(calendar_btn, show_calendar_popup, LV_EVENT_CLICKED, NULL);
 
     // Initialize calendar with current date or system date
     if (app_state.calendar_date.year == 0) {
