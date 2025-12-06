@@ -633,33 +633,42 @@ void show_calendar_popup(lv_event_t *e) {
     popup_calendar_date = app_state.calendar_date;
     popup_current_mode = POPUP_CALENDAR_MODE_MONTH;
     
-    // Create popup container
+    // Create full screen dark overlay (like Korean input)
     lv_obj_t *popup = lv_obj_create(parent);
-    lv_obj_set_size(popup, 460, 220);
-    lv_obj_align(popup, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(popup, lv_color_white(), 0);
-    lv_obj_set_style_bg_opa(popup, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(popup, 3, 0);
-    lv_obj_set_style_border_color(popup, lv_color_hex(app_state.button_border_color), 0);
-    lv_obj_set_style_radius(popup, 10, 0);
-    lv_obj_set_style_shadow_width(popup, 20, 0);
-    lv_obj_set_style_shadow_opa(popup, LV_OPA_30, 0);
+    lv_obj_set_size(popup, SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_obj_set_pos(popup, 0, 0);
+    lv_obj_set_style_bg_color(popup, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(popup, LV_OPA_50, 0);
+    lv_obj_set_style_border_width(popup, 0, 0);
+    lv_obj_clear_flag(popup, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_move_foreground(popup);
+    
+    // Create calendar container (like Korean input keyboard container)
+    lv_obj_t *calendar_container = lv_obj_create(popup);
+    lv_obj_set_size(calendar_container, 460, 280);
+    lv_obj_align(calendar_container, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_bg_color(calendar_container, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(calendar_container, LV_OPA_70, 0);
+    lv_obj_set_style_border_color(calendar_container, lv_color_hex(get_button_border_color()), 0);
+    lv_obj_set_style_border_width(calendar_container, 2, 0);
+    lv_obj_clear_flag(calendar_container, LV_OBJ_FLAG_SCROLLABLE);
     
     // Title
-    lv_obj_t *title_label = lv_label_create(popup);
+    lv_obj_t *title_label = lv_label_create(calendar_container);
     lv_label_set_text(title_label, get_label("admin_screen.calendar_setting"));
-    apply_label_style(title_label);
+    lv_obj_set_style_text_color(title_label, lv_color_white(), 0);
     lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 10);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(title_label, app_state.font_20, 0);
     }
     
-    // Main display area for selected date (like calendar.c)
-    lv_obj_t *calendar_display = lv_label_create(popup);
-    lv_obj_set_style_bg_color(calendar_display, lv_color_hex(0x00FF00), 0); // Green background
+    // Main display area for selected date (like Korean input text area)
+    lv_obj_t *calendar_display = lv_label_create(calendar_container);
+    lv_obj_set_style_bg_color(calendar_display, lv_color_hex(0x333333), 0); // Dark gray like Korean input
     lv_obj_set_style_bg_opa(calendar_display, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_color(calendar_display, lv_color_make(128, 128, 128), 0);
-    lv_obj_set_style_border_width(calendar_display, 3, 0);
+    lv_obj_set_style_border_color(calendar_display, lv_color_hex(get_button_border_color()), 0);
+    lv_obj_set_style_border_width(calendar_display, 2, 0);
+    lv_obj_set_style_text_color(calendar_display, lv_color_white(), 0);
     lv_obj_set_style_pad_all(calendar_display, 15, 0);
     lv_obj_set_size(calendar_display, 400, 60);
     lv_obj_align(calendar_display, LV_ALIGN_TOP_MID, 0, 40);
@@ -668,35 +677,29 @@ void show_calendar_popup(lv_event_t *e) {
     }
     popup_calendar_display_label = calendar_display;
     
-    // Navigation row (like calendar.c)
-    int row_y = 120;
+    // Navigation row - centered layout
     int label_width = 60;
     int label_height = 35;
-    int spacing = 5;
+    int nav_row_y_offset = 30;
     
-    int total_width = 50 + label_width + spacing + label_width + spacing + label_width + 50;
-    int start_x = -total_width / 2 + 25;
-    
-    // Prev button
-    lv_obj_t *prev_btn = lv_btn_create(popup);
+    // Previous button
+    lv_obj_t *prev_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(prev_btn, 50, label_height);
-    lv_obj_set_pos(prev_btn, start_x + 230, row_y);
-    lv_obj_set_style_bg_color(prev_btn, lv_color_hex(0x2196F3), 0);
-    lv_obj_set_style_bg_opa(prev_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(prev_btn, lv_color_white(), 0);
+    lv_obj_align(prev_btn, LV_ALIGN_CENTER, -150, nav_row_y_offset);
+    apply_button_style(prev_btn, app_state.button_color);
     lv_obj_t *prev_label = lv_label_create(prev_btn);
     lv_label_set_text(prev_label, "<");
+    lv_obj_set_style_text_color(prev_label, lv_color_white(), 0);
     lv_obj_center(prev_label);
     lv_obj_add_event_cb(prev_btn, popup_calendar_prev_cb, LV_EVENT_CLICKED, NULL);
     
     // Month button
-    lv_obj_t *month_btn = lv_btn_create(popup);
+    lv_obj_t *month_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(month_btn, label_width, label_height);
-    lv_obj_set_pos(month_btn, start_x + 90, row_y);
-    lv_obj_set_style_bg_color(month_btn, lv_color_hex(0xFF9800), 0);
-    lv_obj_set_style_bg_opa(month_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(month_btn, lv_color_white(), 0);
+    lv_obj_align(month_btn, LV_ALIGN_CENTER, -75, nav_row_y_offset);
+    apply_button_style(month_btn, app_state.button_color);
     lv_obj_t *month_btn_label = lv_label_create(month_btn);
+    lv_obj_set_style_text_color(month_btn_label, lv_color_white(), 0);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(month_btn_label, app_state.font_20, 0);
     }
@@ -706,13 +709,12 @@ void show_calendar_popup(lv_event_t *e) {
     popup_month_button = month_btn;
     
     // Day button
-    lv_obj_t *day_btn = lv_btn_create(popup);
+    lv_obj_t *day_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(day_btn, label_width, label_height);
-    lv_obj_set_pos(day_btn, start_x + 160, row_y);
-    lv_obj_set_style_bg_color(day_btn, lv_color_hex(0xFF9800), 0);
-    lv_obj_set_style_bg_opa(day_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(day_btn, lv_color_white(), 0);
+    lv_obj_align(day_btn, LV_ALIGN_CENTER, -5, nav_row_y_offset);
+    apply_button_style(day_btn, app_state.button_color);
     lv_obj_t *day_btn_label = lv_label_create(day_btn);
+    lv_obj_set_style_text_color(day_btn_label, lv_color_white(), 0);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(day_btn_label, app_state.font_20, 0);
     }
@@ -722,13 +724,12 @@ void show_calendar_popup(lv_event_t *e) {
     popup_day_button = day_btn;
     
     // Year button
-    lv_obj_t *year_btn = lv_btn_create(popup);
+    lv_obj_t *year_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(year_btn, label_width, label_height);
-    lv_obj_set_pos(year_btn, start_x + 230, row_y);
-    lv_obj_set_style_bg_color(year_btn, lv_color_hex(0xFF9800), 0);
-    lv_obj_set_style_bg_opa(year_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(year_btn, lv_color_white(), 0);
+    lv_obj_align(year_btn, LV_ALIGN_CENTER, 65, nav_row_y_offset);
+    apply_button_style(year_btn, app_state.button_color);
     lv_obj_t *year_btn_label = lv_label_create(year_btn);
+    lv_obj_set_style_text_color(year_btn_label, lv_color_white(), 0);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(year_btn_label, app_state.font_20, 0);
     }
@@ -738,41 +739,38 @@ void show_calendar_popup(lv_event_t *e) {
     popup_year_button = year_btn;
     
     // Next button
-    lv_obj_t *next_btn = lv_btn_create(popup);
+    lv_obj_t *next_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(next_btn, 50, label_height);
-    lv_obj_set_pos(next_btn, start_x + 300, row_y);
-    lv_obj_set_style_bg_color(next_btn, lv_color_hex(0x2196F3), 0);
-    lv_obj_set_style_bg_opa(next_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(next_btn, lv_color_white(), 0);
+    lv_obj_align(next_btn, LV_ALIGN_CENTER, 140, nav_row_y_offset);
+    apply_button_style(next_btn, app_state.button_color);
     lv_obj_t *next_label = lv_label_create(next_btn);
     lv_label_set_text(next_label, ">");
+    lv_obj_set_style_text_color(next_label, lv_color_white(), 0);
     lv_obj_center(next_label);
     lv_obj_add_event_cb(next_btn, popup_calendar_next_cb, LV_EVENT_CLICKED, NULL);
     
     // Enter button
-    lv_obj_t *enter_btn = lv_btn_create(popup);
+    lv_obj_t *enter_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(enter_btn, 100, 35);
-    lv_obj_set_pos(enter_btn, 180, 170);
-    lv_obj_set_style_bg_color(enter_btn, lv_color_hex(0x4CAF50), 0); // Green
-    lv_obj_set_style_bg_opa(enter_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(enter_btn, lv_color_white(), 0);
+    lv_obj_align(enter_btn, LV_ALIGN_CENTER, 0, 100);
+    apply_button_style(enter_btn, app_state.button_color);
     lv_obj_t *enter_label = lv_label_create(enter_btn);
     lv_label_set_text(enter_label, get_label("admin_screen.select"));
+    lv_obj_set_style_text_color(enter_label, lv_color_white(), 0);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(enter_label, app_state.font_20, 0);
     }
     lv_obj_center(enter_label);
     lv_obj_add_event_cb(enter_btn, popup_calendar_enter_cb, LV_EVENT_CLICKED, NULL);
     
-    // Close button
-    lv_obj_t *close_btn = lv_btn_create(popup);
-    lv_obj_set_size(close_btn, 80, 35);
-    lv_obj_set_pos(close_btn, 290, 170);
-    lv_obj_set_style_bg_color(close_btn, lv_color_hex(0x757575), 0); // Gray
-    lv_obj_set_style_bg_opa(close_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(close_btn, lv_color_white(), 0);
+    // Close button (styled like Korean input - X in top right)
+    lv_obj_t *close_btn = lv_btn_create(calendar_container);
+    lv_obj_set_size(close_btn, 30, 30);
+    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -10, 10);
+    apply_button_style(close_btn, app_state.button_color);
     lv_obj_t *close_label = lv_label_create(close_btn);
-    lv_label_set_text(close_label, get_label("admin_screen.close"));
+    lv_label_set_text(close_label, "X");
+    lv_obj_set_style_text_color(close_label, lv_color_white(), 0);
     if (app_state.font_20) {
         lv_obj_set_style_text_font(close_label, app_state.font_20, 0);
     }
