@@ -23,5 +23,6 @@ int calendar_get_day_of_week(const calendar_date_t* date);
 const char* calendar_get_month_name(int month);
 const char* calendar_get_day_name(int day_of_week);
 void calendar_format_date_string(const calendar_date_t* date, char* buffer, size_t buffer_size);
+const char* calendar_get_month_abbr(int month);
 
 #endif // CALENDAR_H 

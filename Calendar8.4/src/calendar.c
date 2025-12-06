@@ -455,6 +455,17 @@ const char* calendar_get_month_name(int month) {
     return months[month - 1];
 }
 
+// Get abbreviated month name (JAN, FEB, etc.)
+const char* calendar_get_month_abbr(int month) {
+    static const char* months_abbr[] = {
+        "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    };
+    
+    if (month < 1 || month > 12) return "???";
+    return months_abbr[month - 1];
+}
+
 // Get day name
 const char* calendar_get_day_name(int day_of_week) {
     static const char* days[] = {
