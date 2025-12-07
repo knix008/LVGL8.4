@@ -253,29 +253,37 @@ static void number_btn_callback(lv_event_t *e) {
     if (ip_config.type == IP_TYPE_IPV4) {
         // IPv4 input - insert character at cursor position
         size_t len = strlen(temp_ipv4);
-        if (len < 15) {  // xxx.xxx.xxx.xxx = 15 chars max
-            // Shift characters to the right from cursor position
-            for (int i = len; i > cursor_pos; i--) {
-                temp_ipv4[i] = temp_ipv4[i - 1];
-            }
-            temp_ipv4[cursor_pos] = ch;
-            temp_ipv4[len + 1] = '\0';
-            cursor_pos++;
-            update_popup_ip_display();
+
+        // Safety checks: validate buffer capacity and cursor position
+        if (len >= IPV4_MAX_LENGTH || cursor_pos > (int)len || cursor_pos < 0) {
+            return;  // Prevent buffer overflow
         }
+
+        // Shift characters to the right from cursor position
+        for (int i = (int)len; i > cursor_pos; i--) {
+            temp_ipv4[i] = temp_ipv4[i - 1];
+        }
+        temp_ipv4[cursor_pos] = ch;
+        temp_ipv4[len + 1] = '\0';
+        cursor_pos++;
+        update_popup_ip_display();
     } else {
         // IPv6 input - insert character at cursor position
         size_t len = strlen(temp_ipv6);
-        if (len < 39) {  // xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx = 39 chars max
-            // Shift characters to the right from cursor position
-            for (int i = len; i > cursor_pos; i--) {
-                temp_ipv6[i] = temp_ipv6[i - 1];
-            }
-            temp_ipv6[cursor_pos] = ch;
-            temp_ipv6[len + 1] = '\0';
-            cursor_pos++;
-            update_popup_ip_display();
+
+        // Safety checks: validate buffer capacity and cursor position
+        if (len >= IPV6_MAX_LENGTH || cursor_pos > (int)len || cursor_pos < 0) {
+            return;  // Prevent buffer overflow
         }
+
+        // Shift characters to the right from cursor position
+        for (int i = (int)len; i > cursor_pos; i--) {
+            temp_ipv6[i] = temp_ipv6[i - 1];
+        }
+        temp_ipv6[cursor_pos] = ch;
+        temp_ipv6[len + 1] = '\0';
+        cursor_pos++;
+        update_popup_ip_display();
     }
 }
 
@@ -285,29 +293,43 @@ static void dot_colon_callback(lv_event_t *e) {
     if (ip_config.type == IP_TYPE_IPV4) {
         // Add dot for IPv4 at cursor position
         size_t len = strlen(temp_ipv4);
-        if (len > 0 && len < 15 && (cursor_pos == 0 || temp_ipv4[cursor_pos - 1] != '.')) {
-            // Shift characters to the right from cursor position
-            for (int i = len; i > cursor_pos; i--) {
-                temp_ipv4[i] = temp_ipv4[i - 1];
-            }
-            temp_ipv4[cursor_pos] = '.';
-            temp_ipv4[len + 1] = '\0';
-            cursor_pos++;
-            update_popup_ip_display();
+
+        // Safety checks: validate buffer, cursor position, and prevent duplicate dots
+        if (len == 0 || len >= IPV4_MAX_LENGTH || cursor_pos > (int)len || cursor_pos < 0) {
+            return;
         }
+        if (cursor_pos > 0 && temp_ipv4[cursor_pos - 1] == '.') {
+            return;  // Prevent consecutive dots
+        }
+
+        // Shift characters to the right from cursor position
+        for (int i = (int)len; i > cursor_pos; i--) {
+            temp_ipv4[i] = temp_ipv4[i - 1];
+        }
+        temp_ipv4[cursor_pos] = '.';
+        temp_ipv4[len + 1] = '\0';
+        cursor_pos++;
+        update_popup_ip_display();
     } else {
         // Add colon for IPv6 at cursor position
         size_t len = strlen(temp_ipv6);
-        if (len > 0 && len < 39 && (cursor_pos == 0 || temp_ipv6[cursor_pos - 1] != ':')) {
-            // Shift characters to the right from cursor position
-            for (int i = len; i > cursor_pos; i--) {
-                temp_ipv6[i] = temp_ipv6[i - 1];
-            }
-            temp_ipv6[cursor_pos] = ':';
-            temp_ipv6[len + 1] = '\0';
-            cursor_pos++;
-            update_popup_ip_display();
+
+        // Safety checks: validate buffer, cursor position, and prevent duplicate colons
+        if (len == 0 || len >= IPV6_MAX_LENGTH || cursor_pos > (int)len || cursor_pos < 0) {
+            return;
         }
+        if (cursor_pos > 0 && temp_ipv6[cursor_pos - 1] == ':') {
+            return;  // Prevent consecutive colons (except for ::)
+        }
+
+        // Shift characters to the right from cursor position
+        for (int i = (int)len; i > cursor_pos; i--) {
+            temp_ipv6[i] = temp_ipv6[i - 1];
+        }
+        temp_ipv6[cursor_pos] = ':';
+        temp_ipv6[len + 1] = '\0';
+        cursor_pos++;
+        update_popup_ip_display();
     }
 }
 
@@ -375,7 +397,9 @@ static void save_ip_callback(lv_event_t *e) {
         } else if (!is_valid_ipv4(temp_ipv4)) {
             error_msg = get_label("network_screen.error_invalid_ipv4");
         } else {
-            strcpy(ip_config.ipv4, temp_ipv4);
+            // Use strncpy with proper null termination for safety
+            strncpy(ip_config.ipv4, temp_ipv4, sizeof(ip_config.ipv4) - 1);
+            ip_config.ipv4[sizeof(ip_config.ipv4) - 1] = '\0';
             valid = true;
         }
     } else {
@@ -385,7 +409,9 @@ static void save_ip_callback(lv_event_t *e) {
         } else if (!is_valid_ipv6(temp_ipv6)) {
             error_msg = get_label("network_screen.error_invalid_ipv6");
         } else {
-            strcpy(ip_config.ipv6, temp_ipv6);
+            // Use strncpy with proper null termination for safety
+            strncpy(ip_config.ipv6, temp_ipv6, sizeof(ip_config.ipv6) - 1);
+            ip_config.ipv6[sizeof(ip_config.ipv6) - 1] = '\0';
             valid = true;
         }
     }
@@ -749,8 +775,11 @@ static void create_ip_popup_content(void) {
     lv_obj_add_event_cb(cancel_btn, cancel_btn_callback, LV_EVENT_CLICKED, NULL);
 
     // Initialize temp buffers with current IP addresses BEFORE updating display
-    strcpy(temp_ipv4, ip_config.ipv4);
-    strcpy(temp_ipv6, ip_config.ipv6);
+    // Use strncpy with proper null termination for safety
+    strncpy(temp_ipv4, ip_config.ipv4, sizeof(temp_ipv4) - 1);
+    temp_ipv4[sizeof(temp_ipv4) - 1] = '\0';
+    strncpy(temp_ipv6, ip_config.ipv6, sizeof(temp_ipv6) - 1);
+    temp_ipv6[sizeof(temp_ipv6) - 1] = '\0';
 
     // Initialize cursor position to end of current IP address
     if (ip_config.type == IP_TYPE_IPV4) {
@@ -806,8 +835,10 @@ int load_ip_config(void) {
     if (!fp) {
         // Use defaults
         ip_config.type = IP_TYPE_IPV4;
-        strcpy(ip_config.ipv4, "192.168.1.100");
-        strcpy(ip_config.ipv6, "2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+        strncpy(ip_config.ipv4, "192.168.1.100", sizeof(ip_config.ipv4) - 1);
+        ip_config.ipv4[sizeof(ip_config.ipv4) - 1] = '\0';
+        strncpy(ip_config.ipv6, "2001:0db8:85a3:0000:0000:8a2e:0370:7334", sizeof(ip_config.ipv6) - 1);
+        ip_config.ipv6[sizeof(ip_config.ipv6) - 1] = '\0';
         return 0;
     }
 
@@ -824,8 +855,10 @@ int load_ip_config(void) {
         fclose(fp);
         // Use defaults if file is too large
         ip_config.type = IP_TYPE_IPV4;
-        strcpy(ip_config.ipv4, "192.168.1.100");
-        strcpy(ip_config.ipv6, "2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+        strncpy(ip_config.ipv4, "192.168.1.100", sizeof(ip_config.ipv4) - 1);
+        ip_config.ipv4[sizeof(ip_config.ipv4) - 1] = '\0';
+        strncpy(ip_config.ipv6, "2001:0db8:85a3:0000:0000:8a2e:0370:7334", sizeof(ip_config.ipv6) - 1);
+        ip_config.ipv6[sizeof(ip_config.ipv6) - 1] = '\0';
         return -1;
     }
 

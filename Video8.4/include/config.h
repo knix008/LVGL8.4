@@ -136,6 +136,16 @@ uint32_t get_button_border_color(void);
 int load_status_bar_config(void);
 
 // ============================================================================
+// NETWORK/IP CONFIGURATION
+// ============================================================================
+
+// IP address buffer sizes and limits
+#define IPV4_MAX_LENGTH 15      // "xxx.xxx.xxx.xxx" (15 characters)
+#define IPV6_MAX_LENGTH 39      // Full IPv6 address (39 characters)
+#define IPV4_BUFFER_SIZE 16     // Max length + null terminator
+#define IPV6_BUFFER_SIZE 40     // Max length + null terminator
+
+// ============================================================================
 // VIDEO CONFIGURATION
 // ============================================================================
 
