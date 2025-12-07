@@ -42,8 +42,6 @@ echo "Checking FFmpeg..."
 if ! pkg-config --exists libavformat libavcodec libavutil libswscale; then
     echo "FFmpeg libraries not found. Installing..."
     sudo apt-get install -y libavformat-dev libavcodec-dev libavutil-dev libswscale-dev
-else
-    echo "FFmpeg libraries found"
 fi
 
 # Clone LVGL if not present

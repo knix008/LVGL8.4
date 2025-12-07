@@ -265,14 +265,17 @@ void video_stop(void) {
         lv_ffmpeg_player_set_cmd(video_state.video_player, LV_FFMPEG_PLAYER_CMD_STOP);
         video_state.is_playing = false;
 
+        // Pause the check timer
+        if (video_state.check_timer) {
+            lv_timer_pause(video_state.check_timer);
+        }
+
         // Reset to first video
         video_state.current_index = 0;
         if (video_state.video_count > 0) {
             lv_ffmpeg_player_set_src(video_state.video_player,
                                      video_state.video_paths[video_state.current_index]);
         }
-
-
     }
 #endif
 }
