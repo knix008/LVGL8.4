@@ -46,4 +46,34 @@ lv_obj_t *video_get_player(void);
  */
 bool video_is_playing(void);
 
+/**
+ * Get current video information
+ * @param index Pointer to store current video index (can be NULL)
+ * @param total Pointer to store total video count (can be NULL)
+ * @param path Pointer to store current video path (can be NULL)
+ * @param path_size Size of path buffer
+ */
+void video_get_info(int *index, int *total, char *path, size_t path_size);
+
+/**
+ * Skip to next video manually
+ */
+void video_next(void);
+
+/**
+ * Skip to previous video manually
+ */
+void video_previous(void);
+
+/**
+ * Get total number of videos loaded
+ * @return Number of video files loaded
+ */
+int video_get_count(void);
+
+/**
+ * Manually trigger transition to next video (for testing/debugging)
+ */
+void video_trigger_next(void);
+
 #endif
