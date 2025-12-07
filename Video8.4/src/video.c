@@ -97,12 +97,15 @@ int video_init(lv_obj_t *parent_screen) {
         return -1;
     }
 
-    // Set size to match content area (between title and status bars)
+    // Set size to full screen (320x640)
     lv_obj_set_width(video_state.video_player, SCREEN_WIDTH);
-    lv_obj_set_height(video_state.video_player, SCREEN_HEIGHT - TITLE_BAR_HEIGHT - STATUS_BAR_HEIGHT);
+    lv_obj_set_height(video_state.video_player, SCREEN_HEIGHT);
 
-    // Position below title bar
-    lv_obj_align(video_state.video_player, LV_ALIGN_TOP_LEFT, 0, TITLE_BAR_HEIGHT);
+    // Position at top-left corner (full screen)
+    lv_obj_align(video_state.video_player, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    // Move video to background so title/status bars appear on top
+    lv_obj_move_background(video_state.video_player);
 
     // Set the video source
     if (lv_ffmpeg_player_set_src(video_state.video_player, video_state.video_path) != LV_RES_OK) {

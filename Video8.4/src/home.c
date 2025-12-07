@@ -41,7 +41,7 @@ static void inactivity_timer_callback(lv_timer_t *timer) {
         // Show and start video
         video_show();
         video_start();
-        printf("Inactivity detected - starting video playback\n");
+        //printf("Inactivity detected - starting video playback\n");
     }
 }
 
