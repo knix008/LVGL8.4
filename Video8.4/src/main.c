@@ -15,35 +15,12 @@
 #include "../include/label.h"
 #include "../include/logger.h"
 #include "../include/font.h"
+#include "../include/state/app_state.h"
 
 // ============================================================================
-// GLOBAL APPLICATION STATE
+// SCREEN STACK (still global, will be encapsulated in Phase 3.5)
 // ============================================================================
 
-AppState app_state = {
-    .screen = NULL,
-    .title_bar = NULL,
-    .title_label = NULL,
-    .current_title_label = NULL,
-    .font_20 = NULL,
-    .font_button = NULL,
-    .status_bar = NULL,
-    .menu_item_selected = {false, false, false, false, false},
-    .status_icons = {NULL, NULL, NULL, NULL, NULL},
-    .bg_color = COLOR_BG_DARK,
-    .title_bar_color = COLOR_BG_TITLE,
-    .status_bar_color = COLOR_BG_TITLE,
-    .button_color = COLOR_BUTTON_BG,
-    .button_border_color = COLOR_BORDER,
-    .current_language = "ko",
-    .font_size_title_bar = FONT_SIZE_TITLE_BAR,
-    .font_size_label = FONT_SIZE_REGULAR,
-    .font_size_button_label = FONT_SIZE_BUTTON,
-    .font_size_bold = FONT_SIZE_BOLD,
-    .font_name_title = "NotoSansKR-Bold.ttf",
-    .font_name_status_bar = "NotoSansKR-Regular.ttf",
-    .font_name_button_label = "NotoSansKR-Medium.ttf"
-};
 ScreenState screen_stack[MAX_SCREENS];
 int screen_stack_top = -1;
 
@@ -60,6 +37,13 @@ int main(int argc, char **argv) {
     // Initialize logging system
     if (log_init() != 0) {
         fprintf(stderr, "Warning: Failed to initialize logging system\n");
+    }
+
+    // Initialize application state
+    if (app_state_init() != 0) {
+        log_error("Failed to initialize application state");
+        log_close();
+        return 1;
     }
 
     // Initialize SDL2
@@ -85,7 +69,7 @@ int main(int argc, char **argv) {
     load_font_config();
 
     // Set language based on loaded config
-    set_language(app_state.current_language);
+    set_language(app_state_get_language());
 
     // Create GUI
     create_gui();

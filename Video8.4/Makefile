@@ -30,13 +30,19 @@ ALL_LIBS = $(LVGL_LIB) $(SDL_LIBS) $(FREETYPE_LIBS) $(JPEG_LIBS) $(FFMPEG_LIBS) 
 
 # Build directory
 BUILD_DIR = build
-TARGET = system
+TARGET = application
 SRC_DIR = src
 
 # Source files
 SRCS = $(wildcard $(SRC_DIR)/*.c)
+STATE_SRCS = $(wildcard $(SRC_DIR)/state/*.c)
+
 # Object files in build directory
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
+STATE_OBJS = $(patsubst $(SRC_DIR)/state/%.c,$(BUILD_DIR)/state_%.o,$(STATE_SRCS))
+
+# All objects
+ALL_OBJS = $(OBJS) $(STATE_OBJS)
 
 all: check_setup $(BUILD_DIR) $(TARGET)
 	@echo "Build complete."
@@ -54,11 +60,15 @@ check_setup:
 		exit 1; \
 	fi
 
-$(TARGET): $(OBJS)
+$(TARGET): $(ALL_OBJS)
 	@echo "Linking $(TARGET)..."
-	@$(CC) -o $(TARGET) $(OBJS) $(ALL_LIBS)
+	@$(CC) -o $(TARGET) $(ALL_OBJS) $(ALL_LIBS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@echo "Compiling $<..."
+	@$(CC) $(ALL_CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/state_%.o: $(SRC_DIR)/state/%.c
 	@echo "Compiling $<..."
 	@$(CC) $(ALL_CFLAGS) -c $< -o $@
 

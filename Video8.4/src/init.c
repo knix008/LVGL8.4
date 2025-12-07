@@ -4,6 +4,7 @@
 #include "../include/label.h"
 #include "../include/logger.h"
 #include "../include/font.h"
+#include "../include/state/app_state.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "lvgl/lvgl.h"
@@ -26,8 +27,6 @@ static lv_color_t buf2[BUF_SIZE];
 static lv_indev_drv_t indev_drv;
 static lv_indev_t *indev = NULL;
 
-extern AppState app_state;
-
 // ============================================================================
 // FONT INITIALIZATION
 // ============================================================================
@@ -45,52 +44,52 @@ int init_fonts(void) {
 
     // Build full path for title font
     static char title_font_path[128];
-    snprintf(title_font_path, sizeof(title_font_path), "assets/fonts/%s", app_state.font_name_title);
+    snprintf(title_font_path, sizeof(title_font_path), "assets/fonts/%s", app_state_get_font_name_title());
 
     // Load title bar font
     static lv_ft_info_t info;
     info.name = title_font_path;
-    info.weight = app_state.font_size_title_bar;
+    info.weight = app_state_get_font_size_title_bar();
     info.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info)) {
-        app_state.font_20 = info.font;
-        //fprintf(stderr, "Title bar font loaded successfully: %s at size %d\n", title_font_path, app_state.font_size_title_bar);
+        app_state_set_font_20(info.font);
+        //fprintf(stderr, "Title bar font loaded successfully: %s at size %d\n", title_font_path, app_state_get_font_size_title_bar());
     } else {
         log_warning("Failed to load title bar font: %s", title_font_path);
-        app_state.font_20 = NULL;
+        app_state_set_font_20(NULL);
     }
 
     // Build full path for button font
     static char button_font_path[128];
-    snprintf(button_font_path, sizeof(button_font_path), "assets/fonts/%s", app_state.font_name_button_label);
+    snprintf(button_font_path, sizeof(button_font_path), "assets/fonts/%s", app_state_get_font_name_button_label());
 
     // Load button font
     static lv_ft_info_t info_button;
     info_button.name = button_font_path;
-    info_button.weight = app_state.font_size_button_label;
+    info_button.weight = app_state_get_font_size_button_label();
     info_button.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info_button)) {
-        app_state.font_button = info_button.font;
-        //fprintf(stderr, "Button font loaded successfully: %s at size %d\n", button_font_path, app_state.font_size_button_label);
+        app_state_set_font_button(info_button.font);
+        //fprintf(stderr, "Button font loaded successfully: %s at size %d\n", button_font_path, app_state_get_font_size_button_label());
     } else {
         log_warning("Failed to load button font: %s", button_font_path);
-        app_state.font_button = NULL;
+        app_state_set_font_button(NULL);
     }
 
     // Load bold font (for welcome message) - still using FONT_PATH_BOLD for backward compatibility
     static lv_ft_info_t info_bold;
     info_bold.name = FONT_PATH_BOLD;
-    info_bold.weight = app_state.font_size_bold;
+    info_bold.weight = app_state_get_font_size_bold();
     info_bold.style = FT_FONT_STYLE_NORMAL;
 
     if (lv_ft_font_init(&info_bold)) {
-        app_state.font_24_bold = info_bold.font;
+        app_state_set_font_24_bold(info_bold.font);
         //fprintf(stderr, "Bold font loaded successfully\n");
     } else {
         log_warning("Failed to load bold font");
-        app_state.font_24_bold = NULL;
+        app_state_set_font_24_bold(NULL);
     }
 
     return 0;
