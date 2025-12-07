@@ -10,6 +10,7 @@
 #include "../include/face.h"
 #include "../include/navigation.h"
 #include "../include/label.h"
+#include "../include/home.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -136,6 +137,15 @@ void update_title_bar_location(int screen_id) {
  * @param screen_id The screen ID to display (SCREEN_MENU, SCREEN_INFO, etc.)
  */
 void show_screen(int screen_id) {
+    // Handle inactivity timer based on screen navigation
+    if (screen_id == SCREEN_MAIN) {
+        // Entering home screen - start inactivity timer
+        start_inactivity_timer();
+    } else {
+        // Leaving home screen - stop inactivity timer and video
+        stop_inactivity_timer();
+    }
+    
     // First check if screen already exists anywhere in the stack
     for (int i = 0; i <= screen_stack_top; i++) {
         if (screen_stack[i].screen_id == screen_id) {
@@ -148,6 +158,12 @@ void show_screen(int screen_id) {
                 move_status_bar_to_screen(screen_stack[i].screen, screen_id);
 
                 update_title_bar_location(screen_id);
+                
+                // Additional inactivity timer management for existing screens
+                if (screen_id == SCREEN_MAIN) {
+                    // Returning to home screen - resume inactivity timer
+                    resume_inactivity_timer();
+                }
                 return;
             } else {
                 // Screen was invalidated (set to NULL during language change)

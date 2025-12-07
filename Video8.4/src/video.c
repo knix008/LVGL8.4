@@ -1,5 +1,6 @@
 #include "../include/video.h"
 #include "../include/config.h"
+#include "../include/logger.h"
 #include "lvgl/lvgl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,11 +94,9 @@ static int load_video_files(void) {
 static void video_finished_callback(lv_event_t *e) {
     lv_event_code_t event_code = lv_event_get_code(e);
     
-    // Debug: log events to see what's actually firing
+    // Event counter for debugging if needed
     static int event_counter = 0;
-    if (++event_counter <= 10) {  // Only log first 10 events to avoid spam
-        printf("Video event %d: code=%d\n", event_counter, event_code);
-    }
+    event_counter++;
     
     // With auto-restart enabled, LV_EVENT_READY should fire when video completes and restarts
     // We intercept this to switch to the next video instead of letting it restart the same video
@@ -121,7 +120,7 @@ static void video_finished_callback(lv_event_t *e) {
         }
 
         // Try to switch to next video
-        printf("Attempting video switch on event %d\n", event_code);
+
         last_switch_time = current_time;
 
         // Switch to next video in circular fashion
@@ -131,10 +130,9 @@ static void video_finished_callback(lv_event_t *e) {
         lv_res_t res = lv_ffmpeg_player_set_src(video_state.video_player,
                                                 video_state.video_paths[video_state.current_index]);
         if (res == LV_RES_OK) {
-            printf("Switched to video %d\n", video_state.current_index + 1);
             lv_ffmpeg_player_set_cmd(video_state.video_player, LV_FFMPEG_PLAYER_CMD_START);
         } else {
-            printf("ERROR: Failed to load next video! (error code: %d)\n", res);
+            log_error("Failed to load next video");
         }
     }
 }
@@ -152,8 +150,6 @@ static void video_check_timer(lv_timer_t *timer) {
     
     // If more than 60 seconds, assume video finished and switch
     if (elapsed > 60000) {  // 60 seconds in milliseconds
-        printf("Timer: Video timeout, switching to next\n");
-        
         if (video_state.video_count > 1) {
             video_state.current_index = (video_state.current_index + 1) % video_state.video_count;
             video_state.video_start_time = current_time;
@@ -161,10 +157,9 @@ static void video_check_timer(lv_timer_t *timer) {
             lv_res_t res = lv_ffmpeg_player_set_src(video_state.video_player,
                                                     video_state.video_paths[video_state.current_index]);
             if (res == LV_RES_OK) {
-                printf("Timer: Switched to video %d\n", video_state.current_index + 1);
                 lv_ffmpeg_player_set_cmd(video_state.video_player, LV_FFMPEG_PLAYER_CMD_START);
             } else {
-                printf("ERROR: Timer failed to load next video!\n");
+                log_error("Timer failed to load next video");
             }
         }
     }
@@ -176,21 +171,21 @@ static void video_check_timer(lv_timer_t *timer) {
 
 int video_init(lv_obj_t *parent_screen) {
     if (!parent_screen) {
-        printf("Error: parent_screen is NULL\n");
+        log_error("parent_screen is NULL in video_init");
         return -1;
     }
 
 #if LV_USE_FFMPEG
     // Load all video files
     if (load_video_files() != 0) {
-        printf("Warning: No video files found in %s directory\n", VIDEO_DIR);
+        log_warning("No video files found in videos directory");
         return -1;
     }
 
     // Create FFmpeg player
     video_state.video_player = lv_ffmpeg_player_create(parent_screen);
     if (!video_state.video_player) {
-        printf("Error: Failed to create FFmpeg player\n");
+        log_error("Failed to create FFmpeg player");
         return -1;
     }
 
@@ -208,7 +203,7 @@ int video_init(lv_obj_t *parent_screen) {
     video_state.current_index = 0;
     if (lv_ffmpeg_player_set_src(video_state.video_player,
                                   video_state.video_paths[video_state.current_index]) != LV_RES_OK) {
-        printf("Error: Failed to set video source: %s\n", video_state.video_paths[video_state.current_index]);
+        log_error("Failed to set video source");
         lv_obj_del(video_state.video_player);
         video_state.video_player = NULL;
         return -1;
@@ -237,9 +232,10 @@ int video_init(lv_obj_t *parent_screen) {
     video_state.is_visible = false;
     video_state.is_playing = false;
     video_state.is_initialized = true;
+    
     return 0;
 #else
-    printf("Error: FFmpeg support is not enabled. Please enable LV_USE_FFMPEG in lv_conf.h\n");
+    log_error("FFmpeg support is not enabled. Please enable LV_USE_FFMPEG in lv_conf.h");
     return -1;
 #endif
 }
@@ -374,6 +370,6 @@ void video_trigger_next(void) {
                                   video_state.video_paths[video_state.current_index]) == LV_RES_OK) {
         lv_ffmpeg_player_set_cmd(video_state.video_player, LV_FFMPEG_PLAYER_CMD_START);
     } else {
-        printf("ERROR: Failed to load video: %s\n", video_state.video_paths[video_state.current_index]);
+        log_error("Failed to load video file");
     }
 }

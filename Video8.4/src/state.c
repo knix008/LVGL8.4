@@ -1,5 +1,5 @@
-#include "../../include/state/app_state.h"
-#include "../../include/config.h"
+#include "../include/state/app_state.h"
+#include "../include/config.h"
 #include <string.h>
 
 // ============================================================================
