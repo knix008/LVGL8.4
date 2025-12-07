@@ -15,7 +15,7 @@
 #include "../include/label.h"
 #include "../include/logger.h"
 #include "../include/font.h"
-#include "../include/state/app_state.h"
+#include "../include/state.h"
 
 // ============================================================================
 // SCREEN STACK (still global, will be encapsulated in Phase 3.5)

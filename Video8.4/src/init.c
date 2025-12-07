@@ -4,7 +4,7 @@
 #include "../include/label.h"
 #include "../include/logger.h"
 #include "../include/font.h"
-#include "../include/state/app_state.h"
+#include "../include/state.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "lvgl/lvgl.h"

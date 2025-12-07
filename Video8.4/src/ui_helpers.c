@@ -2,7 +2,7 @@
 #include "../include/config.h"
 #include "../include/style.h"
 #include "../include/label.h"
-#include "../include/state/app_state.h"
+#include "../include/state.h"
 
 // ============================================================================
 // BUTTON CREATION HELPERS

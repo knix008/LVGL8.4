@@ -1,5 +1,5 @@
 #include "../include/screen.h"
-#include "../include/state/app_state.h"
+#include "../include/state.h"
 #include "../include/config.h"
 #include "../include/style.h"
 #include "../include/menu.h"

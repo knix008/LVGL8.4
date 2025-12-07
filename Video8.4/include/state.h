@@ -1,8 +1,8 @@
 #ifndef APP_STATE_H
 #define APP_STATE_H
 
-#include "../types.h"
-#include "../calendar.h"
+#include "types.h"
+#include "calendar.h"
 #include "lvgl/lvgl.h"
 #include <stdbool.h>
 

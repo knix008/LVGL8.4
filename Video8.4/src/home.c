@@ -7,7 +7,7 @@
 #include "../include/slideshow.h"
 #include "../include/video.h"
 #include "../include/welcome.h"
-#include "../include/state/app_state.h"
+#include "../include/state.h"
 #include "../include/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
