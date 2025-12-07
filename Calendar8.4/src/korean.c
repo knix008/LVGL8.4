@@ -8,6 +8,7 @@
 #include "../include/input.h"
 #include "../include/border.h"
 #include "../include/label.h"
+#include "../include/ui_helpers.h"
 #include <string.h>
 
 // ============================================================================
@@ -323,17 +324,9 @@ static void create_keyboard_popup_content(void) {
     int grid_width = btn_width * 3 + btn_spacing * 2;  // 226px
     int grid_height = btn_height * 4 + btn_spacing * 3;
 
-    // Close button (X) in top-right corner with 5px gap from top and right
-    lv_obj_t *close_btn = lv_btn_create(keyboard_container);
-    lv_obj_set_size(close_btn, 40, 40);
-    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -1, 1);
-    apply_circle_button_style(close_btn, 0);
-
-    lv_obj_t *close_img = lv_img_create(close_btn);
-    lv_img_set_src(close_img, IMG_CANCEL);
-    lv_obj_align(close_img, LV_ALIGN_CENTER, 0, 0);
-
-    lv_obj_add_event_cb(close_btn, close_btn_callback, LV_EVENT_CLICKED, NULL);
+    // Close button using helper function
+    lv_obj_t *close_btn = create_close_button(keyboard_container, close_btn_callback, NULL);
+    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -1, 1);  // Adjust position for Korean input
 
     // Mode indicator
     mode_label = lv_label_create(keyboard_container);

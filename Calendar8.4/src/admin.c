@@ -8,6 +8,7 @@
 #include "../include/home.h"
 #include "../include/welcome.h"
 #include "../include/calendar.h"
+#include "../include/ui_helpers.h"
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -633,25 +634,9 @@ void show_calendar_popup(lv_event_t *e) {
     popup_calendar_date = app_state.calendar_date;
     popup_current_mode = POPUP_CALENDAR_MODE_MONTH;
     
-    // Create full screen dark overlay (like Korean input)
-    lv_obj_t *popup = lv_obj_create(parent);
-    lv_obj_set_size(popup, SCREEN_WIDTH, SCREEN_HEIGHT);
-    lv_obj_set_pos(popup, 0, 0);
-    lv_obj_set_style_bg_color(popup, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(popup, LV_OPA_50, 0);
-    lv_obj_set_style_border_width(popup, 0, 0);
-    lv_obj_clear_flag(popup, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_move_foreground(popup);
-    
-    // Create calendar container (like Korean input keyboard container)
-    lv_obj_t *calendar_container = lv_obj_create(popup);
-    lv_obj_set_size(calendar_container, 300, 280);
-    lv_obj_align(calendar_container, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(calendar_container, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(calendar_container, LV_OPA_70, 0);
-    lv_obj_set_style_border_color(calendar_container, lv_color_hex(get_button_border_color()), 0);
-    lv_obj_set_style_border_width(calendar_container, 2, 0);
-    lv_obj_clear_flag(calendar_container, LV_OBJ_FLAG_SCROLLABLE);
+    // Create popup overlay and container using helpers
+    lv_obj_t *popup = create_popup_overlay(parent);
+    lv_obj_t *calendar_container = create_popup_container(popup, 300, 280);
     
     // Title
     lv_obj_t *title_label = lv_label_create(calendar_container);
@@ -684,15 +669,9 @@ void show_calendar_popup(lv_event_t *e) {
     int nav_row_y_offset = 45;
     
     // Previous button
-    lv_obj_t *prev_btn = lv_btn_create(calendar_container);
-    lv_obj_set_size(prev_btn, 45, label_height);
+    lv_obj_t *prev_btn = create_nav_button(calendar_container, "<", 45, label_height, 0, 
+                                           popup_calendar_prev_cb, NULL);
     lv_obj_align(prev_btn, LV_ALIGN_CENTER, -110, nav_row_y_offset);
-    apply_button_style(prev_btn, app_state.button_color);
-    lv_obj_t *prev_label = lv_label_create(prev_btn);
-    lv_label_set_text(prev_label, "<");
-    lv_obj_set_style_text_color(prev_label, lv_color_white(), 0);
-    lv_obj_center(prev_label);
-    lv_obj_add_event_cb(prev_btn, popup_calendar_prev_cb, LV_EVENT_CLICKED, NULL);
     
     // Month button
     lv_obj_t *month_btn = lv_btn_create(calendar_container);
@@ -740,40 +719,17 @@ void show_calendar_popup(lv_event_t *e) {
     popup_year_button = year_btn;
     
     // Next button
-    lv_obj_t *next_btn = lv_btn_create(calendar_container);
-    lv_obj_set_size(next_btn, 45, label_height);
+    lv_obj_t *next_btn = create_nav_button(calendar_container, ">", 45, label_height, 0, 
+                                           popup_calendar_next_cb, NULL);
     lv_obj_align(next_btn, LV_ALIGN_CENTER, 110, nav_row_y_offset);
-    apply_button_style(next_btn, app_state.button_color);
-    lv_obj_t *next_label = lv_label_create(next_btn);
-    lv_label_set_text(next_label, ">");
-    lv_obj_set_style_text_color(next_label, lv_color_white(), 0);
-    lv_obj_center(next_label);
-    lv_obj_add_event_cb(next_btn, popup_calendar_next_cb, LV_EVENT_CLICKED, NULL);
     
     // Enter button
-    lv_obj_t *enter_btn = lv_btn_create(calendar_container);
-    lv_obj_set_size(enter_btn, 90, 32);
+    lv_obj_t *enter_btn = create_button_with_label(calendar_container, get_label("admin_screen.select"), 
+                                                   90, 32, 0, popup_calendar_enter_cb, NULL);
     lv_obj_align(enter_btn, LV_ALIGN_CENTER, 0, 105);
-    apply_button_style(enter_btn, app_state.button_color);
-    lv_obj_t *enter_label = lv_label_create(enter_btn);
-    lv_label_set_text(enter_label, get_label("admin_screen.select"));
-    lv_obj_set_style_text_color(enter_label, lv_color_white(), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(enter_label, app_state.font_20, 0);
-    }
-    lv_obj_center(enter_label);
-    lv_obj_add_event_cb(enter_btn, popup_calendar_enter_cb, LV_EVENT_CLICKED, NULL);
     
-    // Close button (X) in top-right corner with cancel image (same style as Korean input)
-    lv_obj_t *close_btn = lv_btn_create(calendar_container);
-    lv_obj_set_size(close_btn, 40, 40);
-    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -5, 5);
-    apply_circle_button_style(close_btn, 0);
-
-    lv_obj_t *close_img = lv_img_create(close_btn);
-    lv_img_set_src(close_img, IMG_CANCEL);
-    lv_obj_align(close_img, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_add_event_cb(close_btn, calendar_popup_close_cb, LV_EVENT_CLICKED, NULL);
+    // Create close button using helper
+    create_close_button(calendar_container, calendar_popup_close_cb, NULL);
     
     // Initialize displays
     popup_update_calendar_displays();
