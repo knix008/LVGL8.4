@@ -2,35 +2,35 @@
 #include "../include/config.h"
 #include "../include/style.h"
 #include "../include/label.h"
+#include "../include/state/app_state.h"
 
 // ============================================================================
 // BUTTON CREATION HELPERS
 // ============================================================================
 
-lv_obj_t* create_button_with_label(lv_obj_t* parent, const char* text, 
+lv_obj_t* create_button_with_label(lv_obj_t* parent, const char* text,
                                    int width, int height, uint32_t bg_color,
                                    lv_event_cb_t callback, void* user_data) {
-    extern AppState app_state;
-    
     // Create button
     lv_obj_t* btn = lv_btn_create(parent);
     lv_obj_set_size(btn, width, height);
-    
+
     // Apply styling
     if (bg_color == 0) {
-        apply_button_style(btn, app_state.button_color);
+        apply_button_style(btn, app_state_get_button_color());
     } else {
         apply_button_style(btn, bg_color);
     }
-    
+
     // Create label
     lv_obj_t* label = lv_label_create(btn);
     lv_label_set_text(label, text);
     lv_obj_set_style_text_color(label, lv_color_white(), 0);
-    
+
     // Apply font if available
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(label, app_state.font_20, 0);
+    lv_font_t *font = app_state_get_font_20();
+    if (font) {
+        lv_obj_set_style_text_font(label, font, 0);
     }
     
     lv_obj_center(label);
@@ -63,18 +63,16 @@ lv_obj_t* create_close_button(lv_obj_t* parent, lv_event_cb_t callback, void* us
     return close_btn;
 }
 
-lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text, 
+lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text,
                             int width, int height, uint32_t bg_color,
                             lv_event_cb_t callback, void* user_data) {
-    extern AppState app_state;
-    
     // Create button
     lv_obj_t* btn = lv_btn_create(parent);
     lv_obj_set_size(btn, width, height);
-    
+
     // Apply styling
     if (bg_color == 0) {
-        apply_button_style(btn, app_state.button_color);
+        apply_button_style(btn, app_state_get_button_color());
     } else {
         apply_button_style(btn, bg_color);
     }
@@ -112,7 +110,7 @@ lv_obj_t* create_popup_overlay(lv_obj_t* parent) {
 }
 
 lv_obj_t* create_popup_container(lv_obj_t* overlay_parent, int width, int height) {
-    extern AppState app_state;
+    
     
     // Create centered container
     lv_obj_t* container = lv_obj_create(overlay_parent);
@@ -133,7 +131,7 @@ lv_obj_t* create_popup_container(lv_obj_t* overlay_parent, int width, int height
 
 void create_calendar_nav_row(lv_obj_t* parent, const calendar_button_config_t config[5],
                              lv_obj_t* labels[5], lv_obj_t* buttons[5]) {
-    extern AppState app_state;
+    
     
     for (int i = 0; i < 5; i++) {
         const calendar_button_config_t* cfg = &config[i];
@@ -142,13 +140,13 @@ void create_calendar_nav_row(lv_obj_t* parent, const calendar_button_config_t co
         lv_obj_t* btn = lv_btn_create(parent);
         lv_obj_set_size(btn, cfg->width, cfg->height);
         lv_obj_align(btn, LV_ALIGN_CENTER, cfg->x_offset, cfg->y_offset);
-        apply_button_style(btn, cfg->bg_color ? cfg->bg_color : app_state.button_color);
+        apply_button_style(btn, cfg->bg_color ? cfg->bg_color : app_state_get_button_color());
         
         // Create label
         lv_obj_t* label = lv_label_create(btn);
         lv_obj_set_style_text_color(label, lv_color_white(), 0);
-        if (app_state.font_20) {
-            lv_obj_set_style_text_font(label, app_state.font_20, 0);
+        if (app_state_get_font_20()) {
+            lv_obj_set_style_text_font(label, app_state_get_font_20(), 0);
         }
         lv_obj_center(label);
         
@@ -168,14 +166,14 @@ void create_calendar_nav_row(lv_obj_t* parent, const calendar_button_config_t co
 // ============================================================================
 
 lv_obj_t* create_styled_label(lv_obj_t* parent, const char* text, bool use_font) {
-    extern AppState app_state;
+    
     
     lv_obj_t* label = lv_label_create(parent);
     lv_label_set_text(label, text);
     apply_label_style(label);
     
-    if (use_font && app_state.font_20) {
-        lv_obj_set_style_text_font(label, app_state.font_20, 0);
+    if (use_font && app_state_get_font_20()) {
+        lv_obj_set_style_text_font(label, app_state_get_font_20(), 0);
     }
     
     return label;

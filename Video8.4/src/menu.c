@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../include/menu.h"
+#include "../include/state/app_state.h"
 #include "../include/config.h"
 #include "../include/types.h"
 #include "../include/style.h"
@@ -150,8 +151,7 @@ static lv_obj_t *create_menu_content(lv_obj_t *parent) {
         plus_minus_buttons[i].item_index = i;
         
         // Sync with loaded configuration
-        extern AppState app_state;
-        if (app_state.menu_item_selected[i]) {
+        if (app_state_is_menu_item_selected(i)) {
             // Item is selected - show minus button
             lv_img_set_src(plus_btn, IMG_MINUS);
             plus_minus_buttons[i].is_plus = false;

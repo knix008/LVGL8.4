@@ -32,13 +32,13 @@ int app_state_init(void) {
     app_state.font_size_bold = 24;
 
     // Initialize font names
-    strncpy(app_state.font_name_title, "NanumGothic", sizeof(app_state.font_name_title) - 1);
+    strncpy(app_state.font_name_title, "NotoSansKR-Bold.ttf", sizeof(app_state.font_name_title) - 1);
     app_state.font_name_title[sizeof(app_state.font_name_title) - 1] = '\0';
 
-    strncpy(app_state.font_name_status_bar, "NanumGothic", sizeof(app_state.font_name_status_bar) - 1);
+    strncpy(app_state.font_name_status_bar, "NotoSansKR-Regular.ttf", sizeof(app_state.font_name_status_bar) - 1);
     app_state.font_name_status_bar[sizeof(app_state.font_name_status_bar) - 1] = '\0';
 
-    strncpy(app_state.font_name_button_label, "NanumGothic", sizeof(app_state.font_name_button_label) - 1);
+    strncpy(app_state.font_name_button_label, "NotoSansKR-Medium.ttf", sizeof(app_state.font_name_button_label) - 1);
     app_state.font_name_button_label[sizeof(app_state.font_name_button_label) - 1] = '\0';
 
     // Initialize calendar date to current date (will be set properly later)

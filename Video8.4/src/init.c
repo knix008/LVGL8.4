@@ -40,6 +40,7 @@ static lv_indev_t *indev = NULL;
 int init_fonts(void) {
     if (!lv_freetype_init(0, 0, 0)) {
         log_warning("FreeType initialization failed");
+        return -1;
     }
 
     // Build full path for title font
@@ -54,7 +55,6 @@ int init_fonts(void) {
 
     if (lv_ft_font_init(&info)) {
         app_state_set_font_20(info.font);
-        //fprintf(stderr, "Title bar font loaded successfully: %s at size %d\n", title_font_path, app_state_get_font_size_title_bar());
     } else {
         log_warning("Failed to load title bar font: %s", title_font_path);
         app_state_set_font_20(NULL);
@@ -72,7 +72,6 @@ int init_fonts(void) {
 
     if (lv_ft_font_init(&info_button)) {
         app_state_set_font_button(info_button.font);
-        //fprintf(stderr, "Button font loaded successfully: %s at size %d\n", button_font_path, app_state_get_font_size_button_label());
     } else {
         log_warning("Failed to load button font: %s", button_font_path);
         app_state_set_font_button(NULL);
@@ -86,7 +85,6 @@ int init_fonts(void) {
 
     if (lv_ft_font_init(&info_bold)) {
         app_state_set_font_24_bold(info_bold.font);
-        //fprintf(stderr, "Bold font loaded successfully\n");
     } else {
         log_warning("Failed to load bold font");
         app_state_set_font_24_bold(NULL);

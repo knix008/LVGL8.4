@@ -1,5 +1,6 @@
 #include "../include/admin.h"
 #include "../include/config.h"
+#include "../include/state/app_state.h"
 #include "../include/types.h"
 #include "../include/style.h"
 #include "../include/screen.h"
@@ -14,7 +15,6 @@
 #include <time.h>
 
 // External reference to app state
-extern AppState app_state;
 
 // ============================================================================
 // COLOR SELECTION
@@ -37,8 +37,8 @@ static void update_buttons_recursively(lv_obj_t *obj) {
             }
         }
         if (user_data != (void*)1 && user_data != (void*)2) {
-            lv_obj_set_style_bg_color(obj, lv_color_hex(app_state.button_color), 0);
-            lv_obj_set_style_border_color(obj, lv_color_hex(app_state.button_border_color), 0);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(app_state_get_button_color()), 0);
+            lv_obj_set_style_border_color(obj, lv_color_hex(app_state_get_button_border_color()), 0);
         }
     }
     
@@ -76,19 +76,19 @@ static void color_button_clicked(lv_event_t *e) {
     // Update app state based on target
     switch (option->target) {
         case COLOR_TARGET_BACKGROUND:
-            app_state.bg_color = option->color;
+            app_state_set_bg_color(option->color);
             break;
         case COLOR_TARGET_TITLE_BAR:
-            app_state.title_bar_color = option->color;
+            app_state_set_title_bar_color(option->color);
             break;
         case COLOR_TARGET_STATUS_BAR:
-            app_state.status_bar_color = option->color;
+            app_state_set_status_bar_color(option->color);
             break;
         case COLOR_TARGET_BUTTON:
-            app_state.button_color = option->color;
+            app_state_set_button_color(option->color);
             break;
         case COLOR_TARGET_BUTTON_BORDER:
-            app_state.button_border_color = option->color;
+            app_state_set_button_border_color(option->color);
             break;
     }
     
@@ -96,13 +96,13 @@ static void color_button_clicked(lv_event_t *e) {
     save_theme_config();
     
     // Update the shared status bar directly if it exists
-    if (option->target == COLOR_TARGET_STATUS_BAR && app_state.status_bar) {
-        lv_obj_set_style_bg_color(app_state.status_bar, lv_color_hex(app_state.status_bar_color), 0);
+    if (option->target == COLOR_TARGET_STATUS_BAR && app_state_get_status_bar()) {
+        lv_obj_set_style_bg_color(app_state_get_status_bar(), lv_color_hex(app_state_get_status_bar_color()), 0);
     }
     
     // Update the home screen title bar directly if it exists
-    if (option->target == COLOR_TARGET_TITLE_BAR && app_state.title_bar) {
-        lv_obj_set_style_bg_color(app_state.title_bar, lv_color_hex(app_state.title_bar_color), 0);
+    if (option->target == COLOR_TARGET_TITLE_BAR && app_state_get_title_bar()) {
+        lv_obj_set_style_bg_color(app_state_get_title_bar(), lv_color_hex(app_state_get_title_bar_color()), 0);
     }
     
     // Update all cached screens' title bars and backgrounds
@@ -111,7 +111,7 @@ static void color_button_clicked(lv_event_t *e) {
     for (int i = 0; i <= screen_stack_top; i++) {
         if (screen_stack[i].screen) {
             // Update screen background
-            lv_obj_set_style_bg_color(screen_stack[i].screen, lv_color_hex(app_state.bg_color), 0);
+            lv_obj_set_style_bg_color(screen_stack[i].screen, lv_color_hex(app_state_get_bg_color()), 0);
             
             // Update all children (title bars, content, etc.)
             uint32_t child_count = lv_obj_get_child_cnt(screen_stack[i].screen);
@@ -122,21 +122,21 @@ static void color_button_clicked(lv_event_t *e) {
                     
                     if (user_data == (void*)1) {
                         // Title bar
-                        lv_obj_set_style_bg_color(child, lv_color_hex(app_state.title_bar_color), 0);
+                        lv_obj_set_style_bg_color(child, lv_color_hex(app_state_get_title_bar_color()), 0);
                         // Update buttons within title bar
                         if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                             update_buttons_recursively(child);
                         }
                     } else if (user_data == (void*)2) {
                         // Status bar (though it's shared, update it anyway)
-                        lv_obj_set_style_bg_color(child, lv_color_hex(app_state.status_bar_color), 0);
+                        lv_obj_set_style_bg_color(child, lv_color_hex(app_state_get_status_bar_color()), 0);
                         // Update buttons within status bar
                         if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                             update_buttons_recursively(child);
                         }
                     } else {
                         // Content area
-                        lv_obj_set_style_bg_color(child, lv_color_hex(app_state.bg_color), 0);
+                        lv_obj_set_style_bg_color(child, lv_color_hex(app_state_get_bg_color()), 0);
                         // Update buttons recursively within content
                         if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                             update_buttons_recursively(child);
@@ -151,7 +151,7 @@ static void color_button_clicked(lv_event_t *e) {
     lv_obj_t *current = lv_scr_act();
     if (current) {
         // Update background
-        lv_obj_set_style_bg_color(current, lv_color_hex(app_state.bg_color), 0);
+        lv_obj_set_style_bg_color(current, lv_color_hex(app_state_get_bg_color()), 0);
         
         // Update all children
         uint32_t child_count = lv_obj_get_child_cnt(current);
@@ -163,21 +163,21 @@ static void color_button_clicked(lv_event_t *e) {
                 
                 if (user_data == (void*)1) {
                     // Title bar (ID = 1)
-                    lv_obj_set_style_bg_color(child, lv_color_hex(app_state.title_bar_color), 0);
+                    lv_obj_set_style_bg_color(child, lv_color_hex(app_state_get_title_bar_color()), 0);
                     // Update buttons within title bar
                     if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                         update_buttons_recursively(child);
                     }
                 } else if (user_data == (void*)2) {
                     // Status bar (ID = 2)
-                    lv_obj_set_style_bg_color(child, lv_color_hex(app_state.status_bar_color), 0);
+                    lv_obj_set_style_bg_color(child, lv_color_hex(app_state_get_status_bar_color()), 0);
                     // Update buttons within status bar
                     if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                         update_buttons_recursively(child);
                     }
                 } else {
                     // Content area
-                    lv_obj_set_style_bg_color(child, lv_color_hex(app_state.bg_color), 0);
+                    lv_obj_set_style_bg_color(child, lv_color_hex(app_state_get_bg_color()), 0);
                     // Update buttons recursively within content
                     if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                         update_buttons_recursively(child);
@@ -223,11 +223,11 @@ static void update_color_picker_buttons(lv_obj_t *obj, ColorTarget target) {
             
             // Check if this button's color matches its specific target's current setting
             bool is_selected = false;
-            if (opt->target == COLOR_TARGET_BACKGROUND && opt->color == app_state.bg_color) is_selected = true;
-            else if (opt->target == COLOR_TARGET_TITLE_BAR && opt->color == app_state.title_bar_color) is_selected = true;
-            else if (opt->target == COLOR_TARGET_STATUS_BAR && opt->color == app_state.status_bar_color) is_selected = true;
-            else if (opt->target == COLOR_TARGET_BUTTON && opt->color == app_state.button_color) is_selected = true;
-            else if (opt->target == COLOR_TARGET_BUTTON_BORDER && opt->color == app_state.button_border_color) is_selected = true;
+            if (opt->target == COLOR_TARGET_BACKGROUND && opt->color == app_state_get_bg_color()) is_selected = true;
+            else if (opt->target == COLOR_TARGET_TITLE_BAR && opt->color == app_state_get_title_bar_color()) is_selected = true;
+            else if (opt->target == COLOR_TARGET_STATUS_BAR && opt->color == app_state_get_status_bar_color()) is_selected = true;
+            else if (opt->target == COLOR_TARGET_BUTTON && opt->color == app_state_get_button_color()) is_selected = true;
+            else if (opt->target == COLOR_TARGET_BUTTON_BORDER && opt->color == app_state_get_button_border_color()) is_selected = true;
             
             // Update border based on selection
             if (is_selected) {
@@ -317,11 +317,11 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
         
         // Highlight if current selection
         uint32_t current_color = 0;
-        if (target == COLOR_TARGET_BACKGROUND) current_color = app_state.bg_color;
-        else if (target == COLOR_TARGET_TITLE_BAR) current_color = app_state.title_bar_color;
-        else if (target == COLOR_TARGET_STATUS_BAR) current_color = app_state.status_bar_color;
-        else if (target == COLOR_TARGET_BUTTON) current_color = app_state.button_color;
-        else if (target == COLOR_TARGET_BUTTON_BORDER) current_color = app_state.button_border_color;
+        if (target == COLOR_TARGET_BACKGROUND) current_color = app_state_get_bg_color();
+        else if (target == COLOR_TARGET_TITLE_BAR) current_color = app_state_get_title_bar_color();
+        else if (target == COLOR_TARGET_STATUS_BAR) current_color = app_state_get_status_bar_color();
+        else if (target == COLOR_TARGET_BUTTON) current_color = app_state_get_button_color();
+        else if (target == COLOR_TARGET_BUTTON_BORDER) current_color = app_state_get_button_border_color();
         
         if (current_color == options[i].color) {
             lv_obj_set_style_border_color(btn, lv_color_hex(0x00FF00), 0);
@@ -351,8 +351,7 @@ static void language_button_clicked(lv_event_t *e) {
 
     // Update app state and set language
     if (set_language(language) == 0) {
-        strncpy(app_state.current_language, language, 3);
-        app_state.current_language[3] = '\0';
+        app_state_set_language(language);
 
         // Save configuration
         save_theme_config();
@@ -418,10 +417,11 @@ static void update_calendar_display(void) {
     char date_text[64];
     char display_text[128];
     
-    calendar_format_date_string(&app_state.calendar_date, date_text, sizeof(date_text));
+    calendar_date_t calendar_date = app_state_get_calendar_date();
+    calendar_format_date_string(&calendar_date, date_text, sizeof(date_text));
     
     // Get day of week name
-    int day_of_week = calendar_get_day_of_week(&app_state.calendar_date);
+    int day_of_week = calendar_get_day_of_week(&calendar_date);
     const char* day_name = calendar_get_day_name(day_of_week);
     
     // Format display with day of week
@@ -595,7 +595,7 @@ static void popup_calendar_enter_cb(lv_event_t *e) {
     (void)e;
     
     // Update app state with popup calendar date
-    app_state.calendar_date = popup_calendar_date;
+    app_state_set_calendar_date(popup_calendar_date);
     
     // Update the main display
     update_calendar_display();
@@ -631,7 +631,7 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_t *parent = lv_scr_act(); // Get the active screen
     
     // Initialize popup calendar with current app state date
-    popup_calendar_date = app_state.calendar_date;
+    popup_calendar_date = app_state_get_calendar_date();
     popup_current_mode = POPUP_CALENDAR_MODE_MONTH;
     
     // Create popup overlay and container using helpers
@@ -643,8 +643,8 @@ void show_calendar_popup(lv_event_t *e) {
     lv_label_set_text(title_label, get_label("admin_screen.calendar_setting"));
     lv_obj_set_style_text_color(title_label, lv_color_white(), 0);
     lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 10);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(title_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(title_label, app_state_get_font_20(), 0);
     }
     
     // Main display area for selected date (like Korean input text area)
@@ -658,8 +658,8 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_set_style_text_align(calendar_display, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_size(calendar_display, 280, 50);
     lv_obj_align(calendar_display, LV_ALIGN_TOP_MID, 0, 60);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(calendar_display, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(calendar_display, app_state_get_font_20(), 0);
     }
     popup_calendar_display_label = calendar_display;
     
@@ -677,11 +677,11 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_t *month_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(month_btn, label_width, label_height);
     lv_obj_align(month_btn, LV_ALIGN_CENTER, -55, nav_row_y_offset);
-    apply_button_style(month_btn, app_state.button_color);
+    apply_button_style(month_btn, app_state_get_button_color());
     lv_obj_t *month_btn_label = lv_label_create(month_btn);
     lv_obj_set_style_text_color(month_btn_label, lv_color_white(), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(month_btn_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(month_btn_label, app_state_get_font_20(), 0);
     }
     lv_obj_center(month_btn_label);
     lv_obj_add_event_cb(month_btn, popup_calendar_select_month_cb, LV_EVENT_CLICKED, NULL);
@@ -692,11 +692,11 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_t *day_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(day_btn, label_width, label_height);
     lv_obj_align(day_btn, LV_ALIGN_CENTER, 0, nav_row_y_offset);
-    apply_button_style(day_btn, app_state.button_color);
+    apply_button_style(day_btn, app_state_get_button_color());
     lv_obj_t *day_btn_label = lv_label_create(day_btn);
     lv_obj_set_style_text_color(day_btn_label, lv_color_white(), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(day_btn_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(day_btn_label, app_state_get_font_20(), 0);
     }
     lv_obj_center(day_btn_label);
     lv_obj_add_event_cb(day_btn, popup_calendar_select_day_cb, LV_EVENT_CLICKED, NULL);
@@ -707,11 +707,11 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_t *year_btn = lv_btn_create(calendar_container);
     lv_obj_set_size(year_btn, label_width, label_height);
     lv_obj_align(year_btn, LV_ALIGN_CENTER, 55, nav_row_y_offset);
-    apply_button_style(year_btn, app_state.button_color);
+    apply_button_style(year_btn, app_state_get_button_color());
     lv_obj_t *year_btn_label = lv_label_create(year_btn);
     lv_obj_set_style_text_color(year_btn_label, lv_color_white(), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(year_btn_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(year_btn_label, app_state_get_font_20(), 0);
     }
     lv_obj_center(year_btn_label);
     lv_obj_add_event_cb(year_btn, popup_calendar_select_year_cb, LV_EVENT_CLICKED, NULL);
@@ -765,13 +765,13 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_t *calendar_btn = lv_btn_create(content);
     lv_obj_set_size(calendar_btn, 260, 50);
     lv_obj_set_pos(calendar_btn, CONTENT_PADDING, 65);
-    apply_button_style(calendar_btn, app_state.button_color);
+    apply_button_style(calendar_btn, app_state_get_button_color());
     
     // Create label inside the button for the calendar text
     calendar_display_label = lv_label_create(calendar_btn);
     lv_obj_set_style_text_color(calendar_display_label, lv_color_white(), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(calendar_display_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(calendar_display_label, app_state_get_font_20(), 0);
     }
     lv_obj_center(calendar_display_label);
     
@@ -779,8 +779,10 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_add_event_cb(calendar_btn, show_calendar_popup, LV_EVENT_CLICKED, NULL);
 
     // Initialize calendar with current date or system date
-    if (app_state.calendar_date.year == 0) {
-        calendar_init(&app_state.calendar_date);
+    calendar_date_t calendar_date = app_state_get_calendar_date();
+    if (calendar_date.year == 0) {
+        calendar_init(&calendar_date);
+        app_state_set_calendar_date(calendar_date);
     }
     update_calendar_display();
 
@@ -809,8 +811,8 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_set_width(info_label, SCREEN_WIDTH - CONTENT_WIDTH_PADDING);
     lv_label_set_text(info_label, get_label("admin_screen.info_text"));
     lv_obj_set_style_text_color(info_label, lv_color_hex(0xAAAAAA), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(info_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(info_label, app_state_get_font_20(), 0);
     }
     lv_obj_set_pos(info_label, CONTENT_PADDING, 640);
 

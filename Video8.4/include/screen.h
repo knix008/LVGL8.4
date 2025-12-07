@@ -7,7 +7,6 @@
 // SCREEN MANAGEMENT API
 // ============================================================================
 
-extern AppState app_state;
 extern ScreenState screen_stack[];
 extern int screen_stack_top;
 

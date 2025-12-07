@@ -1,5 +1,6 @@
 #include "../include/network.h"
 #include "../include/config.h"
+#include "../include/state/app_state.h"
 #include "../include/types.h"
 #include "../include/style.h"
 #include "../include/screen.h"
@@ -451,9 +452,8 @@ static void save_ip_callback(lv_event_t *e) {
             lv_obj_t *text = lv_msgbox_get_text(mbox);
             if (text) {
                 lv_obj_set_style_text_color(text, lv_color_hex(0xFFFFFF), 0);
-                extern AppState app_state;
-                if (app_state.font_20) {
-                    lv_obj_set_style_text_font(text, app_state.font_20, 0);
+                if (app_state_get_font_20()) {
+                    lv_obj_set_style_text_font(text, app_state_get_font_20(), 0);
                 }
             }
 
@@ -461,18 +461,16 @@ static void save_ip_callback(lv_event_t *e) {
             lv_obj_t *title = lv_msgbox_get_title(mbox);
             if (title) {
                 lv_obj_set_style_text_color(title, lv_color_hex(0xFF6666), 0);
-                extern AppState app_state;
-                if (app_state.font_24_bold) {
-                    lv_obj_set_style_text_font(title, app_state.font_24_bold, 0);
+                if (app_state_get_font_24_bold()) {
+                    lv_obj_set_style_text_font(title, app_state_get_font_24_bold(), 0);
                 }
             }
 
             // Style the buttons
             lv_obj_t *btns_obj = lv_msgbox_get_btns(mbox);
             if (btns_obj) {
-                extern AppState app_state;
-                if (app_state.font_20) {
-                    lv_obj_set_style_text_font(btns_obj, app_state.font_20, 0);
+                if (app_state_get_font_20()) {
+                    lv_obj_set_style_text_font(btns_obj, app_state_get_font_20(), 0);
                 }
             }
 
@@ -930,9 +928,8 @@ static lv_obj_t *create_network_content(lv_obj_t *parent) {
     lv_obj_t *ip_section_label = lv_label_create(content);
     lv_label_set_text(ip_section_label, get_label("network_screen.ip_address_title"));
     apply_label_style(ip_section_label);
-    extern AppState app_state;
-    if (app_state.font_24_bold) {
-        lv_obj_set_style_text_font(ip_section_label, app_state.font_24_bold, 0);
+    if (app_state_get_font_24_bold()) {
+        lv_obj_set_style_text_font(ip_section_label, app_state_get_font_24_bold(), 0);
     }
     lv_obj_align(ip_section_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, y_pos);
     y_pos += 40;

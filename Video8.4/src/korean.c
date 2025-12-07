@@ -1,4 +1,5 @@
 #include "../include/korean.h"
+#include "../include/state/app_state.h"
 #include "../include/config.h"
 #include "../include/types.h"
 #include "../include/style.h"
@@ -243,18 +244,17 @@ static void enter_btn_callback(lv_event_t *e) {
             lv_obj_set_style_border_width(mbox, 0, 0);
 
             // Apply Korean font and white text color to the message box title and content
-            extern AppState app_state;
-            if (app_state.font_20) {
+            if (app_state_get_font_20()) {
                 // Get the title label
                 lv_obj_t *title = lv_msgbox_get_title(mbox);
                 if (title) {
-                    lv_obj_set_style_text_font(title, app_state.font_20, 0);
+                    lv_obj_set_style_text_font(title, app_state_get_font_20(), 0);
                     lv_obj_set_style_text_color(title, lv_color_hex(0xFFFFFF), 0);
                 }
                 // Get the text label
                 lv_obj_t *text = lv_msgbox_get_text(mbox);
                 if (text) {
-                    lv_obj_set_style_text_font(text, app_state.font_20, 0);
+                    lv_obj_set_style_text_font(text, app_state_get_font_20(), 0);
                     lv_obj_set_style_text_color(text, lv_color_hex(0xFFFFFF), 0);
                 }
             }

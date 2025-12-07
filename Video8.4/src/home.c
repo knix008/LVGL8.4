@@ -7,6 +7,7 @@
 #include "../include/slideshow.h"
 #include "../include/video.h"
 #include "../include/welcome.h"
+#include "../include/state/app_state.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -34,8 +35,8 @@ static void inactivity_timer_callback(lv_timer_t *timer) {
         }
 
         // Hide welcome message
-        if (app_state.welcome_message_label) {
-            lv_obj_add_flag(app_state.welcome_message_label, LV_OBJ_FLAG_HIDDEN);
+        if (app_state_get_welcome_label()) {
+            lv_obj_add_flag(app_state_get_welcome_label(), LV_OBJ_FLAG_HIDDEN);
         }
 
         // Show and start video
@@ -60,8 +61,8 @@ static void reset_inactivity_timer(void) {
         }
 
         // Show welcome message again
-        if (app_state.welcome_message_label) {
-            lv_obj_clear_flag(app_state.welcome_message_label, LV_OBJ_FLAG_HIDDEN);
+        if (app_state_get_welcome_label()) {
+            lv_obj_clear_flag(app_state_get_welcome_label(), LV_OBJ_FLAG_HIDDEN);
         }
 
         printf("Activity detected - stopping video playback\n");
@@ -119,35 +120,37 @@ static void update_title_bar(void) {
         timeinfo->tm_mday
     );
 
-    if (app_state.title_label) {
-        lv_label_set_text(app_state.title_label, title_text);
+    if (app_state_get_title_label()) {
+        lv_label_set_text(app_state_get_title_label(), title_text);
     }
 }
 
 static void create_main_title_bar(void) {
-    app_state.title_bar = lv_obj_create(app_state.screen);
-    lv_obj_set_size(app_state.title_bar, SCREEN_WIDTH, TITLE_BAR_HEIGHT);
-    lv_obj_align(app_state.title_bar, LV_ALIGN_TOP_MID, 0, 0);
-    apply_bar_style(app_state.title_bar, get_title_bar_color());
+    lv_obj_t *title_bar = lv_obj_create(app_state_get_screen());
+    lv_obj_set_size(title_bar, SCREEN_WIDTH, TITLE_BAR_HEIGHT);
+    lv_obj_align(title_bar, LV_ALIGN_TOP_MID, 0, 0);
+    apply_bar_style(title_bar, get_title_bar_color());
+    app_state_set_title_bar(title_bar);
     
     // Set user data to identify as title bar
-    lv_obj_set_user_data(app_state.title_bar, (void*)1);  // ID: 1 = title bar
+    lv_obj_set_user_data(app_state_get_title_bar(), (void*)1);  // ID: 1 = title bar
 
     // Disable scrolling on title bar - must stay fixed
-    lv_obj_set_scrollbar_mode(app_state.title_bar, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_clear_flag(app_state.title_bar, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_scroll_to(app_state.title_bar, 0, 0, LV_ANIM_OFF);
+    lv_obj_set_scrollbar_mode(app_state_get_title_bar(), LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(app_state_get_title_bar(), LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_scroll_to(app_state_get_title_bar(), 0, 0, LV_ANIM_OFF);
 
-    app_state.title_label = lv_label_create(app_state.title_bar);
-    lv_obj_set_style_text_color(app_state.title_label, lv_color_hex(COLOR_TEXT), 0);
-    lv_label_set_long_mode(app_state.title_label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_align(app_state.title_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_width(app_state.title_label, TITLE_LABEL_WIDTH);
-    lv_obj_align(app_state.title_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_t *title_label = lv_label_create(app_state_get_title_bar());
+    lv_obj_set_style_text_color(title_label, lv_color_hex(COLOR_TEXT), 0);
+    lv_label_set_long_mode(title_label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_align(title_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_width(title_label, TITLE_LABEL_WIDTH);
+    lv_obj_align(title_label, LV_ALIGN_CENTER, 0, 0);
+    app_state_set_title_label(title_label);
     
     // Set Korean-supporting font
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(app_state.title_label, app_state.font_20, 0);
+    if (app_state_get_font_20()) {
+        lv_obj_set_style_text_font(app_state_get_title_label(), app_state_get_font_20(), 0);
     }
 
     update_title_bar();
@@ -159,7 +162,7 @@ static void create_main_title_bar(void) {
 // ============================================================================
 
 static void create_main_status_bar(void) {
-    lv_obj_t *status_bar = lv_obj_create(app_state.screen);
+    lv_obj_t *status_bar = lv_obj_create(app_state_get_screen());
     lv_obj_set_size(status_bar, SCREEN_WIDTH, STATUS_BAR_HEIGHT);
     lv_obj_align(status_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
     apply_bar_style(status_bar, get_status_bar_color());
@@ -185,7 +188,7 @@ static void create_main_status_bar(void) {
     lv_label_set_text(menu_label, get_label("home_screen.menu_button"));
     apply_label_style(menu_label);
     lv_obj_align(menu_label, LV_ALIGN_CENTER, 0, 0);
-    app_state.menu_button_label = menu_label;  // Store reference for language updates
+    app_state_set_menu_button_label(menu_label);  // Store reference for language updates
     lv_obj_add_event_cb(menu_btn, menu_btn_callback, LV_EVENT_CLICKED, NULL);
 
     // Exit button
@@ -201,7 +204,7 @@ static void create_main_status_bar(void) {
     lv_label_set_text(exit_label, get_label("home_screen.exit_button"));
     apply_label_style(exit_label);
     lv_obj_align(exit_label, LV_ALIGN_CENTER, 0, 0);
-    app_state.exit_button_label = exit_label;  // Store reference for language updates
+    app_state_set_exit_button_label(exit_label);  // Store reference for language updates
     lv_obj_add_event_cb(exit_btn, exit_btn_callback, LV_EVENT_CLICKED, NULL);
 }
 
@@ -223,8 +226,8 @@ static const uint32_t welcome_colors[] = {
 static int color_index = 0;
 
 static void update_welcome_message(void) {
-    if (app_state.welcome_message_label) {
-        lv_label_set_text(app_state.welcome_message_label, welcome_get_message());
+    if (app_state_get_welcome_label()) {
+        lv_label_set_text(app_state_get_welcome_label(), welcome_get_message());
     }
 }
 
@@ -235,9 +238,9 @@ static void welcome_message_timer_callback(lv_timer_t *timer) {
 
 static void welcome_color_timer_callback(lv_timer_t *timer) {
     (void)timer;
-    if (app_state.welcome_message_label) {
+    if (app_state_get_welcome_label()) {
         color_index = (color_index + 1) % WELCOME_COLOR_COUNT;
-        lv_obj_set_style_text_color(app_state.welcome_message_label,
+        lv_obj_set_style_text_color(app_state_get_welcome_label(),
                                      lv_color_hex(welcome_colors[color_index]), 0);
     }
 }
@@ -247,11 +250,11 @@ static void welcome_color_timer_callback(lv_timer_t *timer) {
 // ============================================================================
 
 void update_home_screen_labels(void) {
-    if (app_state.menu_button_label) {
-        lv_label_set_text(app_state.menu_button_label, get_label("home_screen.menu_button"));
+    if (app_state_get_menu_button_label()) {
+        lv_label_set_text(app_state_get_menu_button_label(), get_label("home_screen.menu_button"));
     }
-    if (app_state.exit_button_label) {
-        lv_label_set_text(app_state.exit_button_label, get_label("home_screen.exit_button"));
+    if (app_state_get_exit_button_label()) {
+        lv_label_set_text(app_state_get_exit_button_label(), get_label("home_screen.exit_button"));
     }
     // Reload welcome messages when language changes
     welcome_load();
@@ -263,19 +266,20 @@ void update_home_screen_labels(void) {
 // ============================================================================
 
 void create_gui(void) {
-    app_state.screen = lv_scr_act();
+    lv_obj_t *screen = lv_scr_act();
+    app_state_set_screen(screen);
 
     // Add main screen to screen stack
     if (screen_stack_top < 0) {
         screen_stack_top = 0;
-        screen_stack[0].screen = app_state.screen;
+        screen_stack[0].screen = screen;
         screen_stack[0].screen_id = SCREEN_MAIN;
     }
 
     // Disable all scrolling on main screen - buttons must stay fixed
-    lv_obj_set_scrollbar_mode(app_state.screen, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_clear_flag(app_state.screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_scroll_to(app_state.screen, 0, 0, LV_ANIM_OFF);
+    lv_obj_set_scrollbar_mode(screen, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_scroll_to(screen, 0, 0, LV_ANIM_OFF);
 
     // Create title bar and status bar first (they will be on top)
     create_main_title_bar();
@@ -284,7 +288,7 @@ void create_gui(void) {
     // Create welcome message container in the upper 1/3
     // Available space: TITLE_BAR_HEIGHT (60px) to (SCREEN_HEIGHT - STATUS_BAR_HEIGHT = 580px)
     // Upper 1/3 position: 60 + (580 - 60) / 3 = 233px
-    lv_obj_t *welcome_container = lv_obj_create(app_state.screen);
+    lv_obj_t *welcome_container = lv_obj_create(app_state_get_screen());
     lv_obj_set_size(welcome_container, SCREEN_WIDTH, WELCOME_MESSAGE_CONTAINER_HEIGHT);
     lv_obj_set_pos(welcome_container, 0, WELCOME_MESSAGE_Y_POSITION);
     lv_obj_set_style_bg_color(welcome_container, lv_color_hex(get_background_color()), 0);
@@ -294,23 +298,24 @@ void create_gui(void) {
     lv_obj_clear_flag(welcome_container, LV_OBJ_FLAG_SCROLLABLE);
 
     // Create welcome message label
-    app_state.welcome_message_label = lv_label_create(welcome_container);
-    lv_label_set_long_mode(app_state.welcome_message_label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(app_state.welcome_message_label, SCREEN_WIDTH - 20);
+    lv_obj_t *welcome_label = lv_label_create(welcome_container);
+    lv_label_set_long_mode(welcome_label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(welcome_label, SCREEN_WIDTH - 20);
 
     // Style: 30pt bold text, white color, centered, transparent background
-    lv_obj_set_style_text_color(app_state.welcome_message_label, lv_color_hex(COLOR_TEXT), 0);
-    lv_obj_set_style_text_align(app_state.welcome_message_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_bg_color(app_state.welcome_message_label, lv_color_hex(get_background_color()), 0);
-    lv_obj_set_style_bg_opa(app_state.welcome_message_label, LV_OPA_TRANSP, 0);  // Transparent background
+    lv_obj_set_style_text_color(welcome_label, lv_color_hex(COLOR_TEXT), 0);
+    lv_obj_set_style_text_align(welcome_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_bg_color(welcome_label, lv_color_hex(get_background_color()), 0);
+    lv_obj_set_style_bg_opa(welcome_label, LV_OPA_TRANSP, 0);  // Transparent background
+    app_state_set_welcome_label(welcome_label);
 
     // Apply bold 30pt Korean font
-    if (app_state.font_24_bold) {
-        lv_obj_set_style_text_font(app_state.welcome_message_label, app_state.font_24_bold, 0);
+    if (app_state_get_font_24_bold()) {
+        lv_obj_set_style_text_font(app_state_get_welcome_label(), app_state_get_font_24_bold(), 0);
     }
 
     // Vertically center the label within its container
-    lv_obj_align(app_state.welcome_message_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(app_state_get_welcome_label(), LV_ALIGN_CENTER, 0, 0);
 
     // Load and display welcome message
     if (welcome_load() == 0) {
@@ -324,12 +329,12 @@ void create_gui(void) {
     }
 
     // Initialize slideshow
-    if (slideshow_init(app_state.screen) != 0) {
+    if (slideshow_init(app_state_get_screen()) != 0) {
         printf("Warning: Slideshow initialization failed\n");
     }
 
     // Initialize video player
-    if (video_init(app_state.screen) != 0) {
+    if (video_init(app_state_get_screen()) != 0) {
         printf("Warning: Video player initialization failed\n");
     }
 
@@ -338,6 +343,6 @@ void create_gui(void) {
     inactivity_timer = lv_timer_create(inactivity_timer_callback, 1000, NULL);  // Check every second
 
     // Add event handler to detect user activity (touch/click events)
-    lv_obj_add_event_cb(app_state.screen, activity_event_callback, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(app_state.screen, activity_event_callback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(app_state_get_screen(), activity_event_callback, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(app_state_get_screen(), activity_event_callback, LV_EVENT_CLICKED, NULL);
 }

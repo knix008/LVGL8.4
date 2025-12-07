@@ -53,7 +53,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Initialize LVGL
+    // Load configuration first (before fonts are initialized)
+    load_status_bar_config();
+    load_theme_config();
+    load_font_config();
+
+    // Initialize LVGL (this calls init_fonts() internally)
     if (init_lvgl() != 0) {
         return 1;
     }
@@ -62,11 +67,6 @@ int main(int argc, char **argv) {
     if (load_labels() != 0) {
         log_warning("Failed to load labels, using defaults");
     }
-
-    // Load configuration
-    load_status_bar_config();
-    load_theme_config();
-    load_font_config();
 
     // Set language based on loaded config
     set_language(app_state_get_language());
