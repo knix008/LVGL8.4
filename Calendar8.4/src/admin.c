@@ -764,18 +764,15 @@ void show_calendar_popup(lv_event_t *e) {
     lv_obj_center(enter_label);
     lv_obj_add_event_cb(enter_btn, popup_calendar_enter_cb, LV_EVENT_CLICKED, NULL);
     
-    // Close button (styled like Korean input - X in top right)
+    // Close button (X) in top-right corner with cancel image (same style as Korean input)
     lv_obj_t *close_btn = lv_btn_create(calendar_container);
-    lv_obj_set_size(close_btn, 30, 30);
-    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -10, 10);
-    apply_button_style(close_btn, app_state.button_color);
-    lv_obj_t *close_label = lv_label_create(close_btn);
-    lv_label_set_text(close_label, "X");
-    lv_obj_set_style_text_color(close_label, lv_color_white(), 0);
-    if (app_state.font_20) {
-        lv_obj_set_style_text_font(close_label, app_state.font_20, 0);
-    }
-    lv_obj_center(close_label);
+    lv_obj_set_size(close_btn, 40, 40);
+    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -5, 5);
+    apply_circle_button_style(close_btn, 0);
+
+    lv_obj_t *close_img = lv_img_create(close_btn);
+    lv_img_set_src(close_img, IMG_CANCEL);
+    lv_obj_align(close_img, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_event_cb(close_btn, calendar_popup_close_cb, LV_EVENT_CLICKED, NULL);
     
     // Initialize displays

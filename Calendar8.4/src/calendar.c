@@ -1,5 +1,7 @@
 #include "../include/calendar.h"
 #include "../include/label.h"
+#include "../include/config.h"
+#include "../include/style.h"
 #include "lvgl/lvgl.h"
 #include <string.h>
 #include <stdio.h>
@@ -173,13 +175,12 @@ void calendar_enter_cb(lv_event_t * e) {
     snprintf(popup_text, sizeof(popup_text), "Selected Date:\n%s", current_text);
     lv_label_set_text(popup_result_label, popup_text);
     
-    // Close button
-    lv_obj_t * close_btn = lv_btn_create(dialog);
-    lv_obj_set_size(close_btn, 80, 40);
-    lv_obj_align(close_btn, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_t * close_label = lv_label_create(close_btn);
-    lv_label_set_text(close_label, "Close");
-    lv_obj_center(close_label);
+    // Close button (X) in top-right corner using image button
+    lv_obj_t *close_btn = lv_imgbtn_create(dialog);
+    lv_imgbtn_set_src(close_btn, LV_IMGBTN_STATE_RELEASED, NULL, IMG_CANCEL, NULL);
+    lv_imgbtn_set_src(close_btn, LV_IMGBTN_STATE_PRESSED, NULL, IMG_CANCEL, NULL);
+    lv_obj_set_size(close_btn, 40, 40);
+    lv_obj_align(close_btn, LV_ALIGN_TOP_RIGHT, -5, 5);
     
     // Close button callback
     lv_obj_add_event_cb(close_btn, calendar_close_dialog_cb, LV_EVENT_CLICKED, NULL);
