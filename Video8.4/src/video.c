@@ -26,51 +26,26 @@ static VideoState video_state = {0};
 // VIDEO HELPER FUNCTIONS
 // ============================================================================
 
-static int is_video_file(const char *filename) {
-    const char *ext = strrchr(filename, '.');
-    if (!ext) return 0;
-
-    return (strcasecmp(ext, ".mp4") == 0 ||
-            strcasecmp(ext, ".avi") == 0 ||
-            strcasecmp(ext, ".mkv") == 0 ||
-            strcasecmp(ext, ".mov") == 0 ||
-            strcasecmp(ext, ".webm") == 0);
-}
-
 static int find_video_file(void) {
-    DIR *dir = opendir("assets/videos");
-    if (!dir) {
-        printf("Warning: Cannot open video directory: assets/videos\n");
+    // Use specific video file: Video02.mp4
+    const char *video_filename = "Video02.mp4";
+
+    snprintf(video_state.video_path,
+            sizeof(video_state.video_path),
+            "%s/%s",
+            VIDEO_FILES_DIR,
+            video_filename);
+
+    // Check if file exists
+    FILE *file = fopen(video_state.video_path, "r");
+    if (!file) {
+        printf("Warning: Video file not found: %s\n", video_state.video_path);
         return -1;
     }
+    fclose(file);
 
-    struct dirent *entry;
-    int found = 0;
-
-    // Find the first video file
-    while ((entry = readdir(dir)) != NULL) {
-        if (is_video_file(entry->d_name)) {
-            // Check if the full path will fit in the buffer
-            size_t name_len = strlen(entry->d_name);
-            size_t dir_len = strlen(VIDEO_FILES_DIR);
-            if (name_len + dir_len + 2 > MAX_VIDEO_PATH) {
-                printf("Warning: Video filename too long, skipping: %s\n", entry->d_name);
-                continue;
-            }
-
-            snprintf(video_state.video_path,
-                    sizeof(video_state.video_path),
-                    "%s/%s",
-                    VIDEO_FILES_DIR,
-                    entry->d_name);
-            found = 1;
-            printf("Found video file: %s\n", video_state.video_path);
-            break;
-        }
-    }
-
-    closedir(dir);
-    return found ? 0 : -1;
+    printf("Found video file: %s\n", video_state.video_path);
+    return 0;
 }
 
 // ============================================================================
