@@ -193,18 +193,18 @@ void create_calendar_tab(lv_obj_t * parent) {
     lv_label_set_text(calendar_label, "Calendar Input");
     lv_obj_align(calendar_label, LV_ALIGN_TOP_MID, 0, 10);
 
-    // Main display area for selected date
-    lv_obj_t * calendar_display = lv_label_create(parent);
-    lv_obj_set_style_bg_color(calendar_display, lv_color_hex(0x00FF00), 0); // Green background like other tabs
-    lv_obj_set_style_bg_opa(calendar_display, LV_OPA_COVER, 0);
-    lv_obj_set_style_bg_main_stop(calendar_display, 0, 0);
-    lv_obj_set_style_bg_grad_color(calendar_display, lv_color_hex(0x00FF00), 0);
-    lv_obj_set_style_bg_grad_dir(calendar_display, LV_GRAD_DIR_NONE, 0);
-    lv_obj_set_style_border_color(calendar_display, lv_color_make(128, 128, 128), 0);
-    lv_obj_set_style_border_width(calendar_display, 3, 0);
-    lv_obj_set_style_pad_all(calendar_display, 15, 0);
-    lv_obj_set_size(calendar_display, 400, 60);
-    lv_obj_align(calendar_display, LV_ALIGN_TOP_MID, 0, 40);
+    // Main display area (button-style like admin screen)
+    lv_obj_t * calendar_display_btn = lv_btn_create(parent);
+    lv_obj_set_size(calendar_display_btn, 400, 60);
+    lv_obj_align(calendar_display_btn, LV_ALIGN_TOP_MID, 0, 40);
+    lv_obj_set_style_bg_color(calendar_display_btn, lv_color_hex(0x00FF00), 0); // Green background like other tabs
+    lv_obj_set_style_bg_opa(calendar_display_btn, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_color(calendar_display_btn, lv_color_make(128, 128, 128), 0);
+    lv_obj_set_style_border_width(calendar_display_btn, 3, 0);
+
+    // Create label inside the button for the calendar text
+    lv_obj_t * calendar_display = lv_label_create(calendar_display_btn);
+    lv_obj_center(calendar_display);  // This centers the label vertically and horizontally
     calendar_display_label = calendar_display;
 
     // First row: prev button + month + day + year + next button
