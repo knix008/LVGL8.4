@@ -100,7 +100,7 @@ int log_init(void) {
     log_initialized = 1;
 
     // Write startup message
-    log_info("Application started");
+    //log_info("Application started");
 
     return 0;
 }
@@ -135,7 +135,7 @@ void log_debug(const char *format, ...) {
 
 void log_close(void) {
     if (log_file) {
-        log_info("Application closing");
+    //    log_info("Application closing");
         fclose(log_file);
         log_file = NULL;
     }

@@ -415,18 +415,28 @@ void update_status_bar_icons(void) {
 
     // Icon configuration
     int img_btn_size = ICON_SIZE_SMALL;
-    int spacing = STATUS_ICON_SPACING;
-    int start_x = PADDING_HORIZONTAL;
+    int edge_margin = PADDING_HORIZONTAL;  // Margin from left and right edges
 
-    // Count how many icons are selected and create them
-    int icon_position = 0;
+    // Calculate fixed slot positions for 5 slots with equal spacing
+    // Total available width = screen_width - (2 * edge_margin)
+    // For 5 slots: spacing = (available_width - 5 * button_width) / 4
+    int available_width = SCREEN_WIDTH - (2 * edge_margin);
+    int total_button_width = MAX_STATUS_ICONS * img_btn_size;
+    int total_gaps = MAX_STATUS_ICONS - 1;  // Gaps between 5 slots
+    int gap_between_slots = (available_width - total_button_width) / total_gaps;
+
+    // Create icons in their assigned slots (left to right)
+    int slot_index = 0;  // Track which slot we're filling
     for (int i = 0; i < MAX_STATUS_ICONS; i++) {
         if (app_state_is_menu_item_selected(i)) {
             // Create button for this icon
             lv_obj_t *icon_btn = lv_btn_create(app_state_get_status_bar());
             lv_obj_set_size(icon_btn, img_btn_size, img_btn_size);
-            lv_obj_set_pos(icon_btn, start_x + icon_position * (img_btn_size + spacing),
-                          (STATUS_BAR_HEIGHT - img_btn_size) / 2);
+
+            // Position in the slot: edge_margin + slot_index * (button_width + gap)
+            int x_pos = edge_margin + slot_index * (img_btn_size + gap_between_slots);
+
+            lv_obj_set_pos(icon_btn, x_pos, (STATUS_BAR_HEIGHT - img_btn_size) / 2);
             apply_circle_button_style(icon_btn, COLOR_BUTTON_BACK);
 
             // Create image inside button
@@ -441,7 +451,7 @@ void update_status_bar_icons(void) {
 
             // Store reference to the icon button
             app_state_set_status_icon(i, icon_btn);
-            icon_position++;
+            slot_index++;  // Move to next slot
         }
     }
 
