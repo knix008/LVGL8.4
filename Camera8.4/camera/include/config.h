@@ -41,9 +41,15 @@ namespace Config {
     /// Minimum face size required for reliable recognition
     constexpr int MINIMUM_FACE_SIZE_FOR_RECOGNITION = 80;
 
+    /// Frame skip interval for face recognition (process every Nth frame)
+    /// Range: 1-30 (1 = every frame, 5-10 = recommended, higher = better performance but less responsive)
+    /// At 30 FPS: skip=3 gives ~10 recognitions/sec, skip=6 gives ~5 recognitions/sec
+    constexpr int RECOGNITION_FRAME_SKIP = 3;  // Process recognition every 3rd frame (~10 times/sec at 30 FPS)
+
     /// Time interval between recognition updates (microseconds)
     /// Reduces CPU load by caching recognition results
-    constexpr long RECOGNITION_UPDATE_INTERVAL_US = 1500000;  // 1.5 seconds
+    /// Set to 0 to disable time-based throttling and use only frame skip
+    constexpr long RECOGNITION_UPDATE_INTERVAL_US = 0;  // Disabled - using frame skip only
 
     /// Maximum recognition cache validity time (microseconds)
     constexpr long RECOGNITION_CACHE_MAX_AGE_US = 2000000;  // 2 seconds

@@ -55,6 +55,7 @@ private:
     bool capture_in_progress;
     bool cleanup_done;
     int frame_count;
+    int recognition_frame_count;  // Count frames where recognition actually ran
     gint64 last_time;
     cv::Mat last_frame;
     int capture_count;

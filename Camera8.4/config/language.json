@@ -96,7 +96,18 @@
     },
     "camera_screen": {
       "title": "카메라",
-      "description": "카메라 화면입니다."
+      "description": "카메라 화면입니다.",
+      "camera_on": "카메라 켜기",
+      "camera_off": "카메라 끄기",
+      "capture": "캡처",
+      "training": "학습",
+      "status": "상태",
+      "list_persons": "사람 목록",
+      "delete_person": "사람 삭제",
+      "fas_on": "FAS 켜기",
+      "fas_off": "FAS 끄기",
+      "ready": "준비",
+      "stream_not_connected": "스트림: 연결되지 않음"
     },
     "days_of_week": {
       "sunday": "일요일",
@@ -238,7 +249,18 @@
     },
     "camera_screen": {
       "title": "Camera",
-      "description": "Camera screen."
+      "description": "Camera screen.",
+      "camera_on": "Camera On",
+      "camera_off": "Camera Off",
+      "capture": "Capture",
+      "training": "Training",
+      "status": "Status",
+      "list_persons": "List Persons",
+      "delete_person": "Delete Person",
+      "fas_on": "FAS On",
+      "fas_off": "FAS Off",
+      "ready": "Ready",
+      "stream_not_connected": "Stream: Not Connected"
     },
     "days_of_week": {
       "sunday": "Sunday",

@@ -11,7 +11,7 @@ GTKApp::GTKApp()
       face_count_label(nullptr), error_rate_label(nullptr),
       refresh_timer(0), camera_running(false), face_recognition_enabled(false),
       training_in_progress(false), capture_in_progress(false), cleanup_done(false),
-      frame_count(0), last_time(0), capture_count(0), last_recognition_time(0),
+      frame_count(0), recognition_frame_count(0), last_time(0), capture_count(0), last_recognition_time(0),
       last_recognized_name("Unknown"), last_recognized_confidence(0.0),
       has_recognition_result(false), training_success(false) {}
 
@@ -69,8 +69,8 @@ bool GTKApp::init() {
         status_label = gtk_label_new("Status: Camera Idle");
         gtk_box_pack_start(GTK_BOX(hbox), status_label, TRUE, TRUE, 0);
 
-        // Create FPS label
-        fps_label = gtk_label_new("FPS: 0");
+        // Create Recognition FPS label
+        fps_label = gtk_label_new("Recognition FPS: 0");
         gtk_box_pack_end(GTK_BOX(hbox), fps_label, FALSE, FALSE, 0);
 
         // Create face info label (recognized person)
@@ -278,6 +278,11 @@ gboolean GTKApp::refresh_frame() {
                     return TRUE;
                 }
 
+                // Track if recognition actually ran based on frame processor flag
+                if (processed.recognition_ran) {
+                    recognition_frame_count++;
+                }
+
                 // Update recognition processing time
                 gchar recognition_time_text[100];
                 g_snprintf(recognition_time_text, sizeof(recognition_time_text),
@@ -351,7 +356,7 @@ gboolean GTKApp::refresh_frame() {
                     g_object_unref(pixbuf);
                 }
 
-                // Update FPS counter
+                // Update recognition FPS counter
                 frame_count++;
                 gint64 current_time = g_get_monotonic_time();
                 if (last_time == 0) {
@@ -360,9 +365,9 @@ gboolean GTKApp::refresh_frame() {
 
                 gint64 elapsed_us = current_time - last_time;
                 if (elapsed_us >= 1000000) { // 1 second
-                    double fps = (frame_count * 1000000.0) / elapsed_us;
+                    double recognition_fps = (recognition_frame_count * 1000000.0) / elapsed_us;
                     gchar fps_text[50];
-                    g_snprintf(fps_text, sizeof(fps_text), "FPS: %.1f", fps);
+                    g_snprintf(fps_text, sizeof(fps_text), "Recognition FPS: %.1f", recognition_fps);
                     gtk_label_set_text(GTK_LABEL(fps_label), fps_text);
 
                     // Update detection error rate metrics
@@ -375,6 +380,7 @@ gboolean GTKApp::refresh_frame() {
                     gtk_label_set_text(GTK_LABEL(error_rate_label), error_rate_text);
 
                     frame_count = 0;
+                    recognition_frame_count = 0;
                     last_time = current_time;
                 }
             }
@@ -428,8 +434,9 @@ void GTKApp::toggle_camera() {
             gtk_button_set_label(GTK_BUTTON(toggle_button), "Start Camera");
             gtk_label_set_text(GTK_LABEL(status_label), "Status: Camera Stopped");
             gtk_image_clear(GTK_IMAGE(image_widget));
-            gtk_label_set_text(GTK_LABEL(fps_label), "FPS: 0");
+            gtk_label_set_text(GTK_LABEL(fps_label), "Recognition FPS: 0");
             frame_count = 0;
+            recognition_frame_count = 0;
             last_time = 0;
         }
     } catch (const std::exception& e) {
@@ -479,6 +486,7 @@ bool GTKApp::stop_camera_safe() {
 
         // Reset counters (safe to do from any thread)
         frame_count = 0;
+        recognition_frame_count = 0;
         last_time = 0;
 
         // Schedule UI update on main GTK thread to avoid segmentation fault
@@ -502,7 +510,7 @@ void GTKApp::on_camera_stop_finished() {
     gtk_image_clear(GTK_IMAGE(image_widget));
     gtk_button_set_label(GTK_BUTTON(toggle_button), "Start Camera");
     gtk_label_set_text(GTK_LABEL(status_label), "Status: Camera Stopped");
-    gtk_label_set_text(GTK_LABEL(fps_label), "FPS: 0");
+    gtk_label_set_text(GTK_LABEL(fps_label), "Recognition FPS: 0");
     gtk_label_set_text(GTK_LABEL(face_info_label), "Person: None detected");
     gtk_label_set_text(GTK_LABEL(face_count_label), "Confidence: 0%");
     gtk_label_set_text(GTK_LABEL(recognition_time_label), "Recognition: 0ms");

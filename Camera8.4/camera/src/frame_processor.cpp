@@ -8,6 +8,8 @@ FrameProcessor::FrameProcessor()
       last_recognition_time_us(0),
       recognition_update_interval_us(Config::RECOGNITION_UPDATE_INTERVAL_US),
       use_recognition_cache(true),
+      frame_counter(0),
+      recognition_frame_skip(Config::RECOGNITION_FRAME_SKIP),
       frame_scale(1.0),
       flip_horizontal(true),
       total_frames_processed(0),
@@ -74,10 +76,14 @@ ProcessedFrame FrameProcessor::process_frame(const cv::Mat& frame, bool enable_r
     result.is_valid = false;
     result.detection_count = 0;
     result.processing_time_ms = 0.0;
+    result.recognition_ran = false;
 
     if (frame.empty()) {
         return result;
     }
+
+    // Increment frame counter for ALL frames (not just when recognition is enabled)
+    frame_counter++;
 
     // Preprocess frame
     result.frame = preprocess_frame(frame);
@@ -106,13 +112,17 @@ ProcessedFrame FrameProcessor::process_frame(const cv::Mat& frame, bool enable_r
 
         // Recognize faces if enabled and recognizer is available
         if (enable_recognition && recognizer) {
+            // Only perform recognition every Nth frame (frame skip optimization)
+            bool should_run_recognition = (frame_counter % recognition_frame_skip == 0);
+            
             auto current_time_us = std::chrono::high_resolution_clock::now()
                                       .time_since_epoch()
                                       .count() / 1000;  // Convert to microseconds
 
-            if (should_recognize(current_time_us)) {
+            if (should_run_recognition && should_recognize(current_time_us)) {
                 // Check if recognizer is trained
                 if (is_recognizer_ready()) {
+                    result.recognition_ran = true;  // Mark that recognition ran this frame
                     for (auto& face : result.faces) {
                         double confidence = 0.0;
 

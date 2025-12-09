@@ -22,6 +22,7 @@ struct ProcessedFrame {
     bool is_valid;                      ///< Frame is valid and processed
     int detection_count;                ///< Number of faces detected in this frame
     double processing_time_ms;          ///< Time taken to process this frame
+    bool recognition_ran;               ///< True if recognition was actually performed this frame
 };
 
 /**
@@ -41,6 +42,8 @@ private:
     long last_recognition_time_us;
     long recognition_update_interval_us;
     bool use_recognition_cache;
+    int frame_counter;              // Counter for frame skipping
+    int recognition_frame_skip;     // Process recognition every Nth frame
 
     // Cache for recognition results between recognition intervals
     std::vector<Face> cached_faces;  // Store last recognized faces
@@ -112,6 +115,17 @@ public:
      * @param interval_us Interval in microseconds (0 = every frame)
      */
     void set_recognition_interval(long interval_us) { recognition_update_interval_us = interval_us; }
+
+    /**
+     * @brief Set recognition frame skip interval
+     *
+     * Process recognition only every Nth frame to reduce CPU load.
+     *
+     * @param skip_frames Number of frames to skip (1 = process every frame, 5-10 recommended)
+     */
+    void set_recognition_frame_skip(int skip_frames) { 
+        recognition_frame_skip = (skip_frames > 0) ? skip_frames : 1; 
+    }
 
     /**
      * @brief Get processing statistics
