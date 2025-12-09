@@ -49,6 +49,7 @@ private:
     std::unique_ptr<SocketServer> socket_server;
 
     guint refresh_timer;
+    guint recognition_timer;  // Separate timer for recognition (100ms = 10 times/sec)
     bool camera_running;
     bool face_recognition_enabled;
     std::atomic<bool> training_in_progress;
@@ -58,6 +59,10 @@ private:
     int recognition_frame_count;  // Count frames where recognition actually ran
     gint64 last_time;
     cv::Mat last_frame;
+    cv::Mat latest_frame;  // Latest frame for recognition timer
+    std::mutex latest_frame_mutex;  // Protect latest_frame access
+    std::vector<Face> recognized_faces;  // Store recognition results
+    std::mutex recognized_faces_mutex;  // Protect recognized_faces access
     int capture_count;
     gint64 last_recognition_time;
 
@@ -79,6 +84,7 @@ private:
 
     // Static callback wrappers
     static gboolean on_refresh_timer(gpointer user_data);
+    static gboolean on_recognition_timer(gpointer user_data);
     static void on_toggle_button_clicked(GtkWidget* widget, gpointer user_data);
     static void on_train_button_clicked(GtkWidget* widget, gpointer user_data);
     static void on_capture_button_clicked(GtkWidget* widget, gpointer user_data);
@@ -88,6 +94,7 @@ private:
 
     // Instance methods
     gboolean refresh_frame();
+    gboolean process_recognition();
     void toggle_camera();
     void train_model();
     void train_model_async();

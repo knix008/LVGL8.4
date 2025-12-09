@@ -17,9 +17,21 @@ SocketServer::SocketServer(const std::string& socket_path)
 
 SocketServer::~SocketServer() {
     stop();
-    // Detach thread if it's still running to avoid terminate() exception
+    // Wait for thread to finish with a timeout
     if (server_thread && server_thread->joinable()) {
-        server_thread->detach();
+        // Give it a reasonable time to finish (1 second max)
+        for (int i = 0; i < 20; ++i) {
+            if (!server_thread->joinable()) {
+                break;
+            }
+            usleep(50000);  // 50ms
+        }
+        
+        if (server_thread->joinable()) {
+            // If thread still hasn't finished, detach it to avoid blocking indefinitely
+            LOG_WARN("Socket server thread did not finish - detaching to prevent hang");
+            server_thread->detach();
+        }
     }
 }
 

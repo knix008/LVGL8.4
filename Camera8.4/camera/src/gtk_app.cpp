@@ -9,7 +9,7 @@ GTKApp::GTKApp()
       train_button(nullptr), capture_button(nullptr),
       status_label(nullptr), fps_label(nullptr), face_info_label(nullptr),
       face_count_label(nullptr), error_rate_label(nullptr),
-      refresh_timer(0), camera_running(false), face_recognition_enabled(false),
+      refresh_timer(0), recognition_timer(0), camera_running(false), face_recognition_enabled(false),
       training_in_progress(false), capture_in_progress(false), cleanup_done(false),
       frame_count(0), recognition_frame_count(0), last_time(0), capture_count(0), last_recognition_time(0),
       last_recognized_name("Unknown"), last_recognized_confidence(0.0),
@@ -160,6 +160,9 @@ bool GTKApp::init() {
 
         // Set up refresh timer (30ms = ~33 FPS)
         refresh_timer = g_timeout_add(30, on_refresh_timer, this);
+        
+        // Set up recognition timer (100ms = 10 times per second)
+        recognition_timer = g_timeout_add(100, on_recognition_timer, this);
 
         return true;
     } catch (const std::exception& e) {
@@ -179,15 +182,29 @@ void GTKApp::cleanup() {
     }
     cleanup_done = true;
 
-    // Stop socket server first (before other cleanup)
-    if (socket_server) {
-        socket_server->stop();
+    // Stop both timers FIRST before any other cleanup
+    if (refresh_timer != 0) {
+        g_source_remove(refresh_timer);
+        refresh_timer = 0;
+    }
+    if (recognition_timer != 0) {
+        g_source_remove(recognition_timer);
+        recognition_timer = 0;
     }
 
     // Stop camera and frame processing
     camera_running = false;  // Signal to stop processing frames
+    face_recognition_enabled = false;  // Disable recognition
 
-    // Process pending events - this will let refresh_frame return FALSE and stop naturally
+    // Clear shared frame data to prevent access during cleanup
+    {
+        std::lock_guard<std::mutex> lock1(latest_frame_mutex);
+        std::lock_guard<std::mutex> lock2(recognized_faces_mutex);
+        latest_frame.release();
+        recognized_faces.clear();
+    }
+
+    // Process pending events
     for (int i = 0; i < 5; i++) {
         while (gtk_events_pending()) {
             gtk_main_iteration();
@@ -195,16 +212,21 @@ void GTKApp::cleanup() {
         g_usleep(20000); // 20ms between iterations
     }
 
-    // Now it's safe to close the camera
+    // Close camera
     camera.close();  // This will join the camera thread
-
-    // Clear the timer ID (it should have stopped by now)
-    refresh_timer = 0;
 
     // Wait for training thread to finish
     if (training_thread.joinable()) {
-        training_in_progress = false;  // Signal thread to stop if possible
+        training_in_progress = false;
         training_thread.join();
+    }
+
+    // Stop socket server LAST and wait for it to finish completely
+    if (socket_server) {
+        socket_server->stop();
+        // Give it extra time to ensure the thread has fully stopped
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        socket_server.reset();  // Explicitly destroy socket server
     }
 
     // Note: Don't explicitly close database - the FaceDatabase destructor will handle it
@@ -219,7 +241,18 @@ void GTKApp::cleanup() {
 
 gboolean GTKApp::on_refresh_timer(gpointer user_data) {
     GTKApp* self = static_cast<GTKApp*>(user_data);
+    if (!self || self->cleanup_done) {
+        return FALSE;  // Stop timer
+    }
     return self->refresh_frame();
+}
+
+gboolean GTKApp::on_recognition_timer(gpointer user_data) {
+    GTKApp* self = static_cast<GTKApp*>(user_data);
+    if (!self || self->cleanup_done) {
+        return FALSE;  // Stop timer
+    }
+    return self->process_recognition();
 }
 
 gboolean GTKApp::refresh_frame() {
@@ -268,85 +301,49 @@ gboolean GTKApp::refresh_frame() {
                 // Flip the frame horizontally for mirror effect
                 cv::flip(frame, frame, 1);
 
-                // Use FrameProcessor for face detection and recognition
+                // Store latest frame for recognition timer
+                {
+                    std::lock_guard<std::mutex> lock(latest_frame_mutex);
+                    latest_frame = frame.clone();
+                }
+
+                // Check if frame processor and ui renderer are still valid
+                if (!frame_processor || !ui_renderer) {
+                    return FALSE; // Stop timer if processors are gone
+                }
+
+                // Use FrameProcessor for face detection ONLY (no recognition)
                 ProcessedFrame processed = frame_processor->process_frame(
                     frame,
-                    face_recognition_enabled && !training_in_progress
+                    false  // Disable recognition in refresh timer
                 );
 
                 if (!processed.is_valid) {
                     return TRUE;
                 }
 
-                // Track if recognition actually ran based on frame processor flag
-                if (processed.recognition_ran) {
-                    recognition_frame_count++;
-                }
-
-                // Update recognition processing time
+                // Update detection processing time (not recognition)
                 gchar recognition_time_text[100];
                 g_snprintf(recognition_time_text, sizeof(recognition_time_text),
-                          "Recognition: %.1fms", processed.processing_time_ms);
+                          "Detection: %.1fms", processed.processing_time_ms);
                 gtk_label_set_text(GTK_LABEL(recognition_time_label), recognition_time_text);
-
-                // Track best recognized face for UI display
-                std::string best_person_name = "None detected";
-                double best_confidence = 0.0;
-                int recognized_count = 0;
-                int unknown_count = 0;
-
-                // Count recognized vs unknown faces
-                for (const auto& face : processed.faces) {
-                    if (face.id != -1) {
-                        recognized_count++;
-                        // Track best (highest confidence)
-                        if (face.confidence > best_confidence) {
-                            best_confidence = face.confidence;
-                            best_person_name = face.name;
-                            // Cache result for continuous display
-                            last_recognized_name = face.name;
-                            last_recognized_confidence = face.confidence;
-                            has_recognition_result = true;
-                            last_recognition_time = g_get_monotonic_time();
-                        }
-                    } else {
-                        unknown_count++;
-                    }
-                }
-                
-                // Reset recognition result if no faces detected
-                if (recognized_count == 0 && unknown_count == 0) {
-                    has_recognition_result = false;
-                }
-
-                // Update UI with recognized person and confidence
-                if (recognized_count > 0) {
-                    gchar person_text[100];
-                    g_snprintf(person_text, sizeof(person_text), "Person: %s (%d face%s)",
-                              best_person_name.c_str(), recognized_count,
-                              recognized_count > 1 ? "s" : "");
-                    gtk_label_set_text(GTK_LABEL(face_info_label), person_text);
-
-                    gchar conf_text[100];
-                    g_snprintf(conf_text, sizeof(conf_text), "Confidence: %.1f%%", best_confidence);
-                    gtk_label_set_text(GTK_LABEL(face_count_label), conf_text);
-                } else if (unknown_count > 0) {
-                    gchar person_text[100];
-                    g_snprintf(person_text, sizeof(person_text), "Unknown: %d face%s detected",
-                              unknown_count, unknown_count > 1 ? "s" : "");
-                    gtk_label_set_text(GTK_LABEL(face_info_label), person_text);
-                    gtk_label_set_text(GTK_LABEL(face_count_label), "Confidence: N/A");
-                } else {
-                    gtk_label_set_text(GTK_LABEL(face_info_label), "Person: None detected");
-                    gtk_label_set_text(GTK_LABEL(face_count_label), "Confidence: 0%");
-                }
 
                 // Save clean frame for capture (BEFORE drawing on it)
                 last_frame = processed.frame.clone();
 
-                // Draw all detected faces on frame for display
-                if (!processed.faces.empty()) {
-                    draw_faces_on_frame(processed.frame, processed.faces);
+                // Draw faces on frame - use recognized faces if available, otherwise detected faces
+                std::vector<Face> faces_to_draw;
+                {
+                    std::lock_guard<std::mutex> lock(recognized_faces_mutex);
+                    if (!recognized_faces.empty()) {
+                        faces_to_draw = recognized_faces;  // Use recognition results
+                    } else {
+                        faces_to_draw = processed.faces;  // Fallback to detection only
+                    }
+                }
+                
+                if (!faces_to_draw.empty()) {
+                    draw_faces_on_frame(processed.frame, faces_to_draw);
                 }
 
                 // Convert to pixbuf and display
@@ -401,6 +398,121 @@ gboolean GTKApp::refresh_frame() {
         camera_running = false;
         gtk_button_set_label(GTK_BUTTON(toggle_button), "Start Camera");
         gtk_label_set_text(GTK_LABEL(status_label), "Status: Error - Check console");
+    }
+
+    return TRUE; // Continue timer
+}
+
+gboolean GTKApp::process_recognition() {
+    // Stop timer immediately if cleanup has started
+    if (cleanup_done) {
+        return FALSE; // Stop timer
+    }
+
+    if (!camera_running || !face_recognition_enabled || capture_in_progress || training_in_progress) {
+        return TRUE; // Continue timer but don't process
+    }
+
+    try {
+        cv::Mat frame_copy;
+        {
+            std::lock_guard<std::mutex> lock(latest_frame_mutex);
+            if (latest_frame.empty()) {
+                return TRUE; // No frame available yet
+            }
+            frame_copy = latest_frame.clone();
+        }
+
+        // Check if frame processor is still valid
+        if (!frame_processor) {
+            return FALSE; // Stop timer if processor is gone
+        }
+
+        // Perform face recognition on the latest frame
+        ProcessedFrame processed = frame_processor->process_frame(
+            frame_copy,
+            true  // Always run recognition in this timer
+        );
+
+        if (!processed.is_valid || processed.faces.empty()) {
+            // Clear recognized faces if no faces detected
+            {
+                std::lock_guard<std::mutex> lock(recognized_faces_mutex);
+                recognized_faces.clear();
+            }
+            return TRUE;
+        }
+
+        // Store recognized faces for display in refresh_frame
+        {
+            std::lock_guard<std::mutex> lock(recognized_faces_mutex);
+            recognized_faces = processed.faces;
+        }
+
+        // Track recognition execution
+        recognition_frame_count++;
+
+        // Update recognition processing time
+        gchar recognition_time_text[100];
+        g_snprintf(recognition_time_text, sizeof(recognition_time_text),
+                  "Recognition: %.1fms", processed.processing_time_ms);
+        gtk_label_set_text(GTK_LABEL(recognition_time_label), recognition_time_text);
+
+        // Track best recognized face for UI display
+        std::string best_person_name = "None detected";
+        double best_confidence = 0.0;
+        int recognized_count = 0;
+        int unknown_count = 0;
+
+        // Count recognized vs unknown faces
+        for (const auto& face : processed.faces) {
+            if (face.id != -1) {
+                recognized_count++;
+                // Track best (highest confidence)
+                if (face.confidence > best_confidence) {
+                    best_confidence = face.confidence;
+                    best_person_name = face.name;
+                    // Cache result for continuous display
+                    last_recognized_name = face.name;
+                    last_recognized_confidence = face.confidence;
+                    has_recognition_result = true;
+                    last_recognition_time = g_get_monotonic_time();
+                }
+            } else {
+                unknown_count++;
+            }
+        }
+
+        // Reset recognition result if no faces detected
+        if (recognized_count == 0 && unknown_count == 0) {
+            has_recognition_result = false;
+        }
+
+        // Update UI with recognized person and confidence
+        if (recognized_count > 0) {
+            gchar person_text[100];
+            g_snprintf(person_text, sizeof(person_text), "Person: %s (%d face%s)",
+                      best_person_name.c_str(), recognized_count,
+                      recognized_count > 1 ? "s" : "");
+            gtk_label_set_text(GTK_LABEL(face_info_label), person_text);
+
+            gchar conf_text[100];
+            g_snprintf(conf_text, sizeof(conf_text), "Confidence: %.1f%%", best_confidence);
+            gtk_label_set_text(GTK_LABEL(face_count_label), conf_text);
+        } else if (unknown_count > 0) {
+            gchar person_text[100];
+            g_snprintf(person_text, sizeof(person_text), "Unknown: %d face%s detected",
+                      unknown_count, unknown_count > 1 ? "s" : "");
+            gtk_label_set_text(GTK_LABEL(face_info_label), person_text);
+            gtk_label_set_text(GTK_LABEL(face_count_label), "Confidence: N/A");
+        }
+
+    } catch (const DetectionException& e) {
+        LOG_WARN("Face detection error: " << e.what());
+    } catch (const RecognitionException& e) {
+        LOG_WARN("Face recognition error: " << e.what());
+    } catch (const std::exception& e) {
+        LOG_ERROR("Exception in process_recognition: " << e.what());
     }
 
     return TRUE; // Continue timer
