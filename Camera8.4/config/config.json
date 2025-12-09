@@ -1,9 +1,9 @@
 {
   "status_bar": {
     "admin": true,
-    "network": true,
-    "korean_input": true,
-    "info": true,
+    "network": false,
+    "korean_input": false,
+    "info": false,
     "camera": true
   },
   "border": {

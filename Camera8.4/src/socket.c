@@ -39,9 +39,11 @@ typedef enum {
     RESP_PERSON_LIST = 0x1004
 } MessageType;
 
-/* Simple buffer structure */
+#define MAX_BUFFER_SIZE 4096
+
+/* Simple buffer structure with fixed size */
 typedef struct {
-    uint8_t *data;
+    uint8_t data[MAX_BUFFER_SIZE];
     uint32_t size;
     uint32_t capacity;
 } Buffer;
@@ -76,55 +78,47 @@ typedef struct {
 } PersonListData;
 
 /* Buffer helper functions */
-static Buffer* buffer_create(uint32_t capacity) {
-    Buffer *buf = (Buffer*)malloc(sizeof(Buffer));
-    if (!buf) return NULL;
-
-    buf->data = (uint8_t*)malloc(capacity);
-    if (!buf->data) {
-        free(buf);
-        return NULL;
-    }
-
+static void buffer_init(Buffer *buf) {
+    if (!buf) return;
     buf->size = 0;
-    buf->capacity = capacity;
-    return buf;
-}
-
-static void buffer_destroy(Buffer *buf) {
-    if (buf) {
-        free(buf->data);
-        free(buf);
-    }
+    buf->capacity = MAX_BUFFER_SIZE;
+    memset(buf->data, 0, MAX_BUFFER_SIZE);
 }
 
 static int buffer_ensure_capacity(Buffer *buf, uint32_t required) {
-    if (buf->capacity >= required) return 0;
-
-    uint32_t new_capacity = buf->capacity * 2;
-    if (new_capacity < required) new_capacity = required;
-
-    uint8_t *new_data = (uint8_t*)realloc(buf->data, new_capacity);
-    if (!new_data) return -1;
-
-    buf->data = new_data;
-    buf->capacity = new_capacity;
+    if (!buf) return -1;
+    if (buf->capacity == 0) return -1;  /* Invalid buffer */
+    if (required > buf->capacity) return -1;  /* Fixed size buffer - overflow */
+    if (required > MAX_BUFFER_SIZE) return -1;  /* Sanity check */
     return 0;
 }
 
 static int buffer_append(Buffer *buf, const void *data, uint32_t len) {
+    if (!buf || !data) return -1;
+    if (len == 0) return 0;  /* Nothing to append */
+    
+    /* Check for overflow in addition */
+    if (buf->size > UINT32_MAX - len) return -1;
+    
+    /* Check capacity before appending */
     if (buffer_ensure_capacity(buf, buf->size + len) < 0) return -1;
+    
+    /* Ensure we don't write beyond buffer bounds */
+    if (buf->size + len > MAX_BUFFER_SIZE) return -1;
+    
     memcpy(buf->data + buf->size, data, len);
     buf->size += len;
     return 0;
 }
 
 static int buffer_write_uint32(Buffer *buf, uint32_t value) {
+    if (!buf) return -1;
     uint32_t net_value = htonl(value);
     return buffer_append(buf, &net_value, sizeof(net_value));
 }
 
 static int buffer_write_uint64(Buffer *buf, uint64_t value) {
+    if (!buf) return -1;
     uint32_t high = htonl((uint32_t)(value >> 32));
     uint32_t low = htonl((uint32_t)(value & 0xFFFFFFFF));
     if (buffer_append(buf, &high, sizeof(high)) < 0) return -1;
@@ -132,12 +126,20 @@ static int buffer_write_uint64(Buffer *buf, uint64_t value) {
 }
 
 static int buffer_write_string(Buffer *buf, const char *str) {
+    if (!buf || !str) return -1;
+    
     uint32_t len = strlen(str);
+    /* Prevent string length overflow */
+    if (len > MAX_STRING_LEN) return -1;
+    if (len > MAX_BUFFER_SIZE - sizeof(uint32_t)) return -1;
+    
     if (buffer_write_uint32(buf, len) < 0) return -1;
-    return buffer_append(buf, str, len);
+    if (len > 0 && buffer_append(buf, str, len) < 0) return -1;
+    return 0;
 }
 
 static int buffer_write_float(Buffer *buf, float value) {
+    if (!buf) return -1;
     uint32_t int_value;
     memcpy(&int_value, &value, sizeof(float));
     uint32_t net_value = htonl(int_value);
@@ -145,49 +147,87 @@ static int buffer_write_float(Buffer *buf, float value) {
 }
 
 static int buffer_write_uint8(Buffer *buf, uint8_t value) {
+    if (!buf) return -1;
     return buffer_append(buf, &value, 1);
 }
 
-/* Read helper functions */
-static uint32_t read_uint32(const uint8_t *data, size_t *offset) {
+/* Read helper functions with boundary checks */
+static int read_uint32_safe(const uint8_t *data, size_t data_len, size_t *offset, uint32_t *out_value) {
+    if (!data || !offset || !out_value) return -1;
+    if (data_len == 0) return -1;
+    if (*offset >= data_len) return -1;
+    if (*offset + sizeof(uint32_t) > data_len) return -1;
+    
     uint32_t value;
     memcpy(&value, data + *offset, sizeof(value));
     *offset += sizeof(value);
-    return ntohl(value);
+    *out_value = ntohl(value);
+    return 0;
 }
 
-static uint8_t read_uint8(const uint8_t *data, size_t *offset) {
-    uint8_t value = data[*offset];
+static int read_uint8_safe(const uint8_t *data, size_t data_len, size_t *offset, uint8_t *out_value) {
+    if (!data || !offset || !out_value) return -1;
+    if (data_len == 0) return -1;
+    if (*offset >= data_len) return -1;
+    
+    *out_value = data[*offset];
     *offset += 1;
-    return value;
+    return 0;
 }
 
-static float read_float(const uint8_t *data, size_t *offset) {
+static int read_float_safe(const uint8_t *data, size_t data_len, size_t *offset, float *out_value) {
+    if (!data || !offset || !out_value) return -1;
+    if (data_len == 0) return -1;
+    if (*offset >= data_len) return -1;
+    if (*offset + sizeof(uint32_t) > data_len) return -1;
+    
     uint32_t net_value;
     memcpy(&net_value, data + *offset, sizeof(net_value));
     *offset += sizeof(net_value);
     uint32_t host_value = ntohl(net_value);
-    float result;
-    memcpy(&result, &host_value, sizeof(float));
-    return result;
+    memcpy(out_value, &host_value, sizeof(float));
+    return 0;
 }
 
-static uint64_t read_uint64(const uint8_t *data, size_t *offset) {
-    uint32_t high = read_uint32(data, offset);
-    uint32_t low = read_uint32(data, offset);
-    return ((uint64_t)high << 32) | low;
+static int read_uint64_safe(const uint8_t *data, size_t data_len, size_t *offset, uint64_t *out_value) {
+    if (!data || !offset || !out_value) return -1;
+    if (data_len == 0) return -1;
+    
+    uint32_t high, low;
+    if (read_uint32_safe(data, data_len, offset, &high) < 0) return -1;
+    if (read_uint32_safe(data, data_len, offset, &low) < 0) return -1;
+    *out_value = ((uint64_t)high << 32) | low;
+    return 0;
 }
 
-static void read_string(const uint8_t *data, size_t *offset, char *str, size_t max_len) {
-    uint32_t len = read_uint32(data, offset);
+static int read_string_safe(const uint8_t *data, size_t data_len, size_t *offset, char *str, size_t max_len) {
+    if (!data || !offset || !str) return -1;
+    if (max_len == 0) return -1;
+    if (data_len == 0) return -1;
+    
+    uint32_t len;
+    if (read_uint32_safe(data, data_len, offset, &len) < 0) return -1;
+    
+    /* Prevent excessive string lengths */
     if (len >= max_len) len = max_len - 1;
-    memcpy(str, data + *offset, len);
+    if (len > MAX_STRING_LEN) return -1;
+    
+    /* Check buffer bounds */
+    if (*offset + len > data_len) return -1;
+    
+    if (len > 0) {
+        memcpy(str, data + *offset, len);
+        *offset += len;
+    }
     str[len] = '\0';
-    *offset += len;
+    return 0;
 }
 
 /* Create message header */
 static void create_header(uint8_t *header, MessageType type, uint32_t payload_len) {
+    if (!header) return;
+    if (payload_len > MAX_PAYLOAD_SIZE) return;
+    
     uint32_t magic = htonl(PROTOCOL_MAGIC);
     uint16_t msg_type = htons((uint16_t)type);
     uint32_t length = htonl(payload_len);
@@ -198,15 +238,29 @@ static void create_header(uint8_t *header, MessageType type, uint32_t payload_le
 }
 
 /* Create request message */
-static int create_request(MessageType type, Buffer *payload, uint8_t **out_data, uint32_t *out_size) {
+static int create_request(MessageType type, Buffer *payload, uint8_t *out_data, uint32_t max_size, uint32_t *out_size) {
+    if (!out_data || !out_size) return -1;
+    if (max_size < HEADER_SIZE) return -1;
+    
     uint32_t payload_size = payload ? payload->size : 0;
+    
+    /* Validate payload size */
+    if (payload) {
+        if (payload->size > MAX_PAYLOAD_SIZE) return -1;
+        if (payload->size > payload->capacity) return -1;
+    }
+    
+    /* Check for overflow */
+    if (payload_size > UINT32_MAX - HEADER_SIZE) return -1;
+    
     *out_size = HEADER_SIZE + payload_size;
-    *out_data = (uint8_t*)malloc(*out_size);
-    if (!*out_data) return -1;
+    
+    if (*out_size > max_size) return -1;
+    if (*out_size > MAX_BUFFER_SIZE) return -1;
 
-    create_header(*out_data, type, payload_size);
+    create_header(out_data, type, payload_size);
     if (payload && payload_size > 0) {
-        memcpy(*out_data + HEADER_SIZE, payload->data, payload_size);
+        memcpy(out_data + HEADER_SIZE, payload->data, payload_size);
     }
 
     return 0;
@@ -264,7 +318,7 @@ static int socket_connect(SocketClient *client) {
 static int execute_binary(SocketClient *client, const uint8_t *request_data,
                          uint32_t request_size, Response *response) {
     int sock = -1;
-    uint8_t *payload_buf = NULL;
+    uint8_t payload_buf[MAX_PAYLOAD_SIZE];
     int result = -1;
 
     response->success = 0;
@@ -291,14 +345,33 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
     }
 
     /* Parse header */
+    if (bytes_read < HEADER_SIZE) {
+        snprintf(response->message, MAX_STRING_LEN, "Incomplete header received");
+        goto cleanup;
+    }
+    
     size_t offset = 0;
-    uint32_t magic = read_uint32(header_buf, &offset);
+    uint32_t magic;
+    if (read_uint32_safe(header_buf, HEADER_SIZE, &offset, &magic) < 0) {
+        snprintf(response->message, MAX_STRING_LEN, "Failed to parse header magic");
+        goto cleanup;
+    }
+    
     offset = 4;
     uint16_t type_net;
+    if (offset + 2 > HEADER_SIZE) {
+        snprintf(response->message, MAX_STRING_LEN, "Header buffer overflow");
+        goto cleanup;
+    }
     memcpy(&type_net, header_buf + 4, 2);
     uint16_t resp_type = ntohs(type_net);
+    
     offset = 6;
-    uint32_t payload_length = read_uint32(header_buf, &offset);
+    uint32_t payload_length;
+    if (read_uint32_safe(header_buf, HEADER_SIZE, &offset, &payload_length) < 0) {
+        snprintf(response->message, MAX_STRING_LEN, "Failed to parse payload length");
+        goto cleanup;
+    }
 
     if (magic != PROTOCOL_MAGIC) {
         snprintf(response->message, MAX_STRING_LEN, "Invalid protocol magic");
@@ -312,12 +385,6 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
             goto cleanup;
         }
 
-        payload_buf = (uint8_t*)malloc(payload_length);
-        if (!payload_buf) {
-            snprintf(response->message, MAX_STRING_LEN, "Failed to allocate payload buffer");
-            goto cleanup;
-        }
-
         bytes_read = read(sock, payload_buf, payload_length);
         if (bytes_read != (ssize_t)payload_length) {
             snprintf(response->message, MAX_STRING_LEN, "Failed to read response payload");
@@ -328,14 +395,21 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
         offset = 0;
         if (resp_type == RESP_SUCCESS) {
             response->success = 1;
-            read_string(payload_buf, &offset, response->message, MAX_STRING_LEN);
+            if (read_string_safe(payload_buf, payload_length, &offset, response->message, MAX_STRING_LEN) < 0) {
+                snprintf(response->message, MAX_STRING_LEN, "Invalid success message");
+                goto cleanup;
+            }
             result = 0;
 
         } else if (resp_type == RESP_ERROR) {
             response->success = 0;
-            uint32_t error_code = read_uint32(payload_buf, &offset);
+            uint32_t error_code;
+            if (read_uint32_safe(payload_buf, payload_length, &offset, &error_code) < 0) goto cleanup;
             char error_msg[MAX_STRING_LEN];
-            read_string(payload_buf, &offset, error_msg, MAX_STRING_LEN);
+            if (read_string_safe(payload_buf, payload_length, &offset, error_msg, MAX_STRING_LEN) < 0) {
+                snprintf(response->message, MAX_STRING_LEN, "Invalid error message");
+                goto cleanup;
+            }
             // Use separate buffer for formatting to avoid truncation warning
             char temp[MAX_STRING_LEN];
             int written = snprintf(temp, sizeof(temp), "Error %u: ", error_code);
@@ -356,23 +430,40 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
             response->success = 1;
             StatusData status;
             memset(&status, 0, sizeof(status));  // Initialize all fields
-            status.camera_running = read_uint8(payload_buf, &offset);
-            status.recognition_enabled = read_uint8(payload_buf, &offset);
-            status.training_in_progress = read_uint8(payload_buf, &offset);
-            status.people_count = read_uint32(payload_buf, &offset);
-            status.total_faces = read_uint32(payload_buf, &offset);
-            status.fps = read_float(payload_buf, &offset);
+            
+            uint8_t temp_u8;
+            uint32_t temp_u32;
+            float temp_float;
+            
+            if (read_uint8_safe(payload_buf, payload_length, &offset, &temp_u8) < 0) goto cleanup;
+            status.camera_running = temp_u8;
+            if (read_uint8_safe(payload_buf, payload_length, &offset, &temp_u8) < 0) goto cleanup;
+            status.recognition_enabled = temp_u8;
+            if (read_uint8_safe(payload_buf, payload_length, &offset, &temp_u8) < 0) goto cleanup;
+            status.training_in_progress = temp_u8;
+            if (read_uint32_safe(payload_buf, payload_length, &offset, &temp_u32) < 0) goto cleanup;
+            status.people_count = temp_u32;
+            if (read_uint32_safe(payload_buf, payload_length, &offset, &temp_u32) < 0) goto cleanup;
+            status.total_faces = temp_u32;
+            if (read_float_safe(payload_buf, payload_length, &offset, &temp_float) < 0) goto cleanup;
+            status.fps = temp_float;
 
             if (offset < payload_length) {
-                status.max_face_aspect_ratio = read_float(payload_buf, &offset);
-                status.max_face_degree = read_float(payload_buf, &offset);
-                status.min_face_size = read_uint32(payload_buf, &offset);
-                status.det_th = read_float(payload_buf, &offset);
-                status.fas_th = read_float(payload_buf, &offset);
+                if (read_float_safe(payload_buf, payload_length, &offset, &temp_float) == 0)
+                    status.max_face_aspect_ratio = temp_float;
+                if (read_float_safe(payload_buf, payload_length, &offset, &temp_float) == 0)
+                    status.max_face_degree = temp_float;
+                if (read_uint32_safe(payload_buf, payload_length, &offset, &temp_u32) == 0)
+                    status.min_face_size = temp_u32;
+                if (read_float_safe(payload_buf, payload_length, &offset, &temp_float) == 0)
+                    status.det_th = temp_float;
+                if (read_float_safe(payload_buf, payload_length, &offset, &temp_float) == 0)
+                    status.fas_th = temp_float;
             }
 
             if (offset < payload_length) {
-                status.detection_time_ms = read_float(payload_buf, &offset);
+                if (read_float_safe(payload_buf, payload_length, &offset, &temp_float) == 0)
+                    status.detection_time_ms = temp_float;
             }
 
             snprintf(response->message, MAX_STRING_LEN,
@@ -387,7 +478,8 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
 
         } else if (resp_type == RESP_PERSON_LIST) {
             response->success = 1;
-            uint32_t count = read_uint32(payload_buf, &offset);
+            uint32_t count;
+            if (read_uint32_safe(payload_buf, payload_length, &offset, &count) < 0) goto cleanup;
             if (count > MAX_PERSONS) count = MAX_PERSONS;
 
             char temp[MAX_STRING_LEN * 2];
@@ -395,10 +487,10 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
 
             for (uint32_t i = 0; i < count; i++) {
                 PersonInfo person;
-                read_string(payload_buf, &offset, person.name, MAX_STRING_LEN);
-                person.id = read_uint64(payload_buf, &offset);
-                person.image_count = read_uint32(payload_buf, &offset);
-                person.created_timestamp = read_uint64(payload_buf, &offset);
+                if (read_string_safe(payload_buf, payload_length, &offset, person.name, MAX_STRING_LEN) < 0) break;
+                if (read_uint64_safe(payload_buf, payload_length, &offset, &person.id) < 0) break;
+                if (read_uint32_safe(payload_buf, payload_length, &offset, &person.image_count) < 0) break;
+                if (read_uint64_safe(payload_buf, payload_length, &offset, &person.created_timestamp) < 0) break;
 
                 int len = snprintf(temp, sizeof(temp), ",person:%s:%llu:%u:%llu",
                         person.name,
@@ -423,16 +515,18 @@ static int execute_binary(SocketClient *client, const uint8_t *request_data,
     }
 
 cleanup:
-    if (payload_buf) free(payload_buf);
     if (sock >= 0) close(sock);
     return result;
 }
 
 /* Public API functions */
 
+static SocketClient unix_client;  /* Static client storage */
+static SocketClient tcp_client;   /* Static client storage */
+
 SocketClient* socket_client_create_unix(const char *socket_path) {
-    SocketClient *client = (SocketClient*)malloc(sizeof(SocketClient));
-    if (!client) return NULL;
+    SocketClient *client = &unix_client;
+    memset(client, 0, sizeof(SocketClient));
 
     strncpy(client->socket_path, socket_path ? socket_path : "/tmp/face_recognition.sock",
             sizeof(client->socket_path) - 1);
@@ -445,8 +539,8 @@ SocketClient* socket_client_create_unix(const char *socket_path) {
 }
 
 SocketClient* socket_client_create_tcp(const char *server_ip, int port) {
-    SocketClient *client = (SocketClient*)malloc(sizeof(SocketClient));
-    if (!client) return NULL;
+    SocketClient *client = &tcp_client;
+    memset(client, 0, sizeof(SocketClient));
 
     client->socket_path[0] = '\0';
     strncpy(client->server_ip, server_ip, sizeof(client->server_ip) - 1);
@@ -458,238 +552,189 @@ SocketClient* socket_client_create_tcp(const char *server_ip, int port) {
 }
 
 void socket_client_destroy(SocketClient *client) {
-    free(client);
+    /* No-op: using static storage */
+    (void)client;
 }
 
 int socket_client_camera_on(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_CAMERA_ON, NULL, &request, &size) < 0) {
+    if (create_request(REQ_CAMERA_ON, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_camera_off(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_CAMERA_OFF, NULL, &request, &size) < 0) {
+    if (create_request(REQ_CAMERA_OFF, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_capture(SocketClient *client, const char *initial, uint64_t id, Response *response) {
-    Buffer *buf = buffer_create(256);
-    if (!buf) {
-        snprintf(response->message, MAX_STRING_LEN, "Failed to create buffer");
-        response->success = 0;
-        return -1;
-    }
+    Buffer buf;
+    buffer_init(&buf);
 
-    if (buffer_write_string(buf, initial) < 0 ||
-        buffer_write_uint64(buf, id) < 0) {
-        buffer_destroy(buf);
+    if (buffer_write_string(&buf, initial) < 0 ||
+        buffer_write_uint64(&buf, id) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to build request");
         response->success = 0;
         return -1;
     }
 
-    uint8_t *request = NULL;
+    uint8_t request[MAX_BUFFER_SIZE];
     uint32_t size = 0;
-    if (create_request(REQ_CAPTURE, buf, &request, &size) < 0) {
-        buffer_destroy(buf);
+    if (create_request(REQ_CAPTURE, &buf, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    buffer_destroy(buf);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_train(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_TRAIN, NULL, &request, &size) < 0) {
+    if (create_request(REQ_TRAIN, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_delete_person(SocketClient *client, const char *name, Response *response) {
-    Buffer *buf = buffer_create(256);
-    if (!buf) {
-        snprintf(response->message, MAX_STRING_LEN, "Failed to create buffer");
-        response->success = 0;
-        return -1;
-    }
+    Buffer buf;
+    buffer_init(&buf);
 
-    if (buffer_write_string(buf, name) < 0) {
-        buffer_destroy(buf);
+    if (buffer_write_string(&buf, name) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to build request");
         response->success = 0;
         return -1;
     }
 
-    uint8_t *request = NULL;
+    uint8_t request[MAX_BUFFER_SIZE];
     uint32_t size = 0;
-    if (create_request(REQ_DELETE_PERSON, buf, &request, &size) < 0) {
-        buffer_destroy(buf);
+    if (create_request(REQ_DELETE_PERSON, &buf, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    buffer_destroy(buf);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_status(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_STATUS, NULL, &request, &size) < 0) {
+    if (create_request(REQ_STATUS, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_list_persons(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_LIST_PERSONS, NULL, &request, &size) < 0) {
+    if (create_request(REQ_LIST_PERSONS, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_detect_faces(SocketClient *client, int enabled, Response *response) {
-    Buffer *buf = buffer_create(16);
-    if (!buf) {
-        snprintf(response->message, MAX_STRING_LEN, "Failed to create buffer");
-        response->success = 0;
-        return -1;
-    }
+    Buffer buf;
+    buffer_init(&buf);
 
-    if (buffer_write_uint8(buf, enabled ? 1 : 0) < 0) {
-        buffer_destroy(buf);
+    if (buffer_write_uint8(&buf, enabled ? 1 : 0) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to build request");
         response->success = 0;
         return -1;
     }
 
-    uint8_t *request = NULL;
+    uint8_t request[MAX_BUFFER_SIZE];
     uint32_t size = 0;
-    if (create_request(REQ_DETECT_FACES, buf, &request, &size) < 0) {
-        buffer_destroy(buf);
+    if (create_request(REQ_DETECT_FACES, &buf, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    buffer_destroy(buf);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_fas_on(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_FAS_ON, NULL, &request, &size) < 0) {
+    if (create_request(REQ_FAS_ON, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_fas_off(SocketClient *client, Response *response) {
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
 
-    if (create_request(REQ_FAS_OFF, NULL, &request, &size) < 0) {
+    if (create_request(REQ_FAS_OFF, NULL, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_set_settings(SocketClient *client, float max_ratio, float max_degree,
                                uint32_t min_size, float det_th, float fas_th, Response *response) {
-    Buffer *buf = buffer_create(256);
-    if (!buf) {
-        snprintf(response->message, MAX_STRING_LEN, "Failed to create buffer");
-        response->success = 0;
-        return -1;
-    }
+    Buffer buf;
+    buffer_init(&buf);
 
-    if (buffer_write_float(buf, max_ratio) < 0 ||
-        buffer_write_float(buf, max_degree) < 0 ||
-        buffer_write_uint32(buf, min_size) < 0 ||
-        buffer_write_float(buf, det_th) < 0 ||
-        buffer_write_float(buf, fas_th) < 0) {
-        buffer_destroy(buf);
+    if (buffer_write_float(&buf, max_ratio) < 0 ||
+        buffer_write_float(&buf, max_degree) < 0 ||
+        buffer_write_uint32(&buf, min_size) < 0 ||
+        buffer_write_float(&buf, det_th) < 0 ||
+        buffer_write_float(&buf, fas_th) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to build request");
         response->success = 0;
         return -1;
     }
 
-    uint8_t *request = NULL;
+    uint8_t request[MAX_BUFFER_SIZE];
     uint32_t size = 0;
-    if (create_request(REQ_SET_SETTINGS, buf, &request, &size) < 0) {
-        buffer_destroy(buf);
+    if (create_request(REQ_SET_SETTINGS, &buf, request, sizeof(request), &size) < 0) {
         snprintf(response->message, MAX_STRING_LEN, "Failed to create request");
         response->success = 0;
         return -1;
     }
 
-    int result = execute_binary(client, request, size, response);
-    buffer_destroy(buf);
-    free(request);
-    return result;
+    return execute_binary(client, request, size, response);
 }
 
 int socket_client_stream_recognition(SocketClient *client) {
@@ -700,22 +745,19 @@ int socket_client_stream_recognition(SocketClient *client) {
     }
 
     /* Create stream start message */
-    uint8_t *request = NULL;
+    uint8_t request[HEADER_SIZE];
     uint32_t size = 0;
-    if (create_request(REQ_STREAM_START, NULL, &request, &size) < 0) {
+    if (create_request(REQ_STREAM_START, NULL, request, sizeof(request), &size) < 0) {
         close(sock);
         fprintf(stderr, "Failed to create stream start message\n");
         return -1;
     }
 
     if (write(sock, request, size) < 0) {
-        free(request);
         close(sock);
         fprintf(stderr, "Failed to send stream start message\n");
         return -1;
     }
-
-    free(request);
 
     /* Return socket for streaming (caller must close it) */
     return sock;
