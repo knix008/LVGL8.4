@@ -11,8 +11,9 @@
 /**
  * @brief Initialize stream module
  * @param label LVGL label object to display stream messages
+ * @param parent Parent screen object for popup overlay
  */
-void camera_stream_init(lv_obj_t *label);
+void camera_stream_init(lv_obj_t *label, lv_obj_t *parent);
 
 /**
  * @brief Start streaming from camera server

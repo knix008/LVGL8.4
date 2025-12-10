@@ -276,7 +276,7 @@ static lv_obj_t* create_camera_content(lv_obj_t *parent) {
     // Create stream display area
     int stream_y = status_y + 110;
     lv_obj_t *stream_label_obj = create_stream_container(content, stream_y);
-    camera_stream_init(stream_label_obj);
+    camera_stream_init(stream_label_obj, content);
 
     return content;
 }

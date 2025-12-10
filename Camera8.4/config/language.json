@@ -107,7 +107,10 @@
       "fas_on": "FAS 켜기",
       "fas_off": "FAS 끄기",
       "ready": "준비",
-      "stream_not_connected": "스트림: 연결되지 않음"
+      "stream_not_connected": "스트림: 연결되지 않음",
+      "recognized": "인식됨",
+      "user_id": "사용자 ID",
+      "confidence_level": "신뢰도"
     },
     "days_of_week": {
       "sunday": "일요일",
@@ -260,7 +263,10 @@
       "fas_on": "FAS On",
       "fas_off": "FAS Off",
       "ready": "Ready",
-      "stream_not_connected": "Stream: Not Connected"
+      "stream_not_connected": "Stream: Not Connected",
+      "recognized": "Recognized",
+      "user_id": "User ID",
+      "confidence_level": "Confidence Level"
     },
     "days_of_week": {
       "sunday": "Sunday",
