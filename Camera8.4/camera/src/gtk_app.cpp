@@ -656,13 +656,33 @@ GdkPixbuf* GTKApp::mat_to_pixbuf(const cv::Mat& mat) {
 
 void GTKApp::draw_faces_on_frame(cv::Mat& frame, const std::vector<Face>& faces) {
     try {
+        // First pass: check if there are any recognized faces
+        double threshold_percent = Config::RECOGNITION_CONFIDENCE_THRESHOLD * 100.0;
+        bool has_recognized_face = false;
         for (const auto& face : faces) {
+            bool is_recognized = (face.id > 0) &&
+                                (face.confidence >= threshold_percent) &&
+                                (face.name != "Unknown") &&
+                                (face.name != "Too far");
+            if (is_recognized) {
+                has_recognized_face = true;
+                break;
+            }
+        }
+
+        // Second pass: draw faces based on recognition status
+        for (const auto& face : faces) {
+            // If there are recognized faces, only show faces with confidence > 50%
+            // If there are no recognized faces, show all detected faces (to help with detection)
+            if (has_recognized_face && face.confidence < 50.0) {
+                continue;
+            }
+
             // Determine if face is recognized by checking face ID, confidence, and name
             // A face is recognized if:
             // 1. It has a valid positive ID (from FAISS match)
             // 2. Confidence is above the 70% threshold
             // 3. Name is not "Unknown" or "Too far"
-            double threshold_percent = Config::RECOGNITION_CONFIDENCE_THRESHOLD * 100.0;
             bool is_recognized = (face.id > 0) &&
                                 (face.confidence >= threshold_percent) &&
                                 (face.name != "Unknown") &&
