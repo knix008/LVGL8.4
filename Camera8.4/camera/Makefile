@@ -107,6 +107,7 @@ debug-run: debug
 clean:
 	@rm -rf $(OBJ_DIR) $(TARGET) $(SOCKET_CLIENT) $(GTK_CLIENT)
 	@rm -rf *.db *.bin
+	@rm -rf dataset/*
 	@echo "Cleaned build artifacts"
 
 # Full clean including external dependencies (be careful!)

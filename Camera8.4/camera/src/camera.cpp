@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "config.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -26,33 +27,22 @@ bool Camera::open(int camera_id) {
         }
 
         // Set camera properties for MJPEG format
-        // Note: Camera only supports MJPEG format, try multiple resolution options
-        // Try highest quality first (2560x1440), then fall back to smaller resolutions
-        std::vector<std::pair<int, int>> resolutions = {{2560, 1440}, {1920, 1080}, {1280, 720}, {640, 480}};
+        // Use configured resolution from Config
+        cap.set(cv::CAP_PROP_FRAME_WIDTH, Config::CAMERA_WIDTH);
+        cap.set(cv::CAP_PROP_FRAME_HEIGHT, Config::CAMERA_HEIGHT);
+        cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
 
-        bool resolution_set = false;
-        for (const auto& res : resolutions) {
-            cap.set(cv::CAP_PROP_FRAME_WIDTH, res.first);
-            cap.set(cv::CAP_PROP_FRAME_HEIGHT, res.second);
-            cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
+        int actual_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+        int actual_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
 
-            int actual_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-            int actual_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-
-            if (actual_width == res.first && actual_height == res.second) {
-                resolution_set = true;
-                std::cout << "Successfully set camera resolution: " << actual_width << "x" << actual_height << std::endl;
-                break;
-            }
+        if (actual_width == Config::CAMERA_WIDTH && actual_height == Config::CAMERA_HEIGHT) {
+            std::cout << "Successfully set camera resolution: " << actual_width << "x" << actual_height << std::endl;
+        } else {
+            std::cout << "Could not set requested resolution " << Config::CAMERA_WIDTH << "x" << Config::CAMERA_HEIGHT
+                      << ", using default: " << actual_width << "x" << actual_height << std::endl;
         }
 
-        if (!resolution_set) {
-            // Use whatever resolution the camera provides
-            std::cout << "Could not set requested resolution, using default: "
-                      << get_frame_width() << "x" << get_frame_height() << std::endl;
-        }
-
-        cap.set(cv::CAP_PROP_FPS, 30);
+        cap.set(cv::CAP_PROP_FPS, Config::CAMERA_FPS);
         cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
 
         std::cout << "Camera opened successfully: " << camera_id << std::endl;

@@ -7,8 +7,7 @@
 GTKApp::GTKApp()
     : window(nullptr), image_widget(nullptr), toggle_button(nullptr),
       train_button(nullptr), capture_button(nullptr),
-      status_label(nullptr), fps_label(nullptr), face_info_label(nullptr),
-      face_count_label(nullptr), error_rate_label(nullptr),
+      status_label(nullptr), fps_label(nullptr),
       refresh_timer(0), recognition_timer(0), camera_running(false), face_recognition_enabled(false),
       training_in_progress(false), capture_in_progress(false), cleanup_done(false),
       frame_count(0), recognition_frame_count(0), last_time(0), capture_count(0), last_recognition_time(0),
@@ -67,26 +66,26 @@ bool GTKApp::init() {
 
         // Create status label
         status_label = gtk_label_new("Status: Camera Idle");
-        gtk_box_pack_start(GTK_BOX(hbox), status_label, TRUE, TRUE, 0);
+        gtk_label_set_width_chars(GTK_LABEL(status_label), 30);
+        gtk_label_set_max_width_chars(GTK_LABEL(status_label), 30);
+        gtk_label_set_ellipsize(GTK_LABEL(status_label), PANGO_ELLIPSIZE_END);
+        gtk_label_set_xalign(GTK_LABEL(status_label), 0.0);
+        gtk_box_pack_start(GTK_BOX(hbox), status_label, FALSE, FALSE, 0);
 
         // Create Recognition FPS label
         fps_label = gtk_label_new("Recognition FPS: 0");
+        gtk_label_set_width_chars(GTK_LABEL(fps_label), 20);
+        gtk_label_set_max_width_chars(GTK_LABEL(fps_label), 20);
+        gtk_label_set_ellipsize(GTK_LABEL(fps_label), PANGO_ELLIPSIZE_END);
+        gtk_label_set_xalign(GTK_LABEL(fps_label), 0.0);
         gtk_box_pack_end(GTK_BOX(hbox), fps_label, FALSE, FALSE, 0);
-
-        // Create face info label (recognized person)
-        face_info_label = gtk_label_new("Person: None detected");
-        gtk_box_pack_end(GTK_BOX(hbox), face_info_label, FALSE, FALSE, 0);
-
-        // Create face count label (confidence level)
-        face_count_label = gtk_label_new("Confidence: 0%");
-        gtk_box_pack_end(GTK_BOX(hbox), face_count_label, FALSE, FALSE, 0);
-
-        // Create error rate label (detection metrics)
-        error_rate_label = gtk_label_new("Detection Rate: 0% | Error: 0%");
-        gtk_box_pack_end(GTK_BOX(hbox), error_rate_label, FALSE, FALSE, 0);
 
         // Create recognition time label
         recognition_time_label = gtk_label_new("Recognition: 0ms");
+        gtk_label_set_width_chars(GTK_LABEL(recognition_time_label), 18);
+        gtk_label_set_max_width_chars(GTK_LABEL(recognition_time_label), 18);
+        gtk_label_set_ellipsize(GTK_LABEL(recognition_time_label), PANGO_ELLIPSIZE_END);
+        gtk_label_set_xalign(GTK_LABEL(recognition_time_label), 0.0);
         gtk_box_pack_end(GTK_BOX(hbox), recognition_time_label, FALSE, FALSE, 0);
 
         // Open camera
@@ -158,11 +157,11 @@ bool GTKApp::init() {
         // Show all widgets
         gtk_widget_show_all(window);
 
-        // Set up refresh timer (30ms = ~33 FPS)
-        refresh_timer = g_timeout_add(30, on_refresh_timer, this);
+        // Set up refresh timer (~33 FPS)
+        refresh_timer = g_timeout_add(Config::DISPLAY_REFRESH_INTERVAL_MS, on_refresh_timer, this);
         
-        // Set up recognition timer (100ms = 10 times per second)
-        recognition_timer = g_timeout_add(100, on_recognition_timer, this);
+        // Set up recognition timer (4 times per second)
+        recognition_timer = g_timeout_add(Config::RECOGNITION_INTERVAL_MS, on_recognition_timer, this);
 
         return true;
     } catch (const std::exception& e) {
@@ -367,15 +366,6 @@ gboolean GTKApp::refresh_frame() {
                     g_snprintf(fps_text, sizeof(fps_text), "Recognition FPS: %.1f", recognition_fps);
                     gtk_label_set_text(GTK_LABEL(fps_label), fps_text);
 
-                    // Update detection error rate metrics
-                    double detection_rate = face_detector.get_detection_rate();
-                    double false_positive_rate = face_detector.get_false_positive_rate();
-                    gchar error_rate_text[100];
-                    g_snprintf(error_rate_text, sizeof(error_rate_text),
-                              "Detection: %.1f%% | Error: %.1f%%",
-                              detection_rate, false_positive_rate);
-                    gtk_label_set_text(GTK_LABEL(error_rate_label), error_rate_text);
-
                     frame_count = 0;
                     recognition_frame_count = 0;
                     last_time = current_time;
@@ -488,24 +478,6 @@ gboolean GTKApp::process_recognition() {
             has_recognition_result = false;
         }
 
-        // Update UI with recognized person and confidence
-        if (recognized_count > 0) {
-            gchar person_text[100];
-            g_snprintf(person_text, sizeof(person_text), "Person: %s (%d face%s)",
-                      best_person_name.c_str(), recognized_count,
-                      recognized_count > 1 ? "s" : "");
-            gtk_label_set_text(GTK_LABEL(face_info_label), person_text);
-
-            gchar conf_text[100];
-            g_snprintf(conf_text, sizeof(conf_text), "Confidence: %.1f%%", best_confidence);
-            gtk_label_set_text(GTK_LABEL(face_count_label), conf_text);
-        } else if (unknown_count > 0) {
-            gchar person_text[100];
-            g_snprintf(person_text, sizeof(person_text), "Unknown: %d face%s detected",
-                      unknown_count, unknown_count > 1 ? "s" : "");
-            gtk_label_set_text(GTK_LABEL(face_info_label), person_text);
-            gtk_label_set_text(GTK_LABEL(face_count_label), "Confidence: N/A");
-        }
 
     } catch (const DetectionException& e) {
         LOG_WARN("Face detection error: " << e.what());
@@ -623,10 +595,7 @@ void GTKApp::on_camera_stop_finished() {
     gtk_button_set_label(GTK_BUTTON(toggle_button), "Start Camera");
     gtk_label_set_text(GTK_LABEL(status_label), "Status: Camera Stopped");
     gtk_label_set_text(GTK_LABEL(fps_label), "Recognition FPS: 0");
-    gtk_label_set_text(GTK_LABEL(face_info_label), "Person: None detected");
-    gtk_label_set_text(GTK_LABEL(face_count_label), "Confidence: 0%");
     gtk_label_set_text(GTK_LABEL(recognition_time_label), "Recognition: 0ms");
-    gtk_label_set_text(GTK_LABEL(error_rate_label), "Detection Rate: 0% | Error: 0%");
 
     // Force widget redraw to ensure clear takes effect immediately
     gtk_widget_queue_draw(image_widget);
@@ -930,7 +899,7 @@ void GTKApp::train_model() {
 
     training_in_progress = true;
     gtk_widget_set_sensitive(train_button, FALSE);
-    gtk_label_set_text(GTK_LABEL(status_label), "Status: Training model from dataset... please wait");
+    gtk_label_set_text(GTK_LABEL(status_label), "Status: Training model from dataset...");
 
     LOG_INFO("Starting training from dataset...");
 
@@ -960,11 +929,11 @@ gboolean GTKApp::on_training_complete(gpointer user_data) {
 
 void GTKApp::on_training_finished() {
     if (training_success) {
-        gtk_label_set_text(GTK_LABEL(status_label), "Status: Training complete! Ready to recognize faces.");
+        gtk_label_set_text(GTK_LABEL(status_label), "Status: Training completed.");
         face_recognition_enabled = true;
         LOG_INFO("Training successful!");
     } else {
-        gtk_label_set_text(GTK_LABEL(status_label), "Status: Training failed - add photos and try again");
+        gtk_label_set_text(GTK_LABEL(status_label), "Status: Training failed.");
         LOG_ERROR("Training failed");
         face_recognition_enabled = false;
     }

@@ -48,6 +48,29 @@ namespace Config {
 
     /// Time interval between recognition updates (microseconds)
     /// Reduces CPU load by caching recognition results
+
+    // ========================
+    // Timer Configuration
+    // ========================
+
+    /// Display refresh timer interval in milliseconds (~33 FPS)
+    constexpr int DISPLAY_REFRESH_INTERVAL_MS = 30;
+
+    /// Face recognition timer interval in milliseconds (4 times per second)
+    constexpr int RECOGNITION_INTERVAL_MS = 250;
+
+    // ========================
+    // Camera Configuration
+    // ========================
+
+    /// Camera capture resolution width
+    constexpr int CAMERA_WIDTH = 640;
+
+    /// Camera capture resolution height
+    constexpr int CAMERA_HEIGHT = 480;
+
+    /// Camera frame rate
+    constexpr int CAMERA_FPS = 30;
     /// Set to 0 to disable time-based throttling and use only frame skip
     constexpr long RECOGNITION_UPDATE_INTERVAL_US = 0;  // Disabled - using frame skip only
 
