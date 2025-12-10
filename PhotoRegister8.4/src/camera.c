@@ -189,8 +189,8 @@ static void show_person_id_popup(void) {
     lv_obj_set_size(input_container, 260, 40);
     lv_obj_align(input_container, LV_ALIGN_TOP_MID, 0, 45);
     lv_obj_set_style_bg_color(input_container, lv_color_hex(0x1A1A1A), 0);
-    lv_obj_set_style_border_width(input_container, 1, 0);
-    lv_obj_set_style_border_color(input_container, lv_color_hex(0x555555), 0);
+    lv_obj_set_style_border_width(input_container, 2, 0);
+    lv_obj_set_style_border_color(input_container, lv_color_hex(get_button_border_color()), 0);
     lv_obj_clear_flag(input_container, LV_OBJ_FLAG_SCROLLABLE);  // Disable scrolling
     
     person_id_input = lv_label_create(input_container);
