@@ -688,9 +688,8 @@ void GTKApp::draw_faces_on_frame(cv::Mat& frame, const std::vector<Face>& faces)
             int corner_length = static_cast<int>(box_width * 0.15); // 15% of dynamic width for corner length
             int line_thickness = 2;
 
-            // Color based on recognition status
-            // Green for recognized faces, Red for unknown faces
-            cv::Scalar color = is_recognized ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255);
+            // Always use green color for all detected faces (both recognized and unknown)
+            cv::Scalar color = cv::Scalar(0, 255, 0);
 
             // Top-left corner
             // Horizontal line
@@ -740,38 +739,31 @@ void GTKApp::draw_faces_on_frame(cv::Mat& frame, const std::vector<Face>& faces)
                     cv::Point(expanded_bbox.x + expanded_bbox.width, expanded_bbox.y + expanded_bbox.height - corner_length),
                     color, line_thickness);
 
-            // Draw label with name and confidence
-            // Note: face.confidence may contain either detection confidence or recognition confidence
-            // For display, show the current confidence value
-            std::string label;
-            int confidence_display = static_cast<int>(face.confidence);
-
+            // Draw label with name and confidence only for recognized faces
             if (is_recognized) {
+                std::string label;
+                int confidence_display = static_cast<int>(face.confidence);
                 label = face.name + " (" + std::to_string(confidence_display) + "%)";
-            } else {
-                label = "Unknown (" + std::to_string(confidence_display) + "%)";
+
+                int baseline = 0;
+                cv::Size text_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.45, 1, &baseline);
+
+                // Green background for recognized faces
+                cv::Scalar bg_color = cv::Scalar(0, 255, 0);
+                cv::Scalar text_color = cv::Scalar(0, 0, 0);  // Black text
+
+                // Draw background for text (above the face area) with minimal padding
+                cv::rectangle(frame,
+                             cv::Point(expanded_bbox.x - 1, expanded_bbox.y - text_size.height - 4),
+                             cv::Point(expanded_bbox.x + text_size.width + 1, expanded_bbox.y),
+                             bg_color, -1);
+
+                // Draw text with normal font weight
+                cv::putText(frame, label,
+                           cv::Point(expanded_bbox.x, expanded_bbox.y - 3),
+                           cv::FONT_HERSHEY_SIMPLEX, 0.45, text_color, 1);
             }
-
-            int baseline = 0;
-            cv::Size text_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.45, 1, &baseline);
-
-            // Background color based on recognition status
-            // Green background for recognized/known faces, Red for unknown faces
-            cv::Scalar bg_color = is_recognized ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 200);
-
-            // Text color: black text for known faces, white text for unknown faces
-            cv::Scalar text_color = is_recognized ? cv::Scalar(0, 0, 0) : cv::Scalar(255, 255, 255);
-
-            // Draw background for text (above the face area) with minimal padding
-            cv::rectangle(frame,
-                         cv::Point(expanded_bbox.x - 1, expanded_bbox.y - text_size.height - 4),
-                         cv::Point(expanded_bbox.x + text_size.width + 1, expanded_bbox.y),
-                         bg_color, -1);
-
-            // Draw text with normal font weight
-            cv::putText(frame, label,
-                       cv::Point(expanded_bbox.x, expanded_bbox.y - 3),
-                       cv::FONT_HERSHEY_SIMPLEX, 0.45, text_color, 1);
+            // For unknown faces, only the rectangle is drawn (no label)
         }
     } catch (const std::exception& e) {
         LOG_ERROR("Exception in draw_faces_on_frame: " << e.what());
@@ -1059,6 +1051,51 @@ void GTKApp::capture_photo() {
 
             // Generate filename: A1/1.jpg, A1/2.jpg, etc.
             std::string filename = person_dir + "/" + std::to_string(sequence) + ".jpg";
+
+            // Flash entire window white when capturing photo
+            // Create a white overlay widget that covers the entire window
+            GtkWidget* overlay = gtk_window_new(GTK_WINDOW_POPUP);
+            gtk_window_set_transient_for(GTK_WINDOW(overlay), GTK_WINDOW(window));
+            gtk_window_set_modal(GTK_WINDOW(overlay), TRUE);
+            
+            // Make it fill the window
+            gint win_width, win_height;
+            gtk_window_get_size(GTK_WINDOW(window), &win_width, &win_height);
+            gtk_window_set_default_size(GTK_WINDOW(overlay), win_width, win_height);
+            gtk_widget_set_size_request(overlay, win_width, win_height);
+            
+            // Position it over the main window
+            gint win_x, win_y;
+            gtk_window_get_position(GTK_WINDOW(window), &win_x, &win_y);
+            gtk_window_move(GTK_WINDOW(overlay), win_x, win_y);
+            
+            // Create white drawing area
+            GtkWidget* white_area = gtk_drawing_area_new();
+            gtk_widget_set_size_request(white_area, win_width, win_height);
+            g_signal_connect(white_area, "draw", G_CALLBACK(+[](GtkWidget*, cairo_t* cr, gpointer) -> gboolean {
+                cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);  // White
+                cairo_paint(cr);
+                return FALSE;
+            }), nullptr);
+            
+            gtk_container_add(GTK_CONTAINER(overlay), white_area);
+            gtk_widget_show_all(overlay);
+            
+            // Force immediate GUI update
+            while (gtk_events_pending()) {
+                gtk_main_iteration();
+            }
+            
+            // Brief pause for flash effect (500ms)
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            
+            // Remove the overlay
+            gtk_widget_destroy(overlay);
+            
+            // Force GUI update again
+            while (gtk_events_pending()) {
+                gtk_main_iteration();
+            }
 
             // Save the frame
             if (cv::imwrite(filename, last_frame)) {

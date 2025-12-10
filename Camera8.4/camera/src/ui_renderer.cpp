@@ -99,18 +99,17 @@ void UIRenderer::draw_label(cv::Mat& frame, const Face& face, const Color& color
         return;
     }
 
-    // Prepare label text
-    std::string label;
-    if (face.confidence >= 70.0) {
-        // High confidence - show name and percentage
-        char label_text[100];
-        snprintf(label_text, sizeof(label_text), "%s (%.0f%%)",
-                face.name.c_str(), face.confidence);
-        label = label_text;
-    } else {
-        // Low confidence - show Unknown
-        label = "Unknown";
+    // Only draw label if the face is recognized (id > 0)
+    if (face.id <= 0) {
+        // Unknown or unrecognized face - no label
+        return;
     }
+
+    // Prepare label text with ID and confidence
+    char label_text[100];
+    snprintf(label_text, sizeof(label_text), "%s (%.0f%%)",
+            face.name.c_str(), face.confidence);
+    std::string label = label_text;
 
     // Get text size
     int baseline = 0;
@@ -142,14 +141,16 @@ void UIRenderer::draw_single_face(cv::Mat& frame, const Face& face) {
         return;
     }
 
-    // Get color based on confidence
-    Color face_color = get_face_color(face.confidence);
+    // Always use green color for bounding boxes (no red for unknown faces)
+    Color face_color = color_green;
 
-    // Draw bounding box
+    // Draw bounding box (always shown)
     draw_bounding_box(frame, face, face_color);
 
-    // Draw label
-    draw_label(frame, face, face_color);
+    // Draw label only if face is recognized (id > 0)
+    if (face.id > 0) {
+        draw_label(frame, face, face_color);
+    }
 }
 
 void UIRenderer::draw_faces(cv::Mat& frame, const std::vector<Face>& faces) {
