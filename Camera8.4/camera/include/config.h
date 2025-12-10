@@ -64,10 +64,10 @@ namespace Config {
     // ========================
 
     /// Camera capture resolution width
-    constexpr int CAMERA_WIDTH = 640;
+    constexpr int CAMERA_WIDTH = 320;
 
     /// Camera capture resolution height
-    constexpr int CAMERA_HEIGHT = 480;
+    constexpr int CAMERA_HEIGHT = 240;
 
     /// Camera frame rate
     constexpr int CAMERA_FPS = 30;

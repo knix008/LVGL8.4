@@ -26,20 +26,51 @@ bool Camera::open(int camera_id) {
             return false;
         }
 
-        // Set camera properties for MJPEG format
-        // Use configured resolution from Config
-        cap.set(cv::CAP_PROP_FRAME_WIDTH, Config::CAMERA_WIDTH);
-        cap.set(cv::CAP_PROP_FRAME_HEIGHT, Config::CAMERA_HEIGHT);
-        cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
-
-        int actual_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-        int actual_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-
-        if (actual_width == Config::CAMERA_WIDTH && actual_height == Config::CAMERA_HEIGHT) {
-            std::cout << "Successfully set camera resolution: " << actual_width << "x" << actual_height << std::endl;
-        } else {
-            std::cout << "Could not set requested resolution " << Config::CAMERA_WIDTH << "x" << Config::CAMERA_HEIGHT
-                      << ", using default: " << actual_width << "x" << actual_height << std::endl;
+        // Force camera to use lowest resolution
+        // Many webcams report only their native resolution but can scale down
+        // We'll force it to use a low resolution directly
+        
+        std::vector<std::pair<int, int>> preferred_resolutions = {
+            {320, 240},   // QVGA - good balance
+            {640, 480},   // VGA - fallback
+            {160, 120},   // QQVGA - absolute minimum
+            {176, 144},   // QCIF
+        };
+        
+        std::cout << "\nSetting camera to lowest possible resolution..." << std::endl;
+        
+        // Try preferred resolutions in order
+        int selected_width = 320;
+        int selected_height = 240;
+        bool resolution_set = false;
+        
+        for (const auto& res : preferred_resolutions) {
+            cap.set(cv::CAP_PROP_FRAME_WIDTH, res.first);
+            cap.set(cv::CAP_PROP_FRAME_HEIGHT, res.second);
+            cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
+            
+            // Verify by capturing a frame
+            cv::Mat test_frame;
+            cap.grab();
+            if (cap.read(test_frame) && !test_frame.empty()) {
+                selected_width = test_frame.cols;
+                selected_height = test_frame.rows;
+                std::cout << "Set resolution to: " << selected_width << "x" << selected_height;
+                if (selected_width != res.first || selected_height != res.second) {
+                    std::cout << " (requested " << res.first << "x" << res.second 
+                              << " - camera scaled to nearest supported)";
+                }
+                std::cout << std::endl;
+                resolution_set = true;
+                break;
+            }
+        }
+        
+        if (!resolution_set) {
+            // Fallback to camera default
+            selected_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+            selected_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+            std::cout << "Using camera default resolution: " << selected_width << "x" << selected_height << std::endl;
         }
 
         cap.set(cv::CAP_PROP_FPS, Config::CAMERA_FPS);
