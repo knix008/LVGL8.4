@@ -75,7 +75,7 @@
       "mode_lowercase": "소문자",
       "space_button": "␣",
       "clear_button": "지우기",
-      "delete_button": "< 뒤로",
+      "delete_button": "←",
       "enter_button": "입력",
       "instruction": "텍스트 박스를 클릭하여 키보드를 표시하세요",
       "result_title": "입력 결과"
@@ -263,7 +263,7 @@
       "mode_lowercase": "Lowercase",
       "space_button": "␣",
       "clear_button": "Clear",
-      "delete_button": "< Delete",
+      "delete_button": "←",
       "enter_button": "Enter",
       "instruction": "Click the text box to show the keyboard",
       "result_title": "Input Result"
