@@ -410,13 +410,16 @@ void add_status_bar_icon(int menu_index, const char *icon_path) {
     if (selected_count < MAX_STATUS_ICONS) {
         // Mark as selected
         app_state_set_menu_item_selected(menu_index, true);
-        // Reassign all orders to pack from slot 0
-        int slot = 0;
+        // Find the highest current order
+        int max_order = -1;
         for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
-            if (app_state_is_menu_item_selected(i)) {
-                app_state_set_menu_item_order(i, slot++);
+            int order = app_state_get_menu_item_order(i);
+            if (app_state_is_menu_item_selected(i) && order > max_order) {
+                max_order = order;
             }
         }
+        // Assign next order to this icon
+        app_state_set_menu_item_order(menu_index, max_order + 1);
         // Update the status bar icons
         update_status_bar_icons();
     } else {
@@ -471,13 +474,14 @@ void remove_status_bar_icon(int menu_index) {
         return;
     }
     // Mark as not selected
+    int removed_order = app_state_get_menu_item_order(menu_index);
     app_state_set_menu_item_selected(menu_index, false);
     app_state_set_menu_item_order(menu_index, -1);
-    // Reassign all orders to pack from slot 0
-    int slot = 0;
+    // Shift down all items with higher order numbers
     for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
-        if (app_state_is_menu_item_selected(i)) {
-            app_state_set_menu_item_order(i, slot++);
+        int order = app_state_get_menu_item_order(i);
+        if (app_state_is_menu_item_selected(i) && order > removed_order) {
+            app_state_set_menu_item_order(i, order - 1);
         }
     }
     // Update the status bar icons
