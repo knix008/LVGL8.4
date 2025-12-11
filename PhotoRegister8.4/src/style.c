@@ -97,6 +97,7 @@ void apply_button_label_style(lv_obj_t *label) {
 }
 
 void apply_bar_style(lv_obj_t *bar, uint32_t bg_color) {
+    lv_obj_set_style_radius(bar, 0, 0);  // No rounded corners - rectangular shape
     lv_obj_set_style_bg_color(bar, lv_color_hex(bg_color), 0);
     lv_obj_set_style_bg_opa(bar, COLOR_TRANSPARENT, 0);
     lv_obj_set_style_border_width(bar, 0, 0);
