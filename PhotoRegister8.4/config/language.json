@@ -61,6 +61,12 @@
         "special": "특수문자"
       }
     },
+    "number_input_screen": {
+      "title": "숫자 입력",
+      "enter_button": "입력",
+      "instruction": "텍스트 박스를 클릭하여 키패드를 표시하세요",
+      "result_title": "입력 결과"
+    },
     "info_screen": {
       "title": "애플리케이션 정보",
       "app_name": "이름: LVGL Menu",
@@ -229,6 +235,12 @@
         "number": "Number",
         "special": "Special"
       }
+    },
+    "number_input_screen": {
+      "title": "Number Input",
+      "enter_button": "Enter",
+      "instruction": "Click the text box to show the keypad",
+      "result_title": "Input Result"
     },
     "info_screen": {
       "title": "Application Information",
