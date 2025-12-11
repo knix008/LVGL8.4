@@ -88,3 +88,13 @@ void settings_btn_callback(lv_event_t *e) {
         show_screen(SCREEN_CAMERA);  // Then to CAMERA
     }
 }
+
+void number_input_btn_callback(lv_event_t *e) {
+    (void)e;
+    if (screen_stack[screen_stack_top].screen_id != SCREEN_NUMBER_INPUT) {
+        // Navigate using absolute path: clear stack to MENU then go to NUMBER_INPUT
+        screen_stack_top = 0;  // Reset to MAIN
+        show_screen(SCREEN_MENU);  // Go through MENU
+        show_screen(SCREEN_NUMBER_INPUT);  // Then to NUMBER_INPUT
+    }
+}

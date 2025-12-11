@@ -286,27 +286,27 @@ void app_state_set_font_name_button_label(const char *name) {
 // ============================================================================
 
 bool app_state_is_menu_item_selected(int index) {
-    if (index < 0 || index >= MAX_STATUS_ICONS) {
+    if (index < 0 || index >= MENU_ITEMS_COUNT) {
         return false;
     }
     return app_state.menu_item_selected[index];
 }
 
 void app_state_set_menu_item_selected(int index, bool selected) {
-    if (index >= 0 && index < MAX_STATUS_ICONS) {
+    if (index >= 0 && index < MENU_ITEMS_COUNT) {
         app_state.menu_item_selected[index] = selected;
     }
 }
 
 int app_state_get_menu_item_order(int index) {
-    if (index >= 0 && index < MAX_STATUS_ICONS) {
+    if (index >= 0 && index < MENU_ITEMS_COUNT) {
         return app_state.menu_item_order[index];
     }
     return -1;
 }
 
 void app_state_set_menu_item_order(int index, int order) {
-    if (index >= 0 && index < MAX_STATUS_ICONS) {
+    if (index >= 0 && index < MENU_ITEMS_COUNT) {
         app_state.menu_item_order[index] = order;
     }
 }

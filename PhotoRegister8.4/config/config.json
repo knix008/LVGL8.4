@@ -1,7 +1,7 @@
 {
   "status_bar": {
     "admin": true,
-    "network": false,
+    "network": true,
     "korean_input": false,
     "info": false,
     "camera": true
@@ -31,10 +31,7 @@
     "status_bar_color": "0x3A0A3A",
     "button_color": "0x0D0D3A",
     "button_border_color": "0x4AFF4A",
-    "language": "en"
-  },
-  "calendar": {
-    "selected_date": "2025-12-10"
+    "language": "ko"
   },
   "fonts": {
     "title": {

@@ -72,6 +72,13 @@ void update_title_bar_location(int screen_id) {
                     name = get_label(key);
                 }
                 break;
+            case SCREEN_NUMBER_INPUT:
+                {
+                    char key[64];
+                    snprintf(key, sizeof(key), "menu_items.%s", "number_input");
+                    name = get_label(key);
+                }
+                break;
             default:
                 name = get_label("screen_names.home");
                 break;
@@ -192,6 +199,9 @@ void show_screen(int screen_id) {
         update_title_bar_location(screen_id);
     } else if (screen_id == SCREEN_CAMERA) {
         create_camera_screen();
+        update_title_bar_location(screen_id);
+    } else if (screen_id == SCREEN_NUMBER_INPUT) {
+        create_number_input_screen();
         update_title_bar_location(screen_id);
     }
 }
@@ -356,6 +366,14 @@ void finalize_screen(lv_obj_t *screen, int screen_id) {
 // ============================================================================
 
 /**
+ * Callback to close message box when button is clicked
+ */
+static void msgbox_close_event_cb(lv_event_t *e) {
+    lv_obj_t *mbox = lv_event_get_current_target(e);
+    lv_msgbox_close(mbox);
+}
+
+/**
  * Adds an icon to the status bar at the specified menu index position.
  * 
  * @param menu_index The position index (0-4) for the icon
@@ -364,51 +382,47 @@ void finalize_screen(lv_obj_t *screen, int screen_id) {
 void add_status_bar_icon(int menu_index, const char *icon_path) {
     (void)icon_path;  // Icon path is determined from menu_index in update_status_bar_icons
 
-    if (menu_index < 0 || menu_index >= MAX_STATUS_ICONS) {
+    if (menu_index < 0 || menu_index >= MENU_ITEMS_COUNT) {
         return;
     }
-
     if (!app_state_get_status_bar()) {
         return;
     }
-
-    // Find the next available slot (0-4)
-    int next_slot = 0;
-    for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+    // Only add if we have available slots
+    int selected_count = 0;
+    for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
         if (app_state_is_menu_item_selected(i)) {
-            next_slot++;
+            selected_count++;
         }
     }
-
-    // Only add if we have available slots
-    if (next_slot < MAX_STATUS_ICONS) {
-        // Mark as selected and assign slot order
+    if (selected_count < MAX_STATUS_ICONS) {
+        // Mark as selected
         app_state_set_menu_item_selected(menu_index, true);
-        app_state_set_menu_item_order(menu_index, next_slot);
-
+        // Reassign all orders to pack from slot 0
+        int slot = 0;
+        for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
+            if (app_state_is_menu_item_selected(i)) {
+                app_state_set_menu_item_order(i, slot++);
+            }
+        }
         // Update the status bar icons
         update_status_bar_icons();
     } else {
         // Show warning popup - status bar is full
-        static const char *btns[] = {"OK", ""};
-        lv_obj_t *mbox = lv_msgbox_create(NULL, "Warning", 
-                                          "Status bar is full. Maximum 5 icons allowed.", 
-                                          btns, false);
-
+        static const char *btns[] = {NULL, ""};
+        const char *title_str = get_label("common.warning");
+        const char *msg_str = get_label("menu_screen.status_bar_full");
+        const char *ok_str = get_label("common.ok");
+        btns[0] = ok_str;
+        lv_obj_t *mbox = lv_msgbox_create(NULL, title_str, msg_str, btns, false);
         if (mbox) {
             lv_obj_center(mbox);
             lv_obj_move_foreground(mbox);
-
-            // Set msgbox width
             lv_obj_set_width(mbox, 280);
-
-            // Apply styling
             lv_obj_set_style_bg_color(mbox, lv_color_hex(0x000000), 0);
             lv_obj_set_style_bg_opa(mbox, LV_OPA_70, 0);
             lv_obj_set_style_border_color(mbox, lv_color_hex(0xFF6B00), 0);
             lv_obj_set_style_border_width(mbox, 2, 0);
-
-            // Apply font to title
             lv_obj_t *title = lv_msgbox_get_title(mbox);
             if (title) {
                 if (app_state_get_font_24_bold()) {
@@ -416,8 +430,6 @@ void add_status_bar_icon(int menu_index, const char *icon_path) {
                 }
                 lv_obj_set_style_text_color(title, lv_color_hex(0xFFAA00), 0);
             }
-
-            // Apply font to text
             lv_obj_t *text = lv_msgbox_get_text(mbox);
             if (text) {
                 if (app_state_get_font_20()) {
@@ -425,8 +437,6 @@ void add_status_bar_icon(int menu_index, const char *icon_path) {
                 }
                 lv_obj_set_style_text_color(text, lv_color_hex(0xFFFFFF), 0);
             }
-
-            // Style the OK button
             lv_obj_t *btns_obj = lv_msgbox_get_btns(mbox);
             if (btns_obj) {
                 lv_obj_set_height(btns_obj, 50);
@@ -434,6 +444,7 @@ void add_status_bar_icon(int menu_index, const char *icon_path) {
                     lv_obj_set_style_text_font(btns_obj, app_state_get_font_20(), 0);
                 }
             }
+            lv_obj_add_event_cb(mbox, msgbox_close_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
         }
     }
 }
@@ -444,27 +455,19 @@ void add_status_bar_icon(int menu_index, const char *icon_path) {
  * @param menu_index The position index (0-4) of the icon to remove
  */
 void remove_status_bar_icon(int menu_index) {
-    if (menu_index < 0 || menu_index >= MAX_STATUS_ICONS) {
+    if (menu_index < 0 || menu_index >= MENU_ITEMS_COUNT) {
         return;
     }
-
-    // Get the order of the item being removed
-    int removed_order = app_state_get_menu_item_order(menu_index);
-
     // Mark as not selected
     app_state_set_menu_item_selected(menu_index, false);
     app_state_set_menu_item_order(menu_index, -1);
-
-    // Shift down all items with higher order numbers
-    if (removed_order >= 0) {
-        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
-            int current_order = app_state_get_menu_item_order(i);
-            if (current_order > removed_order) {
-                app_state_set_menu_item_order(i, current_order - 1);
-            }
+    // Reassign all orders to pack from slot 0
+    int slot = 0;
+    for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
+        if (app_state_is_menu_item_selected(i)) {
+            app_state_set_menu_item_order(i, slot++);
         }
     }
-
     // Update the status bar icons
     update_status_bar_icons();
 }
@@ -488,7 +491,7 @@ void update_status_bar_icons(void) {
     }
 
     // Create icons based on their order (not menu index)
-    for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+    for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
         if (app_state_is_menu_item_selected(i)) {
             // Get the slot position for this item based on its order
             int slot_position = app_state_get_menu_item_order(i);

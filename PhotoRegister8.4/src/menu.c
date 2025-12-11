@@ -12,12 +12,13 @@
 // MENU CONFIGURATION ARRAY
 // ============================================================================
 
-const MenuItem MENU_ITEMS[MAX_STATUS_ICONS] = {
+const MenuItem MENU_ITEMS[MENU_ITEMS_COUNT] = {
     {NULL, IMG_CONFIG, "admin", SCREEN_ADMIN, admin_btn_callback},
     {NULL, IMG_NETWORK, "network", SCREEN_NETWORK, network_btn_callback},
     {NULL, IMG_KOREAN, "korean_input", SCREEN_KOREAN_INPUT, korean_input_btn_callback},
     {NULL, IMG_INFO, "info", SCREEN_INFO, info_btn_callback},
-    {NULL, IMG_CAMERA, "camera", SCREEN_CAMERA, settings_btn_callback}
+    {NULL, IMG_CAMERA, "camera", SCREEN_CAMERA, settings_btn_callback},
+    {NULL, IMG_NUMBER, "number_input", SCREEN_NUMBER_INPUT, number_input_btn_callback}
 };
 
 // ============================================================================
@@ -88,19 +89,31 @@ static void plus_minus_btn_callback(lv_event_t *e) {
 
         // Toggle the button state
         if (btn_data->is_plus) {
-            // Change from plus to minus - add icon to status bar
-            lv_img_set_src(btn_data->button, IMG_MINUS);
-            btn_data->is_plus = false;
-            add_status_bar_icon(btn_data->item_index, MENU_ITEMS[btn_data->item_index].icon_path);
+            // Check if we can add icon (status bar not full)
+            int selected_count = 0;
+            for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
+                if (app_state_is_menu_item_selected(i)) {
+                    selected_count++;
+                }
+            }
+            if (selected_count < MAX_STATUS_ICONS) {
+                // Change from plus to minus - add icon to status bar
+                lv_img_set_src(btn_data->button, IMG_MINUS);
+                btn_data->is_plus = false;
+                add_status_bar_icon(btn_data->item_index, MENU_ITEMS[btn_data->item_index].icon_path);
+                save_status_bar_config();
+            } else {
+                // Status bar full, do not change icon
+                add_status_bar_icon(btn_data->item_index, MENU_ITEMS[btn_data->item_index].icon_path);
+                // (add_status_bar_icon will show warning popup)
+            }
         } else {
             // Change from minus to plus - remove icon from status bar
             lv_img_set_src(btn_data->button, IMG_PLUS);
             btn_data->is_plus = true;
             remove_status_bar_icon(btn_data->item_index);
+            save_status_bar_config();
         }
-
-        // Save configuration
-        save_status_bar_config();
     }
 }
 

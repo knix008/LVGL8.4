@@ -175,6 +175,7 @@ int load_status_bar_config(void);
 #define IMG_PLUS "A:assets/images/plus.png"
 #define IMG_MINUS "A:assets/images/minus.png"
 #define IMG_CANCEL "A:assets/images/cancel_button_40x40.png"
+#define IMG_NUMBER "A:assets/images/number_button.png"
 
 // ============================================================================
 // GUI LAYOUT CONFIGURATION
@@ -192,7 +193,7 @@ int load_status_bar_config(void);
 #define MENU_BUTTON_WIDTH (SCREEN_WIDTH - 20)
 
 // Menu configuration
-#define MENU_ITEMS_COUNT 5
+#define MENU_ITEMS_COUNT 6
 #define MENU_BUTTON_HEIGHT 60
 #define MENU_BUTTON_MARGIN 10
 
@@ -259,7 +260,8 @@ enum {
     SCREEN_ADMIN = 3,
     SCREEN_NETWORK = 4,
     SCREEN_KOREAN_INPUT = 5,
-    SCREEN_CAMERA = 6
+    SCREEN_CAMERA = 6,
+    SCREEN_NUMBER_INPUT = 7
 };
 
 #endif

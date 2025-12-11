@@ -3,6 +3,7 @@
 
 #include "lvgl/lvgl.h"
 #include "calendar.h"
+#include "config.h"
 
 // Forward declaration
 typedef void (*menu_callback_fn)(lv_event_t *e);
@@ -34,8 +35,8 @@ typedef struct {
     lv_font_t *font_button;   // 20px font for buttons
     lv_font_t *font_24_bold;  // Bold 24pt font for welcome message
     lv_obj_t *status_bar;  // Reference to the status bar
-    bool menu_item_selected[MAX_STATUS_ICONS];  // Track which menu items are selected
-    int menu_item_order[MAX_STATUS_ICONS];  // Track the order items were added (-1 = not selected, 0-4 = slot position)
+    bool menu_item_selected[MENU_ITEMS_COUNT];  // Track which menu items are selected
+    int menu_item_order[MENU_ITEMS_COUNT];  // Track the order items were added (-1 = not selected, 0-4 = slot position)
     lv_obj_t *status_icons[MAX_STATUS_ICONS];  // Status bar icon objects
     uint32_t bg_color;  // Current background color
     uint32_t title_bar_color;  // Current title bar color
@@ -65,6 +66,6 @@ typedef struct {
 // GLOBAL MENU CONFIGURATION
 // ============================================================================
 
-extern const MenuItem MENU_ITEMS[MAX_STATUS_ICONS];
+extern const MenuItem MENU_ITEMS[MENU_ITEMS_COUNT];
 
 #endif

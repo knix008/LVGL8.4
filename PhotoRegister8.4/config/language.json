@@ -5,7 +5,8 @@
       "network": "네트워크 설정",
       "korean_input": "한글 입력",
       "info": "정보",
-      "camera": "카메라"
+      "camera": "카메라",
+      "number_input": "숫자 입력"
     },
     "home_screen": {
       "menu_button": "메뉴",
@@ -158,6 +159,13 @@
       "year_suffix": "년",
       "month_suffix": "월",
       "day_suffix": "일"
+    },
+    "common": {
+      "warning": "경고",
+      "ok": "확인"
+    },
+    "menu_screen": {
+      "status_bar_full": "상태바가 가득 찼습니다. 최대 5개 아이콘만 허용됩니다."
     }
   },
   "en": {
@@ -166,7 +174,8 @@
       "network": "Network Settings",
       "korean_input": "Korean Input",
       "info": "Information",
-      "camera": "Camera"
+      "camera": "Camera",
+      "number_input": "Number Input"
     },
     "home_screen": {
       "menu_button": "Menu",
@@ -319,6 +328,13 @@
       "year_suffix": "",
       "month_suffix": "",
       "day_suffix": ""
+    },
+    "common": {
+      "warning": "Warning",
+      "ok": "OK"
+    },
+    "menu_screen": {
+      "status_bar_full": "Status bar is full. Maximum 5 icons allowed."
     }
   }
 }
