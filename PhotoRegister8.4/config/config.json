@@ -3,8 +3,8 @@
     "admin": true,
     "network": true,
     "korean_input": true,
-    "info": true,
-    "camera": true
+    "info": false,
+    "camera": false
   },
   "border": {
     "default_color": "0x00FF00",

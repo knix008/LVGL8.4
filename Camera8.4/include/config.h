@@ -259,7 +259,8 @@ enum {
     SCREEN_ADMIN = 3,
     SCREEN_NETWORK = 4,
     SCREEN_KOREAN_INPUT = 5,
-    SCREEN_CAMERA = 6
+    SCREEN_CAMERA = 6,
+    SCREEN_NUMBER_INPUT = 7
 };
 
 #endif

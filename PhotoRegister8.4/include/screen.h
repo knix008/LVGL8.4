@@ -16,6 +16,7 @@ void create_info_screen(void);
 void create_admin_screen(void);
 void create_network_screen(void);
 void create_number_input_screen(void);
+void create_english_input_screen(void);
 void update_title_bar_location(int screen_id);
 
 // ============================================================================

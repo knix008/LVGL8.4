@@ -482,6 +482,7 @@ static void create_ip_popup_content(void) {
     lv_obj_set_style_bg_opa(ip_container, LV_OPA_70, 0);
     lv_obj_set_style_border_color(ip_container, lv_color_hex(get_button_border_color()), 0);
     lv_obj_set_style_border_width(ip_container, 2, 0);
+    lv_obj_set_style_pad_all(ip_container, 0, 0);
     lv_obj_clear_flag(ip_container, LV_OBJ_FLAG_SCROLLABLE);
 
     int y_offset = 10;
@@ -715,19 +716,20 @@ static void create_ip_popup_content(void) {
     }
 
     // Control buttons (Save, Cancel)
-    int btn_width = 115;
+    int btn_width = UI_CONTAINER_CONTROL_BUTTON_WIDTH;
+    int btn_height = UI_CONTAINER_CONTROL_BUTTON_HEIGHT;
     int btn_gap = 10;
     int total_width = btn_width * 2 + btn_gap;
 
     lv_obj_t *ctrl_container = lv_obj_create(ip_container);
-    lv_obj_set_size(ctrl_container, total_width, 40);
+    lv_obj_set_size(ctrl_container, total_width, btn_height);
     lv_obj_align(ctrl_container, LV_ALIGN_TOP_MID, 0, y_offset);
     lv_obj_set_style_bg_opa(ctrl_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(ctrl_container, 0, 0);
     lv_obj_set_style_pad_all(ctrl_container, 0, 0);
 
     lv_obj_t *save_btn = lv_btn_create(ctrl_container);
-    lv_obj_set_size(save_btn, btn_width, 40);
+    lv_obj_set_size(save_btn, btn_width, btn_height);
     lv_obj_set_pos(save_btn, 0, 0);
     apply_button_style(save_btn, 0);
     lv_obj_set_style_bg_color(save_btn, lv_color_hex(UI_COLOR_BTN_SUCCESS), 0);
@@ -739,7 +741,7 @@ static void create_ip_popup_content(void) {
     lv_obj_add_event_cb(save_btn, save_ip_callback, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *cancel_btn = lv_btn_create(ctrl_container);
-    lv_obj_set_size(cancel_btn, btn_width, 40);
+    lv_obj_set_size(cancel_btn, btn_width, btn_height);
     lv_obj_set_pos(cancel_btn, btn_width + btn_gap, 0);
     apply_button_style(cancel_btn, 0);
     lv_obj_set_style_bg_color(cancel_btn, lv_color_hex(UI_COLOR_BTN_DANGER), 0);

@@ -112,6 +112,16 @@
       "user_id": "사용자 ID",
       "confidence_level": "신뢰도"
     },
+    "number_screen": {
+      "screen_title": "숫자 입력",
+      "title": "숫자 입력",
+      "instruction": "텍스트 박스를 클릭하여 숫자 키패드를 표시하세요",
+      "input_button": "숫자 입력",
+      "clear_button": "지우기",
+      "backspace_button": "←",
+      "save_button": "저장",
+      "cancel_button": "취소"
+    },
     "days_of_week": {
       "sunday": "일요일",
       "monday": "월요일",
@@ -267,6 +277,16 @@
       "recognized": "Recognized",
       "user_id": "User ID",
       "confidence_level": "Confidence Level"
+    },
+    "number_screen": {
+      "screen_title": "Number Input",
+      "title": "Enter Number",
+      "instruction": "Click the text box to display the number keypad",
+      "input_button": "Enter Number",
+      "clear_button": "Clear",
+      "backspace_button": "←",
+      "save_button": "Save",
+      "cancel_button": "Cancel"
     },
     "days_of_week": {
       "sunday": "Sunday",

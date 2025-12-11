@@ -8,6 +8,8 @@
 #include "../include/network.h"
 #include "../include/korean.h"
 #include "../include/camera.h"
+#include "../include/number.h"
+#include "../include/english.h"
 #include "../include/navigation.h"
 #include "../include/label.h"
 #include "../include/home.h"
@@ -76,6 +78,13 @@ void update_title_bar_location(int screen_id) {
                 {
                     char key[64];
                     snprintf(key, sizeof(key), "menu_items.%s", "number_input");
+                    name = get_label(key);
+                }
+                break;
+            case SCREEN_ENGLISH_INPUT:
+                {
+                    char key[64];
+                    snprintf(key, sizeof(key), "menu_items.%s", "english_input");
                     name = get_label(key);
                 }
                 break;
@@ -202,6 +211,9 @@ void show_screen(int screen_id) {
         update_title_bar_location(screen_id);
     } else if (screen_id == SCREEN_NUMBER_INPUT) {
         create_number_input_screen();
+        update_title_bar_location(screen_id);
+    } else if (screen_id == SCREEN_ENGLISH_INPUT) {
+        create_english_input_screen();
         update_title_bar_location(screen_id);
     }
 }

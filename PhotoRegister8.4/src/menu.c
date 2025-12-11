@@ -18,7 +18,8 @@ const MenuItem MENU_ITEMS[MENU_ITEMS_COUNT] = {
     {NULL, IMG_KOREAN, "korean_input", SCREEN_KOREAN_INPUT, korean_input_btn_callback},
     {NULL, IMG_INFO, "info", SCREEN_INFO, info_btn_callback},
     {NULL, IMG_CAMERA, "camera", SCREEN_CAMERA, settings_btn_callback},
-    {NULL, IMG_NUMBER, "number_input", SCREEN_NUMBER_INPUT, number_input_btn_callback}
+    {NULL, IMG_NUMBER, "number_input", SCREEN_NUMBER_INPUT, number_input_btn_callback},
+    {NULL, IMG_ENGLISH, "english_input", SCREEN_ENGLISH_INPUT, english_input_btn_callback}
 };
 
 // ============================================================================
