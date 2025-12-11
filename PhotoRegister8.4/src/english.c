@@ -27,11 +27,12 @@ typedef struct {
 
 static MobileInputState mobile_state;
 static lv_obj_t *text_display;
-static lv_obj_t *keyboard_buttons[9];  // 8 letter buttons + 1 space button
+static lv_obj_t *keyboard_buttons[10];  // 8 letter buttons + 'yz.' + 1 space button
 static lv_obj_t *keyboard_popup = NULL;
 static lv_obj_t *text_input_box = NULL;
 static lv_obj_t *mode_label = NULL;
 static bool uppercase_mode = false;
+static char pending_text[512] = "";  // Text waiting for OK confirmation
 
 // Cursor state
 static bool cursor_visible = true;
@@ -41,7 +42,9 @@ static lv_timer_t *cursor_timer = NULL;
 #define MULTI_TAP_TIMEOUT 1000
 
 // Mobile keypad layout - 8 letter buttons + space
-static const char *keypad_lower[9] = {
+
+// 9 letter buttons + 1 space button
+static const char *keypad_lower[10] = {
     "abc",    // 0: abc
     "def",    // 1: def
     "ghi",    // 2: ghi
@@ -50,10 +53,11 @@ static const char *keypad_lower[9] = {
     "pqr",    // 5: pqr
     "stu",    // 6: stu
     "vwx",    // 7: vwx
-    " "       // 8: space
+    "yz.",    // 8: yz.
+    " "       // 9: space
 };
 
-static const char *keypad_upper[9] = {
+static const char *keypad_upper[10] = {
     "ABC",    // 0
     "DEF",    // 1
     "GHI",    // 2
@@ -62,7 +66,8 @@ static const char *keypad_upper[9] = {
     "PQR",    // 5
     "STU",    // 6
     "VWX",    // 7
-    " "       // 8
+    "YZ.",    // 8
+    " "       // 9
 };
 
 // ============================================================================
@@ -110,48 +115,50 @@ static void mobile_input_init(void) {
     uppercase_mode = false;
 }
 
+// Multi-tap candidate logic
+static int candidate_active = 0;
+static char candidate_char = 0;
+
 static void commit_current_char(void) {
-    if (mobile_state.last_key >= 0 && mobile_state.repeat_count > 0) {
-        // Character is already in the buffer, just reset the state
-        mobile_state.last_key = -1;
-        mobile_state.repeat_count = 0;
+    if (candidate_active) {
+        // Commit candidate_char to buffer
+        if (mobile_state.cursor_pos < (int)sizeof(mobile_state.buffer) - 1) {
+            mobile_state.buffer[mobile_state.cursor_pos] = candidate_char;
+            mobile_state.cursor_pos++;
+            mobile_state.buffer[mobile_state.cursor_pos] = '\0';
+        }
+        candidate_active = 0;
+        candidate_char = 0;
     }
+    mobile_state.last_key = -1;
+    mobile_state.repeat_count = 0;
 }
 
 static void process_key_press(int key_num) {
-    uint32_t current_time = lv_tick_get();
     const char *key_chars = uppercase_mode ? keypad_upper[key_num] : keypad_lower[key_num];
     int num_chars = strlen(key_chars);
 
     if (num_chars == 0) return;
 
-    // Check if this is the same key within timeout
-    if (key_num == mobile_state.last_key &&
-        (current_time - mobile_state.last_press_time) < MULTI_TAP_TIMEOUT) {
-        // Same key pressed again - cycle to next character
+    // Check if this is the same key (no timer)
+    if (key_num == mobile_state.last_key) {
+        // Same key pressed again - cycle to next character (candidate only)
         mobile_state.repeat_count++;
         if (mobile_state.repeat_count >= num_chars) {
             mobile_state.repeat_count = 0;
         }
-
-        // Replace the last character
-        if (mobile_state.cursor_pos > 0) {
-            mobile_state.buffer[mobile_state.cursor_pos - 1] = key_chars[mobile_state.repeat_count];
-        }
+        candidate_char = key_chars[mobile_state.repeat_count];
+        candidate_active = 1;
     } else {
-        // Different key or timeout - commit previous and start new
+        // Different key - commit previous and start new
         commit_current_char();
 
         mobile_state.last_key = key_num;
         mobile_state.repeat_count = 0;
-        mobile_state.last_press_time = current_time;
 
-        // Add new character
-        if (mobile_state.cursor_pos < (int)sizeof(mobile_state.buffer) - 1) {
-            mobile_state.buffer[mobile_state.cursor_pos] = key_chars[0];
-            mobile_state.cursor_pos++;
-            mobile_state.buffer[mobile_state.cursor_pos] = '\0';
-        }
+        // Add new character as candidate
+        candidate_char = key_chars[0];
+        candidate_active = 1;
     }
 }
 
@@ -173,18 +180,17 @@ static void update_text_display_with_cursor(void) {
 
     static char display_text[512];
 
-    if (mobile_state.cursor_pos == 0) {
-        if (cursor_visible) {
-            strcpy(display_text, "|");
-        } else {
-            display_text[0] = '\0';
-        }
-    } else {
-        if (cursor_visible) {
-            snprintf(display_text, sizeof(display_text), "%s|", mobile_state.buffer);
-        } else {
-            strcpy(display_text, mobile_state.buffer);
-        }
+    int len = mobile_state.cursor_pos;
+    strcpy(display_text, mobile_state.buffer);
+    if (candidate_active && len < (int)sizeof(display_text) - 2) {
+        display_text[len] = candidate_char;
+        display_text[len + 1] = '\0';
+        len++;
+    }
+
+    if (cursor_visible) {
+        display_text[len] = '|';
+        display_text[len + 1] = '\0';
     }
 
     lv_label_set_text(text_display, display_text);
@@ -206,9 +212,7 @@ static void key_btn_callback(lv_event_t *e) {
 
     update_text_display_with_cursor();
 
-    if (text_input_box) {
-        lv_label_set_text(text_input_box, mobile_state.buffer);
-    }
+    // Do not update the main screen's text box here - only update on OK confirmation
 }
 
 static void backspace_btn_callback(lv_event_t *e) {
@@ -217,20 +221,20 @@ static void backspace_btn_callback(lv_event_t *e) {
 
     update_text_display_with_cursor();
 
-    if (text_input_box) {
-        lv_label_set_text(text_input_box, mobile_state.buffer);
-    }
+    // Do not update the main screen's text box here - only update on OK confirmation
 }
 
-static void clear_btn_callback(lv_event_t *e) {
+static void space_btn_callback(lv_event_t *e) {
     (void)e;
-    mobile_input_init();
-
-    update_text_display_with_cursor();
-
-    if (text_input_box) {
-        lv_label_set_text(text_input_box, "");
+    commit_current_char();
+    // Insert a space character at the current cursor position
+    if (mobile_state.cursor_pos < (int)sizeof(mobile_state.buffer) - 1) {
+        mobile_state.buffer[mobile_state.cursor_pos] = ' ';
+        mobile_state.cursor_pos++;
+        mobile_state.buffer[mobile_state.cursor_pos] = '\0';
     }
+    update_text_display_with_cursor();
+    // Do not update the main screen's text box here - only update on OK confirmation
 }
 
 static void mode_switch_callback(lv_event_t *e) {
@@ -260,6 +264,15 @@ static void mode_switch_callback(lv_event_t *e) {
 
 static void msgbox_event_callback(lv_event_t *e) {
     lv_obj_t *mbox = lv_event_get_current_target(e);
+    
+    // Update the text box when OK is clicked
+    if (text_input_box && pending_text[0] != '\0') {
+        lv_label_set_text(text_input_box, pending_text);
+    }
+    
+    // Clear pending text
+    pending_text[0] = '\0';
+    
     lv_msgbox_close(mbox);
     remove_green_border();
 }
@@ -278,9 +291,9 @@ static void enter_btn_callback(lv_event_t *e) {
     strncpy(text_copy, mobile_state.buffer, sizeof(text_copy) - 1);
     text_copy[sizeof(text_copy) - 1] = '\0';
 
-    if (text_input_box && text_copy[0] != '\0') {
-        lv_label_set_text(text_input_box, text_copy);
-    }
+    // Store text for confirmation, but don't update text box yet
+    strncpy(pending_text, text_copy, sizeof(pending_text) - 1);
+    pending_text[sizeof(pending_text) - 1] = '\0';
 
     mobile_input_init();
     hide_keyboard_popup();
@@ -386,14 +399,16 @@ static void create_keyboard_popup_content(void) {
     y_offset += 80;
 
     // Mobile keypad grid (3x3 = 9 buttons)
+
+    // 10 buttons: 3x4 grid (last row has 1 button centered for space)
     lv_obj_t *button_grid = lv_obj_create(keyboard_container);
-    lv_obj_set_size(button_grid, grid_width, btn_height * 3 + btn_spacing * 2);
+    int grid_rows = 4;
+    lv_obj_set_size(button_grid, grid_width, btn_height * grid_rows + btn_spacing * (grid_rows - 1));
     lv_obj_align(button_grid, LV_ALIGN_TOP_MID, 0, y_offset);
     lv_obj_set_style_bg_opa(button_grid, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(button_grid, 0, 0);
     lv_obj_set_style_pad_all(button_grid, 0, 0);
 
-    // Create 3x3 grid: ABC, DEF, GHI, JKL, MNO, PQR, STU, VWX, Space
     for (int i = 0; i < 9; i++) {
         int row = i / 3;
         int col = i % 3;
@@ -412,6 +427,23 @@ static void create_keyboard_popup_content(void) {
         lv_obj_add_event_cb(btn, key_btn_callback, LV_EVENT_CLICKED, (void *)(intptr_t)i);
         keyboard_buttons[i] = btn;
     }
+    // Add the 10th button (space) centered in the last row
+    int space_row = 3;
+    int space_col = 1; // center column
+    int i = 9;
+    lv_obj_t *btn = lv_btn_create(button_grid);
+    lv_obj_set_size(btn, btn_width, btn_height);
+    lv_obj_set_pos(btn, space_col * (btn_width + btn_spacing), space_row * (btn_height + btn_spacing));
+    apply_button_style(btn, 0);
+
+    lv_obj_t *label = lv_label_create(btn);
+    const char *key_text = uppercase_mode ? keypad_upper[i] : keypad_lower[i];
+    lv_label_set_text(label, key_text);
+    apply_label_style(label);
+    lv_obj_center(label);
+
+    lv_obj_add_event_cb(btn, key_btn_callback, LV_EVENT_CLICKED, (void *)(intptr_t)i);
+    keyboard_buttons[i] = btn;
 
     y_offset += btn_height * 3 + btn_spacing * 2 + 10;
 
@@ -441,18 +473,18 @@ static void create_keyboard_popup_content(void) {
 
     lv_obj_add_event_cb(mode_btn, mode_switch_callback, LV_EVENT_CLICKED, NULL);
 
-    // Clear button
-    lv_obj_t *clear_btn = lv_btn_create(ctrl_container);
-    lv_obj_set_size(clear_btn, ctrl_btn_width, ctrl_btn_height);
-    lv_obj_set_pos(clear_btn, ctrl_btn_width + ctrl_btn_spacing, 0);
-    apply_button_style(clear_btn, 0);
+    // Space button
+    lv_obj_t *space_btn = lv_btn_create(ctrl_container);
+    lv_obj_set_size(space_btn, ctrl_btn_width, ctrl_btn_height);
+    lv_obj_set_pos(space_btn, ctrl_btn_width + ctrl_btn_spacing, 0);
+    apply_button_style(space_btn, 0);
 
-    lv_obj_t *clear_btn_label = lv_label_create(clear_btn);
-    lv_label_set_text(clear_btn_label, get_label("english_input_screen.clear_button"));
-    apply_label_style(clear_btn_label);
-    lv_obj_center(clear_btn_label);
+    lv_obj_t *space_btn_label = lv_label_create(space_btn);
+    lv_label_set_text(space_btn_label, get_label("english_input_screen.space_button"));
+    apply_label_style(space_btn_label);
+    lv_obj_center(space_btn_label);
 
-    lv_obj_add_event_cb(clear_btn, clear_btn_callback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(space_btn, space_btn_callback, LV_EVENT_CLICKED, NULL);
 
     // Delete button
     lv_obj_t *del_btn = lv_btn_create(ctrl_container);

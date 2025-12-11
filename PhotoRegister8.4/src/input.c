@@ -146,23 +146,28 @@ void eng_make(ChunjiinState *state, int input) {
 
         size_t str_len = wcslen(str);
 
+        // Compare using uppercase version for case-insensitive matching
+        wchar_t current_upper = (state->engnum[0] >= L'a' && state->engnum[0] <= L'z')
+            ? state->engnum[0] - (L'a' - L'A')
+            : state->engnum[0];
+
         if (wcslen(state->engnum) == 0) {
             state->engnum[0] = ch[0];
             state->engnum[1] = 0;
-        } else if (state->engnum[0] == ch[0]) {
+        } else if (current_upper == ch[0]) {
             state->engnum[0] = ch[1];
             state->engnum[1] = 0;
             state->flag_engdelete = true;
-        } else if (state->engnum[0] == ch[1] && str_len >= 3) {
+        } else if (current_upper == ch[1] && str_len >= 3) {
             state->engnum[0] = ch[2];
             state->engnum[1] = 0;
             state->flag_engdelete = true;
-        } else if (state->engnum[0] == ch[1] && str_len == 2) {
+        } else if (current_upper == ch[1] && str_len == 2) {
             // For 2-character buttons, cycle back to first character
             state->engnum[0] = ch[0];
             state->engnum[1] = 0;
             state->flag_engdelete = true;
-        } else if (state->engnum[0] == ch[2] && str_len >= 3) {
+        } else if (current_upper == ch[2] && str_len >= 3) {
             state->engnum[0] = ch[0];
             state->engnum[1] = 0;
             state->flag_engdelete = true;
