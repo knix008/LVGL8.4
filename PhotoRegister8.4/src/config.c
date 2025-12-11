@@ -218,11 +218,11 @@ int save_status_bar_config(void) {
     fprintf(file, "{\n");
     fprintf(file, "  \"status_bar\": {\n");
 
-    for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+    for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
         const char *value = app_state_get_internal()->menu_item_selected[i] ? "true" : "false";
         fprintf(file, "    \"%s\": %s%s\n",
                 MENU_ITEMS[i].config_key, value,
-                (i < MAX_STATUS_ICONS - 1) ? "," : "");
+                (i < MENU_ITEMS_COUNT - 1) ? "," : "");
     }
 
     fprintf(file, "  }");
@@ -268,7 +268,7 @@ int load_status_bar_config(void) {
     
     if (!content) {
         // Initialize with default values (all disabled)
-        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+        for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
             app_state_get_internal()->menu_item_selected[i] = false;
             app_state_get_internal()->menu_item_order[i] = -1;
         }
@@ -280,7 +280,7 @@ int load_status_bar_config(void) {
     if (status_bar && *status_bar == '{') {
         // Parse each menu item and track order
         int current_order = 0;
-        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+        for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
             const char* value = find_json_value(status_bar, MENU_ITEMS[i].config_key);
             if (value) {
                 app_state_get_internal()->menu_item_selected[i] = parse_bool(value);
@@ -296,7 +296,7 @@ int load_status_bar_config(void) {
         }
     } else {
         // Initialize with defaults
-        for (int i = 0; i < MAX_STATUS_ICONS; i++) {
+        for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
             app_state_get_internal()->menu_item_selected[i] = false;
             app_state_get_internal()->menu_item_order[i] = -1;
         }

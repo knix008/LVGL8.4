@@ -4,7 +4,9 @@
     "network": true,
     "korean_input": false,
     "info": false,
-    "camera": true
+    "camera": true,
+    "number_input": true,
+    "english_input": true
   },
   "border": {
     "default_color": "0x00FF00",

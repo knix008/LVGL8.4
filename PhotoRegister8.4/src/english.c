@@ -460,23 +460,10 @@ static void create_keyboard_popup_content(void) {
     lv_obj_set_style_border_width(ctrl_container, 0, 0);
     lv_obj_set_style_pad_all(ctrl_container, 0, 0);
 
-    // Mode button
-    lv_obj_t *mode_btn = lv_btn_create(ctrl_container);
-    lv_obj_set_size(mode_btn, ctrl_btn_width, ctrl_btn_height);
-    lv_obj_set_pos(mode_btn, 0, 0);
-    apply_button_style(mode_btn, 0);
-
-    lv_obj_t *mode_btn_label = lv_label_create(mode_btn);
-    lv_label_set_text(mode_btn_label, get_label("english_input_screen.mode_button"));
-    apply_label_style(mode_btn_label);
-    lv_obj_center(mode_btn_label);
-
-    lv_obj_add_event_cb(mode_btn, mode_switch_callback, LV_EVENT_CLICKED, NULL);
-
     // Space button
     lv_obj_t *space_btn = lv_btn_create(ctrl_container);
     lv_obj_set_size(space_btn, ctrl_btn_width, ctrl_btn_height);
-    lv_obj_set_pos(space_btn, ctrl_btn_width + ctrl_btn_spacing, 0);
+    lv_obj_set_pos(space_btn, 0, 0);
     apply_button_style(space_btn, 0);
 
     lv_obj_t *space_btn_label = lv_label_create(space_btn);
@@ -485,6 +472,19 @@ static void create_keyboard_popup_content(void) {
     lv_obj_center(space_btn_label);
 
     lv_obj_add_event_cb(space_btn, space_btn_callback, LV_EVENT_CLICKED, NULL);
+
+    // Mode button
+    lv_obj_t *mode_btn = lv_btn_create(ctrl_container);
+    lv_obj_set_size(mode_btn, ctrl_btn_width, ctrl_btn_height);
+    lv_obj_set_pos(mode_btn, ctrl_btn_width + ctrl_btn_spacing, 0);
+    apply_button_style(mode_btn, 0);
+
+    lv_obj_t *mode_btn_label = lv_label_create(mode_btn);
+    lv_label_set_text(mode_btn_label, get_label("english_input_screen.mode_button"));
+    apply_label_style(mode_btn_label);
+    lv_obj_center(mode_btn_label);
+
+    lv_obj_add_event_cb(mode_btn, mode_switch_callback, LV_EVENT_CLICKED, NULL);
 
     // Delete button
     lv_obj_t *del_btn = lv_btn_create(ctrl_container);
