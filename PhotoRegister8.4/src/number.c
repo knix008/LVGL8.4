@@ -109,11 +109,7 @@ static void number_btn_callback(lv_event_t *e) {
 
         // Update popup text display with cursor
         update_text_display_with_cursor();
-
-        // Update main input box (without cursor)
-        if (text_input_box) {
-            lv_label_set_text(text_input_box, number_buffer);
-        }
+        // Do NOT update main input box here
     }
 }
 
@@ -126,11 +122,7 @@ static void backspace_btn_callback(lv_event_t *e) {
 
         // Update popup text display with cursor
         update_text_display_with_cursor();
-
-        // Update main input box
-        if (text_input_box) {
-            lv_label_set_text(text_input_box, number_buffer);
-        }
+        // Do NOT update main input box here
     }
 }
 
@@ -140,10 +132,7 @@ static void clear_btn_callback(lv_event_t *e) {
 
     // Update popup text display with cursor
     update_text_display_with_cursor();
-
-    if (text_input_box) {
-        lv_label_set_text(text_input_box, "");
-    }
+    // Do NOT update main input box here
 }
 
 static void msgbox_event_callback(lv_event_t *e) {

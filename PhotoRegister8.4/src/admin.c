@@ -1,3 +1,30 @@
+#include <lvgl/lvgl.h>
+// Forward declarations to fix implicit warnings
+#include "../include/state.h"
+#include "../include/config.h"
+// File-scope static callback for font dropdown
+static void font_dropdown_event_cb(lv_event_t *e) {
+    lv_obj_t *dropdown = lv_event_get_target(e);
+    uint16_t idx = lv_dropdown_get_selected(dropdown);
+    const char* font_names[9] = {
+        "NotoSansKR-Black.ttf",
+        "NotoSansKR-Bold.ttf",
+        "NotoSansKR-ExtraBold.ttf",
+        "NotoSansKR-ExtraLight.ttf",
+        "NotoSansKR-Light.ttf",
+        "NotoSansKR-Medium.ttf",
+        "NotoSansKR-Regular.ttf",
+        "NotoSansKR-SemiBold.ttf",
+        "NotoSansKR-Thin.ttf"
+    };
+    const char* selected_font = font_names[idx];
+    app_state_set_font_name_title(selected_font);
+    app_state_set_font_name_status_bar(selected_font);
+    app_state_set_font_name_button_label(selected_font);
+    save_font_config();
+    // Optionally reload fonts and update all UI labels/buttons
+    // reload_fonts_and_update_ui();
+}
 #include "../include/admin.h"
 #include "../include/config.h"
 #include "../include/state.h"
@@ -242,6 +269,8 @@ static void color_button_clicked(lv_event_t *e) {
                 }
             }
         }
+        // Force redraw of the entire screen
+        lv_obj_invalidate(active_screen);
     }
 }
 
@@ -436,10 +465,10 @@ static void refresh_admin_screen_timer_cb(lv_timer_t *timer) {
 
 // Helper to create language button
 static lv_obj_t *create_language_button(lv_obj_t *parent, const char *label_text,
-                                        const char *language_code, int x_pos) {
+                                        const char *language_code, int x_pos, int y_pos) {
     lv_obj_t *btn = lv_btn_create(parent);
     lv_obj_set_size(btn, 90, 40);
-    lv_obj_set_pos(btn, x_pos, 665);
+    lv_obj_set_pos(btn, x_pos, y_pos);
     apply_button_style(btn, 0);
 
     lv_obj_t *label = lv_label_create(btn);
@@ -836,26 +865,65 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     update_calendar_display();
 
     // Create five color sections (moved down to make room for calendar)
-    create_color_section(content, get_label("admin_screen.background_color"), 140, COLOR_TARGET_BACKGROUND);
-    create_color_section(content, get_label("admin_screen.title_bar_color"), 220, COLOR_TARGET_TITLE_BAR);
-    create_color_section(content, get_label("admin_screen.status_bar_color"), 300, COLOR_TARGET_STATUS_BAR);
-    create_color_section(content, get_label("admin_screen.button_color"), 380, COLOR_TARGET_BUTTON);
-    create_color_section(content, get_label("admin_screen.button_border_color"), 460, COLOR_TARGET_BUTTON_BORDER);
-    create_color_section(content, get_label("admin_screen.label_text_color"), 540, COLOR_TARGET_LABEL_TEXT);
+    // Font setting section (before font color)
+    lv_obj_t *font_section_label = lv_label_create(content);
+    lv_label_set_text(font_section_label, "Font");
+    apply_label_style(font_section_label);
+    lv_obj_set_pos(font_section_label, 10, 140);
+
+    // Font selection dropdown
+    lv_obj_t *font_dropdown = lv_dropdown_create(content);
+    lv_dropdown_set_options(font_dropdown,
+        "NotoSansKR-Black\nNotoSansKR-Bold\nNotoSansKR-ExtraBold\nNotoSansKR-ExtraLight\nNotoSansKR-Light\nNotoSansKR-Medium\nNotoSansKR-Regular\nNotoSansKR-SemiBold\nNotoSansKR-Thin");
+    lv_obj_set_width(font_dropdown, 220);
+    lv_obj_set_pos(font_dropdown, 10, 170);
+
+    // Restore font selection from config
+    int font_idx = 0;
+    const char* current_font = app_state_get_font_name_status_bar();
+    const char* font_names[9] = {
+        "NotoSansKR-Black.ttf",
+        "NotoSansKR-Bold.ttf",
+        "NotoSansKR-ExtraBold.ttf",
+        "NotoSansKR-ExtraLight.ttf",
+        "NotoSansKR-Light.ttf",
+        "NotoSansKR-Medium.ttf",
+        "NotoSansKR-Regular.ttf",
+        "NotoSansKR-SemiBold.ttf",
+        "NotoSansKR-Thin.ttf"
+    };
+    for (int i = 0; i < 9; ++i) {
+        if (strcmp(current_font, font_names[i]) == 0) {
+            font_idx = i;
+            break;
+        }
+    }
+    lv_dropdown_set_selected(font_dropdown, font_idx);
+
+    // Proper LVGL event callback for font selection
+    lv_obj_add_event_cb(font_dropdown, font_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // Font color section
+    create_color_section(content, get_label("admin_screen.label_text_color"), 220, COLOR_TARGET_LABEL_TEXT);
+    create_color_section(content, get_label("admin_screen.background_color"), 300, COLOR_TARGET_BACKGROUND);
+    create_color_section(content, get_label("admin_screen.title_bar_color"), 380, COLOR_TARGET_TITLE_BAR);
+    create_color_section(content, get_label("admin_screen.status_bar_color"), 460, COLOR_TARGET_STATUS_BAR);
+    create_color_section(content, get_label("admin_screen.button_color"), 540, COLOR_TARGET_BUTTON);
+    create_color_section(content, get_label("admin_screen.button_border_color"), 620, COLOR_TARGET_BUTTON_BORDER);
 
     // Language Settings Section (moved down to avoid overlap with label text color section)
+    int lang_section_y = 700;
     lv_obj_t *language_title = lv_label_create(content);
     lv_label_set_text(language_title, get_label("admin_screen.language_title"));
     apply_label_style(language_title);
-    lv_obj_set_pos(language_title, 10, 630);
+    lv_obj_set_pos(language_title, 10, lang_section_y);
 
-    // Korean button
-    create_language_button(content, get_label("admin_screen.language_korean"), "ko", 10);
+    // Korean and English buttons in the same row
+    int lang_btn_y = lang_section_y + 35;
+    create_language_button(content, get_label("admin_screen.language_korean"), "ko", 10, lang_btn_y);
+    create_language_button(content, get_label("admin_screen.language_english"), "en", 120, lang_btn_y);
 
-    // English button
-    create_language_button(content, get_label("admin_screen.language_english"), "en", 110);
-
-    // Info text at bottom
+    // Info text below language buttons
     lv_obj_t *info_label = lv_label_create(content);
     lv_label_set_long_mode(info_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_width(info_label, SCREEN_WIDTH - CONTENT_WIDTH_PADDING);
@@ -864,7 +932,7 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     if (app_state_get_font_20()) {
         lv_obj_set_style_text_font(info_label, app_state_get_font_20(), 0);
     }
-    lv_obj_set_pos(info_label, CONTENT_PADDING, 710);
+    lv_obj_set_pos(info_label, CONTENT_PADDING, lang_btn_y + 60);
 
     return content;
 }
