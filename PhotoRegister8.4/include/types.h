@@ -43,6 +43,7 @@ typedef struct {
     uint32_t status_bar_color;  // Current status bar color
     uint32_t button_color;  // Current button background color
     uint32_t button_border_color;  // Current button border color
+    uint32_t label_text_color;  // Current label text color
     char current_language[4];  // Current language code ("ko" or "en")
     int font_size_title_bar;   // Font size for title bar
     int font_size_label;       // Font size for labels

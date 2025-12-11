@@ -78,7 +78,11 @@ void apply_circle_button_style(lv_obj_t *btn, uint32_t bg_color) {
  * @param label The label object to style
  */
 void apply_label_style(lv_obj_t *label) {
-    lv_obj_set_style_text_color(label, lv_color_hex(COLOR_TEXT), 0);
+    uint32_t label_color = app_state_get_label_text_color();
+    if (label_color == 0) {
+        label_color = COLOR_TEXT;  // Fallback to default if not set
+    }
+    lv_obj_set_style_text_color(label, lv_color_hex(label_color), 0);
     if (app_state_get_font_20()) {
         lv_obj_set_style_text_font(label, app_state_get_font_20(), 0);
     }
@@ -90,7 +94,11 @@ void apply_label_style(lv_obj_t *label) {
  * @param label The label object to style
  */
 void apply_button_label_style(lv_obj_t *label) {
-    lv_obj_set_style_text_color(label, lv_color_hex(COLOR_TEXT), 0);
+    uint32_t label_color = app_state_get_label_text_color();
+    if (label_color == 0) {
+        label_color = COLOR_TEXT;  // Fallback to default if not set
+    }
+    lv_obj_set_style_text_color(label, lv_color_hex(label_color), 0);
     if (app_state_get_font_button()) {
         lv_obj_set_style_text_font(label, app_state_get_font_button(), 0);
     }

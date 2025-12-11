@@ -20,6 +20,7 @@ int app_state_init(void) {
     app_state.status_bar_color = COLOR_BG_TITLE;
     app_state.button_color = COLOR_BUTTON_BG;
     app_state.button_border_color = COLOR_BORDER;
+    app_state.label_text_color = COLOR_TEXT;
 
     // Initialize default language
     strncpy(app_state.current_language, "ko", sizeof(app_state.current_language) - 1);
@@ -195,6 +196,14 @@ uint32_t app_state_get_button_border_color(void) {
 
 void app_state_set_button_border_color(uint32_t color) {
     app_state.button_border_color = color;
+}
+
+uint32_t app_state_get_label_text_color(void) {
+    return app_state.label_text_color;
+}
+
+void app_state_set_label_text_color(uint32_t color) {
+    app_state.label_text_color = color;
 }
 
 // ============================================================================

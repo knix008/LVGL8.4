@@ -92,6 +92,9 @@ void app_state_set_button_color(uint32_t color);
 uint32_t app_state_get_button_border_color(void);
 void app_state_set_button_border_color(uint32_t color);
 
+uint32_t app_state_get_label_text_color(void);
+void app_state_set_label_text_color(uint32_t color);
+
 // ============================================================================
 // LANGUAGE MANAGEMENT
 // ============================================================================

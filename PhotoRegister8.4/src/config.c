@@ -458,6 +458,7 @@ int save_theme_config(void) {
     fprintf(file, "    \"status_bar_color\": \"0x%06X\",\n", app_state_get_internal()->status_bar_color);
     fprintf(file, "    \"button_color\": \"0x%06X\",\n", app_state_get_internal()->button_color);
     fprintf(file, "    \"button_border_color\": \"0x%06X\",\n", app_state_get_internal()->button_border_color);
+    fprintf(file, "    \"label_text_color\": \"0x%06X\",\n", app_state_get_internal()->label_text_color);
     fprintf(file, "    \"language\": \"%s\"\n", app_state_get_internal()->current_language);
     fprintf(file, "  },\n");
 
@@ -499,6 +500,7 @@ int load_theme_config(void) {
         app_state_get_internal()->status_bar_color = COLOR_BG_TITLE;
         app_state_get_internal()->button_color = COLOR_BUTTON_BG;
         app_state_get_internal()->button_border_color = COLOR_BORDER;
+        app_state_get_internal()->label_text_color = COLOR_TEXT;
         // Initialize calendar date with current system date
         time_t t = time(NULL);
         struct tm *tm = localtime(&t);
@@ -552,6 +554,14 @@ int load_theme_config(void) {
             app_state_get_internal()->button_border_color = COLOR_BORDER;
         }
 
+        const char* label_text = find_json_value(theme, "label_text_color");
+        if (label_text) {
+            while (*label_text && (*label_text == '\"' || isspace(*label_text))) label_text++;
+            app_state_get_internal()->label_text_color = strtoul(label_text, NULL, 0);
+        } else {
+            app_state_get_internal()->label_text_color = COLOR_TEXT;
+        }
+
         const char* language = find_json_value(theme, "language");
         if (language) {
             char lang_buf[4];
@@ -576,6 +586,7 @@ int load_theme_config(void) {
         app_state_get_internal()->title_bar_color = COLOR_BG_TITLE;
         app_state_get_internal()->status_bar_color = COLOR_BG_TITLE;
         app_state_get_internal()->button_color = COLOR_BUTTON_BG;
+        app_state_get_internal()->label_text_color = COLOR_TEXT;
         app_state_get_internal()->button_border_color = COLOR_BORDER;
         strncpy(app_state_get_internal()->current_language, "ko", 3);
         app_state_get_internal()->current_language[3] = '\0';

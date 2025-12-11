@@ -50,13 +50,31 @@ static void update_buttons_recursively(lv_obj_t *obj) {
     }
 }
 
+// Helper to recursively update label text colors
+static void update_labels_recursively(lv_obj_t *obj) {
+    if (!obj) return;
+    
+    // Check if this is a label object
+    if (lv_obj_check_type(obj, &lv_label_class)) {
+        lv_obj_set_style_text_color(obj, lv_color_hex(app_state_get_label_text_color()), 0);
+    }
+    
+    // Recursively update children
+    uint32_t child_count = lv_obj_get_child_cnt(obj);
+    for (uint32_t i = 0; i < child_count; i++) {
+        lv_obj_t *child = lv_obj_get_child(obj, i);
+        update_labels_recursively(child);
+    }
+}
+
 // Color target enum
 typedef enum {
     COLOR_TARGET_BACKGROUND,
     COLOR_TARGET_TITLE_BAR,
     COLOR_TARGET_STATUS_BAR,
     COLOR_TARGET_BUTTON,
-    COLOR_TARGET_BUTTON_BORDER
+    COLOR_TARGET_BUTTON_BORDER,
+    COLOR_TARGET_LABEL_TEXT
 } ColorTarget;
 
 // Predefined color options
@@ -89,6 +107,9 @@ static void color_button_clicked(lv_event_t *e) {
             break;
         case COLOR_TARGET_BUTTON_BORDER:
             app_state_set_button_border_color(option->color);
+            break;
+        case COLOR_TARGET_LABEL_TEXT:
+            app_state_set_label_text_color(option->color);
             break;
     }
     
@@ -182,7 +203,26 @@ static void color_button_clicked(lv_event_t *e) {
                     if (option->target == COLOR_TARGET_BUTTON || option->target == COLOR_TARGET_BUTTON_BORDER) {
                         update_buttons_recursively(child);
                     }
+                    // Update labels recursively if label text color changed
+                    if (option->target == COLOR_TARGET_LABEL_TEXT) {
+                        update_labels_recursively(child);
+                    }
                 }
+                // Update labels in title bar and status bar too
+                if (option->target == COLOR_TARGET_LABEL_TEXT) {
+                    update_labels_recursively(child);
+                }
+            }
+        }
+    }
+    
+    // Update labels on all screens if label text color changed
+    if (option->target == COLOR_TARGET_LABEL_TEXT) {
+        extern ScreenState screen_stack[];
+        extern int screen_stack_top;
+        for (int i = 0; i <= screen_stack_top; i++) {
+            if (screen_stack[i].screen) {
+                update_labels_recursively(screen_stack[i].screen);
             }
         }
     }
@@ -228,6 +268,7 @@ static void update_color_picker_buttons(lv_obj_t *obj, ColorTarget target) {
             else if (opt->target == COLOR_TARGET_STATUS_BAR && opt->color == app_state_get_status_bar_color()) is_selected = true;
             else if (opt->target == COLOR_TARGET_BUTTON && opt->color == app_state_get_button_color()) is_selected = true;
             else if (opt->target == COLOR_TARGET_BUTTON_BORDER && opt->color == app_state_get_button_border_color()) is_selected = true;
+            else if (opt->target == COLOR_TARGET_LABEL_TEXT && opt->color == app_state_get_label_text_color()) is_selected = true;
             
             // Update border based on selection
             if (is_selected) {
@@ -265,12 +306,13 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
     static ColorOption status_options[4];
     static ColorOption button_options[4];
     static ColorOption button_border_options[4];
+    static ColorOption label_text_options[4];
     
     ColorOption *options;
     if (target == COLOR_TARGET_BACKGROUND) {
         bg_options[0] = (ColorOption){"어두운 회색", 0x2A2A2A, target};
         bg_options[1] = (ColorOption){"검정", 0x000000, target};
-        bg_options[2] = (ColorOption){"남색", 0x1A1A40, target};
+        bg_options[2] = (ColorOption){"흰색", 0xFFFFFF, target};
         bg_options[3] = (ColorOption){"진한 녹색", 0x1A3A1A, target};
         options = bg_options;
     } else if (target == COLOR_TARGET_TITLE_BAR) {
@@ -291,6 +333,12 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
         button_options[2] = (ColorOption){"회색", 0x444444, target};
         button_options[3] = (ColorOption){"진한 파랑", 0x0D0D3A, target};
         options = button_options;
+    } else if (target == COLOR_TARGET_LABEL_TEXT) {
+        label_text_options[0] = (ColorOption){"흰색", 0xFFFFFF, target};
+        label_text_options[1] = (ColorOption){"검정", 0x000000, target};
+        label_text_options[2] = (ColorOption){"회색", 0x888888, target};
+        label_text_options[3] = (ColorOption){"파랑", 0x4A4AFF, target};
+        options = label_text_options;
     } else {
         button_border_options[0] = (ColorOption){"회색", 0x888888, target};
         button_border_options[1] = (ColorOption){"흰색", 0xFFFFFF, target};
@@ -322,6 +370,7 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
         else if (target == COLOR_TARGET_STATUS_BAR) current_color = app_state_get_status_bar_color();
         else if (target == COLOR_TARGET_BUTTON) current_color = app_state_get_button_color();
         else if (target == COLOR_TARGET_BUTTON_BORDER) current_color = app_state_get_button_border_color();
+        else if (target == COLOR_TARGET_LABEL_TEXT) current_color = app_state_get_label_text_color();
         
         if (current_color == options[i].color) {
             lv_obj_set_style_border_color(btn, lv_color_hex(0x00FF00), 0);
@@ -390,7 +439,7 @@ static lv_obj_t *create_language_button(lv_obj_t *parent, const char *label_text
                                         const char *language_code, int x_pos) {
     lv_obj_t *btn = lv_btn_create(parent);
     lv_obj_set_size(btn, 90, 40);
-    lv_obj_set_pos(btn, x_pos, 595);
+    lv_obj_set_pos(btn, x_pos, 665);
     apply_button_style(btn, 0);
 
     lv_obj_t *label = lv_label_create(btn);
@@ -792,12 +841,13 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     create_color_section(content, get_label("admin_screen.status_bar_color"), 300, COLOR_TARGET_STATUS_BAR);
     create_color_section(content, get_label("admin_screen.button_color"), 380, COLOR_TARGET_BUTTON);
     create_color_section(content, get_label("admin_screen.button_border_color"), 460, COLOR_TARGET_BUTTON_BORDER);
+    create_color_section(content, get_label("admin_screen.label_text_color"), 540, COLOR_TARGET_LABEL_TEXT);
 
-    // Language Settings Section
+    // Language Settings Section (moved down to avoid overlap with label text color section)
     lv_obj_t *language_title = lv_label_create(content);
     lv_label_set_text(language_title, get_label("admin_screen.language_title"));
     apply_label_style(language_title);
-    lv_obj_set_pos(language_title, 10, 560);
+    lv_obj_set_pos(language_title, 10, 630);
 
     // Korean button
     create_language_button(content, get_label("admin_screen.language_korean"), "ko", 10);
@@ -814,7 +864,7 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     if (app_state_get_font_20()) {
         lv_obj_set_style_text_font(info_label, app_state_get_font_20(), 0);
     }
-    lv_obj_set_pos(info_label, CONTENT_PADDING, 640);
+    lv_obj_set_pos(info_label, CONTENT_PADDING, 710);
 
     return content;
 }
