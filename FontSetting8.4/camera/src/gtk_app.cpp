@@ -1354,6 +1354,7 @@ std::string GTKApp::handle_capture(const std::string& args) {
     uint64_t person_id;
     try {
         person_id = std::stoull(id_str);
+        (void)person_id; // Validated but not used - we use id_str as folder name
     } catch (...) {
         return "ERROR:Invalid ID. Must be numeric.";
     }

@@ -405,3 +405,27 @@ void video_trigger_next(void) {
         log_error("Failed to recreate video player");
     }
 }
+
+void video_pause(void) {
+#if LV_USE_FFMPEG
+    if (video_state.video_player && video_state.is_initialized && video_state.is_playing) {
+        lv_ffmpeg_player_set_cmd(video_state.video_player, LV_FFMPEG_PLAYER_CMD_PAUSE);
+        // Pause the check timer
+        if (video_state.check_timer) {
+            lv_timer_pause(video_state.check_timer);
+        }
+    }
+#endif
+}
+
+void video_resume(void) {
+#if LV_USE_FFMPEG
+    if (video_state.video_player && video_state.is_initialized && video_state.is_playing) {
+        lv_ffmpeg_player_set_cmd(video_state.video_player, LV_FFMPEG_PLAYER_CMD_START);
+        // Resume the check timer
+        if (video_state.check_timer) {
+            lv_timer_resume(video_state.check_timer);
+        }
+    }
+#endif
+}

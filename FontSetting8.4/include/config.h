@@ -156,7 +156,7 @@ int load_status_bar_config(void);
 // VIDEO CONFIGURATION
 // ============================================================================
 
-#define VIDEO_DIR "assets/videos"
+#define VIDEO_DIR "videos"
 #define VIDEO_FILENAME "Video02.mp4"
 #define MAX_VIDEO_PATH 256
 

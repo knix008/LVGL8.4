@@ -115,4 +115,59 @@ lv_obj_t* create_styled_label(lv_obj_t* parent, const char* text, bool use_font)
  */
 lv_obj_t* create_title_label(lv_obj_t* parent, const char* text);
 
+// ============================================================================
+// WARNING MESSAGE BOX - YELLOW BORDER AROUND SCREEN EDGES
+// ============================================================================
+
+/**
+ * Structure to hold warning border components
+ */
+typedef struct {
+    lv_obj_t* top;
+    lv_obj_t* bottom;
+    lv_obj_t* left;
+    lv_obj_t* right;
+} warning_border_t;
+
+/**
+ * Create a yellow warning border around the application window edges
+ * @param parent Parent container (usually lv_scr_act())
+ * @param message_key Language key for the warning message (optional, can be NULL)
+ *                    If provided, a message label will be displayed at the top center.
+ *                    The function will use get_label() to retrieve the localized message.
+ * @param border_width Width of the yellow border in pixels (0 for default 8px)
+ * @param auto_close_ms Auto-close timer in milliseconds (0 for no auto-close)
+ * @return Pointer to warning_border_t structure containing the border objects, or NULL on failure
+ */
+warning_border_t* create_warning_box(lv_obj_t* parent, const char* message_key, 
+                                     int border_width, uint32_t auto_close_ms);
+
+/**
+ * Structure to hold warning message box components (border + message box)
+ */
+typedef struct {
+    warning_border_t* border;
+    lv_obj_t* msgbox;
+} warning_msgbox_t;
+
+/**
+ * Create a warning message box with orange border around screen edges
+ * This function creates both a standard LVGL message box and an orange border around the screen.
+ * Uses the existing border system (show_orange_border/remove_border) to reuse the same mechanism
+ * as green and red borders.
+ * @param parent Parent container (usually lv_scr_act() or NULL for screen)
+ * @param title_key Language key for the message box title (e.g., "common.warning")
+ * @param message_key Language key for the message box content (e.g., "menu_screen.status_bar_full")
+ * @param button_texts Array of button texts (e.g., {"OK", ""} or {get_label("common.ok"), ""})
+ * @param add_close_btn Whether to add a close button
+ * @param border_width Width of the yellow border in pixels (ignored - uses existing border system with default width)
+ * @return Pointer to warning_msgbox_t structure, or NULL on failure
+ */
+warning_msgbox_t* create_warning_msgbox_with_border(lv_obj_t* parent, 
+                                                     const char* title_key,
+                                                     const char* message_key,
+                                                     const char* button_texts[],
+                                                     bool add_close_btn,
+                                                     int border_width);
+
 #endif

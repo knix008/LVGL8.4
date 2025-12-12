@@ -13,6 +13,9 @@
 #include "../include/navigation.h"
 #include "../include/label.h"
 #include "../include/home.h"
+#include "../include/ui_helpers.h"
+#include "../include/slideshow.h"
+#include "../include/video.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -155,10 +158,18 @@ void update_title_bar_location(int screen_id) {
 void show_screen(int screen_id) {
     // Handle inactivity timer based on screen navigation
     if (screen_id == SCREEN_MAIN) {
-        // Entering home screen - start inactivity timer
+        // Entering home screen - start inactivity timer and resume slideshow/video
         start_inactivity_timer();
+        slideshow_resume();
+        if (video_is_playing()) {
+            video_resume();
+        }
     } else {
-        // Leaving home screen - stop inactivity timer and video
+        // Leaving home screen - pause slideshow and video timers
+        slideshow_pause();
+        if (video_is_playing()) {
+            video_pause();
+        }
         stop_inactivity_timer();
     }
     
@@ -177,8 +188,12 @@ void show_screen(int screen_id) {
                 
                 // Additional inactivity timer management for existing screens
                 if (screen_id == SCREEN_MAIN) {
-                    // Returning to home screen - resume inactivity timer
+                    // Returning to home screen - resume inactivity timer and slideshow/video
                     resume_inactivity_timer();
+                    slideshow_resume();
+                    if (video_is_playing()) {
+                        video_resume();
+                    }
                 }
                 return;
             } else {
@@ -378,14 +393,6 @@ void finalize_screen(lv_obj_t *screen, int screen_id) {
 // ============================================================================
 
 /**
- * Callback to close message box when button is clicked
- */
-static void msgbox_close_event_cb(lv_event_t *e) {
-    lv_obj_t *mbox = lv_event_get_current_target(e);
-    lv_msgbox_close(mbox);
-}
-
-/**
  * Adds an icon to the status bar at the specified menu index position.
  * 
  * @param menu_index The position index (0-4) for the icon
@@ -423,44 +430,11 @@ void add_status_bar_icon(int menu_index, const char *icon_path) {
         // Update the status bar icons
         update_status_bar_icons();
     } else {
-        // Show warning popup - status bar is full
+        // Show warning popup - status bar is full (with yellow border)
         static const char *btns[] = {NULL, ""};
-        const char *title_str = get_label("common.warning");
-        const char *msg_str = get_label("menu_screen.status_bar_full");
         const char *ok_str = get_label("common.ok");
         btns[0] = ok_str;
-        lv_obj_t *mbox = lv_msgbox_create(NULL, title_str, msg_str, btns, false);
-        if (mbox) {
-            lv_obj_center(mbox);
-            lv_obj_move_foreground(mbox);
-            lv_obj_set_width(mbox, 280);
-            lv_obj_set_style_bg_color(mbox, lv_color_hex(0x000000), 0);
-            lv_obj_set_style_bg_opa(mbox, LV_OPA_70, 0);
-            lv_obj_set_style_border_color(mbox, lv_color_hex(0xFF6B00), 0);
-            lv_obj_set_style_border_width(mbox, 2, 0);
-            lv_obj_t *title = lv_msgbox_get_title(mbox);
-            if (title) {
-                if (app_state_get_font_24_bold()) {
-                    lv_obj_set_style_text_font(title, app_state_get_font_24_bold(), 0);
-                }
-                lv_obj_set_style_text_color(title, lv_color_hex(0xFFAA00), 0);
-            }
-            lv_obj_t *text = lv_msgbox_get_text(mbox);
-            if (text) {
-                if (app_state_get_font_20()) {
-                    lv_obj_set_style_text_font(text, app_state_get_font_20(), 0);
-                }
-                lv_obj_set_style_text_color(text, lv_color_hex(0xFFFFFF), 0);
-            }
-            lv_obj_t *btns_obj = lv_msgbox_get_btns(mbox);
-            if (btns_obj) {
-                lv_obj_set_height(btns_obj, 50);
-                if (app_state_get_font_20()) {
-                    lv_obj_set_style_text_font(btns_obj, app_state_get_font_20(), 0);
-                }
-            }
-            lv_obj_add_event_cb(mbox, msgbox_close_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-        }
+        create_warning_msgbox_with_border(NULL, "common.warning", "menu_screen.status_bar_full", btns, false, 0);
     }
 }
 

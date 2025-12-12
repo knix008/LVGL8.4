@@ -20,4 +20,14 @@ int slideshow_init(lv_obj_t *parent_screen);
  */
 lv_obj_t *slideshow_get_image(void);
 
+/**
+ * Pause the slideshow timer
+ */
+void slideshow_pause(void);
+
+/**
+ * Resume the slideshow timer
+ */
+void slideshow_resume(void);
+
 #endif

@@ -76,4 +76,14 @@ int video_get_count(void);
  */
 void video_trigger_next(void);
 
+/**
+ * Pause video playback and timer
+ */
+void video_pause(void);
+
+/**
+ * Resume video playback and timer
+ */
+void video_resume(void);
+
 #endif

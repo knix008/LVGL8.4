@@ -211,3 +211,15 @@ int slideshow_init(lv_obj_t *parent_screen) {
 lv_obj_t *slideshow_get_image(void) {
     return slideshow_state.slideshow_img;
 }
+
+void slideshow_pause(void) {
+    if (slideshow_state.slideshow_timer) {
+        lv_timer_pause(slideshow_state.slideshow_timer);
+    }
+}
+
+void slideshow_resume(void) {
+    if (slideshow_state.slideshow_timer) {
+        lv_timer_resume(slideshow_state.slideshow_timer);
+    }
+}
