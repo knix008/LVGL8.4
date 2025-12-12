@@ -200,6 +200,7 @@ int slideshow_init(lv_obj_t *parent_screen) {
                   slideshow_state.image_paths[slideshow_state.current_index]);
     lv_obj_invalidate(slideshow_state.slideshow_img);
 
+
     // Create timer for slideshow
     slideshow_state.slideshow_timer = lv_timer_create(slideshow_timer_callback,
                                                       SLIDESHOW_INTERVAL, NULL);

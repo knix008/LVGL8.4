@@ -20,6 +20,11 @@ static const char* font_names[9] = {
 // Font sizes array
 static int font_sizes[] = {12, 14, 16, 18, 20, 24, 28, 32};
 
+
+// Forward declarations for navigation callbacks
+static void admin_prev_page_callback(lv_event_t *e);
+static void admin_next_page_callback(lv_event_t *e);
+
 // ============================================================================
 // FONT DROPDOWN CALLBACK CONFIGURATION
 // ============================================================================
@@ -1102,6 +1107,40 @@ static void refresh_admin_page(void) {
             break;
     }
 
+    // Recreate navigation container/buttons/label after clearing content
+    int nav_container_width = 220;
+    int nav_container_height = 60;
+    lv_obj_t *nav_container = lv_obj_create(admin_content_container);
+    lv_obj_set_size(nav_container, nav_container_width, nav_container_height);
+    lv_obj_set_pos(nav_container, SCREEN_WIDTH - nav_container_width - CONTENT_PADDING, CONTENT_PADDING + 10);
+    lv_obj_set_style_bg_opa(nav_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(nav_container, 0, 0);
+    lv_obj_clear_flag(nav_container, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Previous button (left in container)
+    admin_prev_btn = create_nav_button(nav_container, "<", 50, 50, 0,
+                                       admin_prev_page_callback, NULL);
+    lv_obj_align(admin_prev_btn, LV_ALIGN_LEFT_MID, 0, 0);
+
+    // Page label (center in container)
+    admin_page_label = lv_label_create(nav_container);
+    char page_text[64];
+    snprintf(page_text, sizeof(page_text), "%s (%d/%d)",
+             page_names[current_admin_page], current_admin_page + 1, ADMIN_PAGE_COUNT);
+    lv_label_set_text(admin_page_label, page_text);
+    lv_obj_set_style_text_color(admin_page_label, lv_color_hex(COLOR_TEXT), 0);
+    if (app_state_get_font_label()) {
+        lv_obj_set_style_text_font(admin_page_label, app_state_get_font_label(), 0);
+    }
+    lv_obj_set_width(admin_page_label, 100);
+    lv_obj_align(admin_page_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_text_align(admin_page_label, LV_TEXT_ALIGN_CENTER, 0);
+
+    // Next button (right in container)
+    admin_next_btn = create_nav_button(nav_container, ">", 50, 50, 0,
+                                       admin_next_page_callback, NULL);
+    lv_obj_align(admin_next_btn, LV_ALIGN_RIGHT_MID, 0, 0);
+
     // Update navigation button states
     update_page_navigation_buttons();
 }
@@ -1277,15 +1316,24 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
 
     // Create page navigation buttons at the bottom of content area
     // Position them above the status bar
-    int nav_y = SCREEN_HEIGHT - TITLE_BAR_HEIGHT - STATUS_BAR_HEIGHT - 60;
 
-    // Previous button (left side)
-    admin_prev_btn = create_nav_button(parent, "<", 60, 50, 0,
+    // --- Navigation container at top right ---
+    int nav_container_width = 220;
+    int nav_container_height = 60;
+    lv_obj_t *nav_container = lv_obj_create(content);
+    lv_obj_set_size(nav_container, nav_container_width, nav_container_height);
+    lv_obj_set_pos(nav_container, SCREEN_WIDTH - nav_container_width - CONTENT_PADDING, CONTENT_PADDING + 10); // In content area, below title bar
+    lv_obj_set_style_bg_opa(nav_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(nav_container, 0, 0);
+    lv_obj_clear_flag(nav_container, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Previous button (left in container)
+    admin_prev_btn = create_nav_button(nav_container, "<", 50, 50, 0,
                                        admin_prev_page_callback, NULL);
-    lv_obj_set_pos(admin_prev_btn, 20, nav_y);
+    lv_obj_align(admin_prev_btn, LV_ALIGN_LEFT_MID, 0, 0);
 
-    // Page indicator label (center)
-    admin_page_label = lv_label_create(parent);
+    // Page label (center in container)
+    admin_page_label = lv_label_create(nav_container);
     char page_text[64];
     snprintf(page_text, sizeof(page_text), "%s (%d/%d)",
              page_names[current_admin_page], current_admin_page + 1, ADMIN_PAGE_COUNT);
@@ -1294,12 +1342,14 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     if (app_state_get_font_label()) {
         lv_obj_set_style_text_font(admin_page_label, app_state_get_font_label(), 0);
     }
-    lv_obj_set_pos(admin_page_label, (SCREEN_WIDTH - 50) / 2, nav_y + 15);
+    lv_obj_set_width(admin_page_label, 100);
+    lv_obj_align(admin_page_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_text_align(admin_page_label, LV_TEXT_ALIGN_CENTER, 0);
 
-    // Next button (right side)
-    admin_next_btn = create_nav_button(parent, ">", 60, 50, 0,
+    // Next button (right in container)
+    admin_next_btn = create_nav_button(nav_container, ">", 50, 50, 0,
                                        admin_next_page_callback, NULL);
-    lv_obj_set_pos(admin_next_btn, SCREEN_WIDTH - 80, nav_y);
+    lv_obj_align(admin_next_btn, LV_ALIGN_RIGHT_MID, 0, 0);
 
     // Initial button state update
     update_page_navigation_buttons();
