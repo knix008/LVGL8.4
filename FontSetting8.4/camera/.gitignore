@@ -1,0 +1,43 @@
+# Build artifacts
+build/
+*.o
+*.a
+*.so
+*.out
+*.bin
+onnxruntime-*/
+faiss/
+models/*.onnx
+models/*.bin
+dataset/
+
+
+# Executable
+gtk_webcam
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile.cmake
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies
+*.db
+face_database.db
+faiss_index.bin
+
+# Temporary files
+*.tmp
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db

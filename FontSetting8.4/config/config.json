@@ -1,0 +1,61 @@
+{
+  "status_bar": {
+    "admin": true,
+    "network": true,
+    "korean_input": false,
+    "info": true,
+    "camera": true,
+    "number_input": false,
+    "english_input": true
+  },
+  "border": {
+    "default_color": "0x00FF00",
+    "default_width": 8,
+    "colors": {
+      "green": "0x00FF00",
+      "red": "0xFF0000",
+      "blue": "0x0000FF",
+      "yellow": "0xFFFF00",
+      "orange": "0xFF5733",
+      "purple": "0x8A2BE2",
+      "white": "0xFFFFFF"
+    },
+    "widths": {
+      "thin": 3,
+      "default": 5,
+      "thick": 12,
+      "extra_thick": 16
+    }
+  },
+  "theme": {
+    "background_color": "0x2A2A2A",
+    "title_bar_color": "0x500A0A",
+    "status_bar_color": "0x1A1A1A",
+    "button_color": "0x444444",
+    "button_border_color": "0x888888",
+    "label_text_color": "0xFFFFFF",
+    "language": "en"
+  },
+  "fonts": {
+    "title": {
+      "name": "NotoSansKR-ExtraBold.ttf",
+      "size": 14
+    },
+    "status_bar": {
+      "name": "NotoSansKR-Medium.ttf",
+      "size": 14
+    },
+    "button_label": {
+      "name": "NotoSansKR-ExtraLight.ttf",
+      "size": 16
+    },
+    "label": {
+      "name": "NotoSansKR-Medium.ttf",
+      "size": 16
+    },
+    "home_contents": {
+      "name": "NotoSansKR-Bold.ttf",
+      "size": 32
+    }
+  }
+}

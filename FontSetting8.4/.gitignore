@@ -1,0 +1,47 @@
+# Build outputs and binary files.
+application
+*.o
+*.a
+*.so
+*.dylib
+build/
+
+# LVGL build directory
+lvgl/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Backup files
+*_backup.*
+*_370x370_backup.png
+
+# Dependency files
+*.d
+
+# Core dumps
+core
+core.*
+
+# System files
+.directory
+Thumbs.db
+
+# Application log
+log/
