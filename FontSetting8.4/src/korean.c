@@ -225,6 +225,7 @@ static void enter_btn_callback(lv_event_t *e) {
         lv_obj_t *mbox = lv_msgbox_create(NULL, "입력 결과", text_copy, btns, false);
 
         if (mbox) {
+            setup_msgbox_timer_management(mbox);
             lv_obj_center(mbox);
 
             // Set msgbox width to match button row width (3 buttons + spacing)

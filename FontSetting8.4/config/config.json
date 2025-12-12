@@ -1,9 +1,9 @@
 {
   "status_bar": {
     "admin": true,
-    "network": false,
+    "network": true,
     "korean_input": true,
-    "info": true,
+    "info": false,
     "camera": false,
     "number_input": true,
     "english_input": true
@@ -35,9 +35,6 @@
     "button_border_color": "0x4AFF4A",
     "label_text_color": "0xFFFFFF",
     "language": "ko"
-  },
-  "calendar": {
-    "selected_date": "2025-12-12"
   },
   "fonts": {
     "title": {

@@ -116,6 +116,17 @@ lv_obj_t* create_styled_label(lv_obj_t* parent, const char* text, bool use_font)
 lv_obj_t* create_title_label(lv_obj_t* parent, const char* text);
 
 // ============================================================================
+// MESSAGE BOX TIMER MANAGEMENT
+// ============================================================================
+
+/**
+ * Helper function to pause home screen timer when message box is shown
+ * and resume when deleted. Call this immediately after creating any message box.
+ * @param mbox The message box object
+ */
+void setup_msgbox_timer_management(lv_obj_t* mbox);
+
+// ============================================================================
 // WARNING MESSAGE BOX - YELLOW BORDER AROUND SCREEN EDGES
 // ============================================================================
 

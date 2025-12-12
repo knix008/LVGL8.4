@@ -4,6 +4,7 @@
 #include "../include/label.h"
 #include "../include/state.h"
 #include "../include/border.h"
+#include "../include/home.h"
 #include <stdlib.h>
 
 // ============================================================================
@@ -187,6 +188,35 @@ lv_obj_t* create_title_label(lv_obj_t* parent, const char* text) {
 }
 
 // ============================================================================
+// MESSAGE BOX TIMER MANAGEMENT
+// ============================================================================
+
+/**
+ * Generic event callback for all message boxes to pause/resume inactivity timer
+ */
+static void msgbox_timer_management_cb(lv_event_t* e) {
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_DELETE) {
+        // Message box is being deleted - resume timer
+        resume_inactivity_timer();
+    }
+}
+
+/**
+ * Helper function to add timer management to any message box
+ * Call this immediately after creating a message box
+ */
+void setup_msgbox_timer_management(lv_obj_t* mbox) {
+    if (mbox) {
+        // Pause timer when message box is created
+        pause_inactivity_timer();
+        // Add event callback to resume timer when deleted
+        lv_obj_add_event_cb(mbox, msgbox_timer_management_cb, LV_EVENT_DELETE, NULL);
+    }
+}
+
+// ============================================================================
 // WARNING MESSAGE BOX - YELLOW BORDER AROUND SCREEN EDGES
 // ============================================================================
 
@@ -214,13 +244,15 @@ static void warning_msgbox_close_cb(lv_event_t* e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t* mbox = lv_event_get_current_target(e);
     warning_msgbox_t* wmb = (warning_msgbox_t*)lv_event_get_user_data(e);
-    
+
     if (code == LV_EVENT_VALUE_CHANGED) {
         // Button was clicked - remove border immediately and close the message box
         remove_border();
         if (mbox) {
             lv_msgbox_close(mbox);
         }
+        // Resume home screen inactivity timer
+        resume_inactivity_timer();
         // Free the structure after closing
         if (wmb) {
             free(wmb);
@@ -228,6 +260,8 @@ static void warning_msgbox_close_cb(lv_event_t* e) {
     } else if (code == LV_EVENT_DELETE) {
         // Message box is being deleted - ensure border is removed and free structure
         remove_border();
+        // Resume home screen inactivity timer
+        resume_inactivity_timer();
         if (wmb) {
             free(wmb);
         }
@@ -356,24 +390,24 @@ warning_border_t* create_warning_box(lv_obj_t* parent, const char* message_key,
  * @param border_width Width of the orange border in pixels (0 for default, ignored - uses existing border system)
  * @return Pointer to warning_msgbox_t structure, or NULL on failure
  */
-warning_msgbox_t* create_warning_msgbox_with_border(lv_obj_t* parent, 
+warning_msgbox_t* create_warning_msgbox_with_border(lv_obj_t* parent,
                                                      const char* title_key,
                                                      const char* message_key,
                                                      const char* button_texts[],
                                                      bool add_close_btn,
                                                      int border_width) {
     (void)border_width; // Unused - uses existing border system with default width
-    
+
     // Show the orange border using the existing border system
     show_orange_border();
-    
+
     // Get localized strings
     const char* title = get_label(title_key);
     if (!title) title = title_key;
-    
+
     const char* message = get_label(message_key);
     if (!message) message = message_key;
-    
+
     // Create the message box
     lv_obj_t* mbox = lv_msgbox_create(parent, title, message, button_texts, add_close_btn);
     if (!mbox) {
@@ -381,6 +415,9 @@ warning_msgbox_t* create_warning_msgbox_with_border(lv_obj_t* parent,
         remove_border();
         return NULL;
     }
+
+    // Setup timer management (pause on create, resume on delete)
+    setup_msgbox_timer_management(mbox);
     
     // Center and style the message box
     lv_obj_center(mbox);

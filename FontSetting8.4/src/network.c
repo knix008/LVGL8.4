@@ -10,6 +10,7 @@
 #include "../include/cursor.h"
 #include "../include/colors.h"
 #include "../include/layout.h"
+#include "../include/ui_helpers.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -416,6 +417,7 @@ static void save_ip_callback(lv_event_t *e) {
                                           error_msg, btns, false);
 
         if (mbox) {
+            setup_msgbox_timer_management(mbox);
             lv_obj_center(mbox);
             lv_obj_move_foreground(mbox);
 

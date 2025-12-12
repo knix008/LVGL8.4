@@ -187,7 +187,7 @@ int load_status_bar_config(void);
 #define PADDING_VERTICAL 5
 #define PADDING_BUTTON 20
 #define MARGIN_BUTTON 10
-#define OFFSET_BUTTON_START_Y 20
+#define OFFSET_BUTTON_START_Y 5
 
 // Label and title widths
 #define TITLE_LABEL_WIDTH (SCREEN_WIDTH - 20)

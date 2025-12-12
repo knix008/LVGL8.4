@@ -129,8 +129,9 @@ static lv_obj_t *create_menu_content(lv_obj_t *parent) {
     lv_obj_set_style_bg_color(content, lv_color_hex(get_background_color()), 0);
     lv_obj_set_style_border_width(content, 0, 0);
 
-    // Allow only vertical scrolling
-    lv_obj_set_scroll_dir(content, LV_DIR_VER);
+    // Disable scrolling - all buttons fit on screen
+    lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_OFF);
 
     // Create menu buttons using MENU_ITEMS configuration
     for (int i = 0; i < MENU_ITEMS_COUNT; i++) {

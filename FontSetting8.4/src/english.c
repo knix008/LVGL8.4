@@ -303,6 +303,7 @@ static void enter_btn_callback(lv_event_t *e) {
         lv_obj_t *mbox = lv_msgbox_create(NULL, get_label("english_input_screen.result_title"), text_copy, btns, false);
 
         if (mbox) {
+            setup_msgbox_timer_management(mbox);
             lv_obj_center(mbox);
             lv_obj_set_width(mbox, 265);
 
