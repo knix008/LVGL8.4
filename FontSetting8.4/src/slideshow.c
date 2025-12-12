@@ -11,7 +11,7 @@
 
 #define MAX_SLIDESHOW_IMAGES 20
 #define SLIDESHOW_INTERVAL 3000  // 3 seconds in milliseconds
-#define IMAGES_DIR_PATH "images"
+#define IMAGES_DIR_PATH "slideshow"
 
 typedef struct {
     char image_paths[MAX_SLIDESHOW_IMAGES][512];
