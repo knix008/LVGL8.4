@@ -1001,26 +1001,106 @@ static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char 
 }
 
 // ============================================================================
-// BUTTON DIMENSION SETTINGS
+// MULTI-PAGE MANAGEMENT
 // ============================================================================
 
+#define ADMIN_PAGE_COUNT 3
+static int current_admin_page = 0;  // Current page index (0-2)
+static lv_obj_t *admin_content_container = NULL;  // Reference to content container
+static lv_obj_t *admin_prev_btn = NULL;  // Previous page button
+static lv_obj_t *admin_next_btn = NULL;  // Next page button
+static lv_obj_t *admin_page_label = NULL;  // Page indicator label
 
-static lv_obj_t *create_admin_content(lv_obj_t *parent) {
-    lv_obj_t *content = create_standard_content(parent);
-    
-    // Enable vertical scrolling with wider scrollbar
-    lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_AUTO);
-    lv_obj_set_scroll_dir(content, LV_DIR_VER);
-    lv_obj_set_style_pad_right(content, 15, LV_PART_SCROLLBAR);
-    lv_obj_set_style_width(content, 8, LV_PART_SCROLLBAR);
+// Forward declarations for page creation functions
+static void create_admin_page_1(lv_obj_t *content);
+static void create_admin_page_2(lv_obj_t *content);
+static void create_admin_page_3(lv_obj_t *content);
 
+// ============================================================================
+// PAGE NAVIGATION
+// ============================================================================
+
+static void update_page_navigation_buttons(void) {
+    // Update prev button state
+    if (admin_prev_btn) {
+        if (current_admin_page == 0) {
+            lv_obj_add_state(admin_prev_btn, LV_STATE_DISABLED);
+        } else {
+            lv_obj_clear_state(admin_prev_btn, LV_STATE_DISABLED);
+        }
+    }
+
+    // Update next button state
+    if (admin_next_btn) {
+        if (current_admin_page == ADMIN_PAGE_COUNT - 1) {
+            lv_obj_add_state(admin_next_btn, LV_STATE_DISABLED);
+        } else {
+            lv_obj_clear_state(admin_next_btn, LV_STATE_DISABLED);
+        }
+    }
+
+    // Update page indicator
+    if (admin_page_label) {
+        char page_text[16];
+        snprintf(page_text, sizeof(page_text), "%d / %d", current_admin_page + 1, ADMIN_PAGE_COUNT);
+        lv_label_set_text(admin_page_label, page_text);
+    }
+}
+
+static void refresh_admin_page(void) {
+    if (!admin_content_container) return;
+
+    // Clear all children from content container
+    lv_obj_clean(admin_content_container);
+
+    // Create the current page content
+    switch (current_admin_page) {
+        case 0:
+            create_admin_page_1(admin_content_container);
+            break;
+        case 1:
+            create_admin_page_2(admin_content_container);
+            break;
+        case 2:
+            create_admin_page_3(admin_content_container);
+            break;
+        default:
+            break;
+    }
+
+    // Update navigation button states
+    update_page_navigation_buttons();
+}
+
+static void admin_prev_page_callback(lv_event_t *e) {
+    (void)e;
+    if (current_admin_page > 0) {
+        current_admin_page--;
+        refresh_admin_page();
+    }
+}
+
+static void admin_next_page_callback(lv_event_t *e) {
+    (void)e;
+    if (current_admin_page < ADMIN_PAGE_COUNT - 1) {
+        current_admin_page++;
+        refresh_admin_page();
+    }
+}
+
+// ============================================================================
+// PAGE CONTENT CREATION
+// ============================================================================
+
+// Page 1: Calendar + Font Settings
+static void create_admin_page_1(lv_obj_t *content) {
     // Main title
     lv_obj_t *title_label = lv_label_create(content);
     lv_label_set_text(title_label, get_label("admin_screen.title"));
     apply_label_style(title_label);
     lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
 
-    // Calendar Settings Section (First Row)
+    // Calendar Settings Section
     lv_obj_t *calendar_title = lv_label_create(content);
     lv_label_set_text(calendar_title, get_label("admin_screen.calendar_setting"));
     apply_label_style(calendar_title);
@@ -1031,17 +1111,14 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_set_size(calendar_btn, 260, 50);
     lv_obj_set_pos(calendar_btn, CONTENT_PADDING, 65);
     apply_button_style(calendar_btn, app_state_get_button_color());
-    
+
     // Create label inside the button for the calendar text
     calendar_display_label = lv_label_create(calendar_btn);
     lv_obj_set_style_text_color(calendar_display_label, lv_color_white(), 0);
-    // Use button font for button labels
     if (app_state_get_font_button()) {
         lv_obj_set_style_text_font(calendar_display_label, app_state_get_font_button(), 0);
     }
     lv_obj_center(calendar_display_label);
-    
-    // Add click event to button
     lv_obj_add_event_cb(calendar_btn, show_calendar_popup, LV_EVENT_CLICKED, NULL);
 
     // Initialize calendar with current date or system date
@@ -1052,28 +1129,25 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     }
     update_calendar_display();
 
-    // Font Settings Section - Title Bar
+    // Font Settings Sections
     create_font_setting_section(content, 140, get_label("admin_screen.title_bar_font"),
                                 app_state_get_font_name_title(),
                                 app_state_get_font_size_title_bar(),
                                 &config_title_name,
                                 &config_title_size);
 
-    // Font Settings Section - Status Bar
     create_font_setting_section(content, 220, get_label("admin_screen.status_bar_font"),
                                 app_state_get_font_name_status_bar(),
                                 app_state_get_font_size_status_bar(),
                                 &config_status_name,
                                 &config_status_size);
 
-    // Font Settings Section - Buttons
     create_font_setting_section(content, 300, get_label("admin_screen.button_font"),
                                 app_state_get_font_name_button_label(),
                                 app_state_get_font_size_button_label(),
                                 &config_button_name,
                                 &config_button_size);
 
-    // Font Settings Section - Labels
     create_font_setting_section(content, 380, get_label("admin_screen.label_font"),
                                 app_state_get_font_name_label(),
                                 app_state_get_font_size_label(),
@@ -1085,17 +1159,35 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
                                 app_state_get_font_size_home_contents(),
                                 &config_home_name,
                                 &config_home_size);
+}
 
-    // Font color section (moved down to make room for font sections)
-    create_color_section(content, get_label("admin_screen.label_text_color"), 540, COLOR_TARGET_LABEL_TEXT);
-    create_color_section(content, get_label("admin_screen.background_color"), 620, COLOR_TARGET_BACKGROUND);
-    create_color_section(content, get_label("admin_screen.title_bar_color"), 700, COLOR_TARGET_TITLE_BAR);
-    create_color_section(content, get_label("admin_screen.status_bar_color"), 780, COLOR_TARGET_STATUS_BAR);
-    create_color_section(content, get_label("admin_screen.button_color"), 860, COLOR_TARGET_BUTTON);
-    create_color_section(content, get_label("admin_screen.button_border_color"), 940, COLOR_TARGET_BUTTON_BORDER);
+// Page 2: Color Settings
+static void create_admin_page_2(lv_obj_t *content) {
+    // Page title
+    lv_obj_t *title_label = lv_label_create(content);
+    lv_label_set_text(title_label, get_label("admin_screen.title"));
+    apply_label_style(title_label);
+    lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
 
-    // Language Settings Section (moved down to avoid overlap with color sections)
-    int lang_section_y = 1020;
+    // Color sections
+    create_color_section(content, get_label("admin_screen.label_text_color"), 60, COLOR_TARGET_LABEL_TEXT);
+    create_color_section(content, get_label("admin_screen.background_color"), 140, COLOR_TARGET_BACKGROUND);
+    create_color_section(content, get_label("admin_screen.title_bar_color"), 220, COLOR_TARGET_TITLE_BAR);
+    create_color_section(content, get_label("admin_screen.status_bar_color"), 300, COLOR_TARGET_STATUS_BAR);
+    create_color_section(content, get_label("admin_screen.button_color"), 380, COLOR_TARGET_BUTTON);
+    create_color_section(content, get_label("admin_screen.button_border_color"), 460, COLOR_TARGET_BUTTON_BORDER);
+}
+
+// Page 3: Language Settings
+static void create_admin_page_3(lv_obj_t *content) {
+    // Page title
+    lv_obj_t *title_label = lv_label_create(content);
+    lv_label_set_text(title_label, get_label("admin_screen.title"));
+    apply_label_style(title_label);
+    lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
+
+    // Language Settings Section
+    int lang_section_y = 60;
     lv_obj_t *language_title = lv_label_create(content);
     lv_label_set_text(language_title, get_label("admin_screen.language_title"));
     apply_label_style(language_title);
@@ -1112,11 +1204,59 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_set_width(info_label, SCREEN_WIDTH - CONTENT_WIDTH_PADDING);
     lv_label_set_text(info_label, get_label("admin_screen.info_text"));
     lv_obj_set_style_text_color(info_label, lv_color_hex(0xAAAAAA), 0);
-    // Use label font for regular labels
     if (app_state_get_font_label()) {
         lv_obj_set_style_text_font(info_label, app_state_get_font_label(), 0);
     }
     lv_obj_set_pos(info_label, CONTENT_PADDING, lang_btn_y + 60);
+}
+
+// ============================================================================
+// ADMIN CONTENT CREATION
+// ============================================================================
+
+static lv_obj_t *create_admin_content(lv_obj_t *parent) {
+    lv_obj_t *content = create_standard_content(parent);
+
+    // Disable scrolling - using multi-page system instead
+    lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_OFF);
+
+    // Store content container reference for page refresh
+    admin_content_container = content;
+
+    // Reset to page 1 when screen is created
+    current_admin_page = 0;
+
+    // Create initial page content
+    create_admin_page_1(content);
+
+    // Create page navigation buttons at the bottom of content area
+    // Position them above the status bar
+    int nav_y = SCREEN_HEIGHT - TITLE_BAR_HEIGHT - STATUS_BAR_HEIGHT - 60;
+
+    // Previous button (left side)
+    admin_prev_btn = create_nav_button(parent, "<", 60, 50, 0,
+                                       admin_prev_page_callback, NULL);
+    lv_obj_set_pos(admin_prev_btn, 20, nav_y);
+
+    // Page indicator label (center)
+    admin_page_label = lv_label_create(parent);
+    char page_text[16];
+    snprintf(page_text, sizeof(page_text), "%d / %d", current_admin_page + 1, ADMIN_PAGE_COUNT);
+    lv_label_set_text(admin_page_label, page_text);
+    lv_obj_set_style_text_color(admin_page_label, lv_color_hex(COLOR_TEXT), 0);
+    if (app_state_get_font_label()) {
+        lv_obj_set_style_text_font(admin_page_label, app_state_get_font_label(), 0);
+    }
+    lv_obj_set_pos(admin_page_label, (SCREEN_WIDTH - 50) / 2, nav_y + 15);
+
+    // Next button (right side)
+    admin_next_btn = create_nav_button(parent, ">", 60, 50, 0,
+                                       admin_next_page_callback, NULL);
+    lv_obj_set_pos(admin_next_btn, SCREEN_WIDTH - 80, nav_y);
+
+    // Initial button state update
+    update_page_navigation_buttons();
 
     return content;
 }
