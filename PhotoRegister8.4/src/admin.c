@@ -25,6 +25,20 @@ static void font_dropdown_event_cb(lv_event_t *e) {
     // Optionally reload fonts and update all UI labels/buttons
     // reload_fonts_and_update_ui();
 }
+
+// File-scope static callback for font size dropdown
+static void font_size_dropdown_event_cb(lv_event_t *e) {
+    lv_obj_t *dropdown = lv_event_get_target(e);
+    uint16_t idx = lv_dropdown_get_selected(dropdown);
+    int font_sizes[] = {12, 14, 16, 18, 20, 24, 28, 32};
+    if (idx < sizeof(font_sizes) / sizeof(font_sizes[0])) {
+        int selected_size = font_sizes[idx];
+        app_state_set_font_size_title_bar(selected_size);
+        app_state_set_font_size_label(selected_size);
+        app_state_set_font_size_button_label(selected_size);
+        save_font_config();
+    }
+}
 #include "../include/admin.h"
 #include "../include/config.h"
 #include "../include/state.h"
@@ -867,7 +881,7 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     // Create five color sections (moved down to make room for calendar)
     // Font setting section (before font color)
     lv_obj_t *font_section_label = lv_label_create(content);
-    lv_label_set_text(font_section_label, "Font");
+    lv_label_set_text(font_section_label, get_label("admin_screen.font"));
     apply_label_style(font_section_label);
     lv_obj_set_pos(font_section_label, 10, 140);
 
@@ -875,7 +889,7 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     lv_obj_t *font_dropdown = lv_dropdown_create(content);
     lv_dropdown_set_options(font_dropdown,
         "NotoSansKR-Black\nNotoSansKR-Bold\nNotoSansKR-ExtraBold\nNotoSansKR-ExtraLight\nNotoSansKR-Light\nNotoSansKR-Medium\nNotoSansKR-Regular\nNotoSansKR-SemiBold\nNotoSansKR-Thin");
-    lv_obj_set_width(font_dropdown, 220);
+    lv_obj_set_width(font_dropdown, 150);
     lv_obj_set_pos(font_dropdown, 10, 170);
 
     // Restore font selection from config
@@ -902,6 +916,33 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
 
     // Proper LVGL event callback for font selection
     lv_obj_add_event_cb(font_dropdown, font_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // Font size label
+    lv_obj_t *font_size_label = lv_label_create(content);
+    lv_label_set_text(font_size_label, get_label("admin_screen.font_size"));
+    apply_label_style(font_size_label);
+    lv_obj_set_pos(font_size_label, 170, 140);
+
+    // Font size selection dropdown
+    lv_obj_t *font_size_dropdown = lv_dropdown_create(content);
+    lv_dropdown_set_options(font_size_dropdown, "12\n14\n16\n18\n20\n24\n28\n32");
+    lv_obj_set_width(font_size_dropdown, 80);
+    lv_obj_set_pos(font_size_dropdown, 170, 170);
+
+    // Restore font size selection from config
+    int font_size_idx = 4; // Default to 20
+    int current_font_size = app_state_get_font_size_label();
+    int font_sizes[] = {12, 14, 16, 18, 20, 24, 28, 32};
+    for (int i = 0; i < 8; ++i) {
+        if (current_font_size == font_sizes[i]) {
+            font_size_idx = i;
+            break;
+        }
+    }
+    lv_dropdown_set_selected(font_size_dropdown, font_size_idx);
+
+    // Event callback for font size selection
+    lv_obj_add_event_cb(font_size_dropdown, font_size_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     // Font color section
     create_color_section(content, get_label("admin_screen.label_text_color"), 220, COLOR_TARGET_LABEL_TEXT);
