@@ -189,6 +189,9 @@ int slideshow_init(lv_obj_t *parent_screen) {
     // Position at top-left corner
     lv_obj_align(slideshow_state.slideshow_img, LV_ALIGN_TOP_LEFT, 0, 0);
 
+    // Make image non-clickable so touch events pass through to the screen
+    lv_obj_clear_flag(slideshow_state.slideshow_img, LV_OBJ_FLAG_CLICKABLE);
+
     // Move to background layer so title/status bars appear on top
     lv_obj_move_background(slideshow_state.slideshow_img);
 

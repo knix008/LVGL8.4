@@ -22,6 +22,66 @@
 // External reference to the global app state
 
 // ============================================================================
+// NON-HOME SCREEN INACTIVITY DETECTION
+// ============================================================================
+
+static lv_timer_t *non_home_inactivity_timer = NULL;
+static uint32_t non_home_last_activity_time = 0;
+static int last_active_screen_id = SCREEN_MAIN;  // Store last screen before going to home
+
+static void non_home_inactivity_timer_callback(lv_timer_t *timer) {
+    (void)timer;
+    
+    // Only check if we're not on home screen
+    if (screen_stack_top >= 0 && screen_stack[screen_stack_top].screen_id != SCREEN_MAIN) {
+        uint32_t current_time = lv_tick_get();
+        uint32_t elapsed = current_time - non_home_last_activity_time;
+        
+        if (elapsed >= INACTIVITY_TIMEOUT) {
+            // Inactivity detected - return to home screen
+            show_screen(SCREEN_MAIN);
+        }
+    }
+}
+
+static void reset_non_home_inactivity_timer(void) {
+    non_home_last_activity_time = lv_tick_get();
+}
+
+static void non_home_activity_event_callback(lv_event_t *e) {
+    (void)e;
+    
+    // If we're on home screen and there's activity, return to last screen (or menu if no last screen)
+    if (screen_stack_top >= 0 && screen_stack[screen_stack_top].screen_id == SCREEN_MAIN) {
+        if (last_active_screen_id != SCREEN_MAIN) {
+            show_screen(last_active_screen_id);
+        } else {
+            // No previous screen, go to menu screen
+            show_screen(SCREEN_MENU);
+        }
+    } else {
+        // On non-home screen, reset inactivity timer
+        reset_non_home_inactivity_timer();
+    }
+}
+
+static void start_non_home_inactivity_timer(void) {
+    if (!non_home_inactivity_timer) {
+        non_home_last_activity_time = lv_tick_get();
+        non_home_inactivity_timer = lv_timer_create(non_home_inactivity_timer_callback, 1000, NULL);
+    } else {
+        reset_non_home_inactivity_timer();
+        lv_timer_resume(non_home_inactivity_timer);
+    }
+}
+
+static void stop_non_home_inactivity_timer(void) {
+    if (non_home_inactivity_timer) {
+        lv_timer_pause(non_home_inactivity_timer);
+    }
+}
+
+// ============================================================================
 // SCREEN MANAGEMENT
 // ============================================================================
 
@@ -156,16 +216,25 @@ void update_title_bar_location(int screen_id) {
  * @param screen_id The screen ID to display (SCREEN_MENU, SCREEN_INFO, etc.)
  */
 void show_screen(int screen_id) {
-    // Handle inactivity timer based on screen navigation
+    // Store last active screen before going to home (if not already home)
     if (screen_id == SCREEN_MAIN) {
-        // Entering home screen - start inactivity timer and resume slideshow/video
+        // Store the current screen as last active before going to home
+        if (screen_stack_top >= 0 && screen_stack[screen_stack_top].screen_id != SCREEN_MAIN) {
+            last_active_screen_id = screen_stack[screen_stack_top].screen_id;
+        }
+        // Stop non-home inactivity timer
+        stop_non_home_inactivity_timer();
+        // Start home screen inactivity timer and resume slideshow/video
         start_inactivity_timer();
         slideshow_resume();
         if (video_is_playing()) {
             video_resume();
         }
     } else {
-        // Leaving home screen - pause slideshow and video timers
+        // Leaving home screen - store as last active and start non-home inactivity timer
+        last_active_screen_id = screen_id;
+        start_non_home_inactivity_timer();
+        // Pause slideshow and video timers
         slideshow_pause();
         if (video_is_playing()) {
             video_pause();
@@ -188,12 +257,16 @@ void show_screen(int screen_id) {
                 
                 // Additional inactivity timer management for existing screens
                 if (screen_id == SCREEN_MAIN) {
-                    // Returning to home screen - resume inactivity timer and slideshow/video
+                    // Returning to home screen - stop non-home timer, resume home timer and slideshow/video
+                    stop_non_home_inactivity_timer();
                     resume_inactivity_timer();
                     slideshow_resume();
                     if (video_is_playing()) {
                         video_resume();
                     }
+                } else {
+                    // Returning to non-home screen - start non-home inactivity timer
+                    start_non_home_inactivity_timer();
                 }
                 return;
             } else {
@@ -383,6 +456,12 @@ void finalize_screen(lv_obj_t *screen, int screen_id) {
         screen_stack[screen_stack_top].screen = screen;
         screen_stack[screen_stack_top].screen_id = screen_id;
     }
+
+    // Add activity event handlers to all screens
+    // For non-home screens: reset inactivity timer on activity
+    // For home screen: return to last screen on activity (if there was a previous screen)
+    lv_obj_add_event_cb(screen, non_home_activity_event_callback, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(screen, non_home_activity_event_callback, LV_EVENT_CLICKED, NULL);
 
     // Load the screen
     lv_scr_load(screen);

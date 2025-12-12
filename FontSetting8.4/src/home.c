@@ -332,15 +332,19 @@ void create_gui(void) {
     lv_obj_set_size(welcome_container, SCREEN_WIDTH, WELCOME_MESSAGE_CONTAINER_HEIGHT);
     lv_obj_set_pos(welcome_container, 0, WELCOME_MESSAGE_Y_POSITION);
     lv_obj_set_style_bg_color(welcome_container, lv_color_hex(get_background_color()), 0);
-    lv_obj_set_style_bg_opa(welcome_container, LV_OPA_TRANSP, 0);  // Transparent background
+    lv_obj_set_style_bg_opa(welcome_container, LV_OPA_TRANSP, 0);      // Transparent background
     lv_obj_set_style_border_width(welcome_container, 0, 0);
     lv_obj_set_scrollbar_mode(welcome_container, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(welcome_container, LV_OBJ_FLAG_SCROLLABLE);
+    // Make container non-clickable so touch events pass through to the screen
+    lv_obj_clear_flag(welcome_container, LV_OBJ_FLAG_CLICKABLE);
 
     // Create welcome message label
     lv_obj_t *welcome_label = lv_label_create(welcome_container);
     lv_label_set_long_mode(welcome_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_width(welcome_label, SCREEN_WIDTH - 20);
+    // Make label non-clickable so touch events pass through to the screen
+    lv_obj_clear_flag(welcome_label, LV_OBJ_FLAG_CLICKABLE);
 
     // Style: 30pt bold text, white color, centered, transparent background
     lv_obj_set_style_text_color(welcome_label, lv_color_hex(COLOR_TEXT), 0);
