@@ -9,109 +9,29 @@
 #include "../include/welcome.h"
 #include "../include/state.h"
 #include "../include/logger.h"
+#include "../include/inactivity_timer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-// ============================================================================
-// INACTIVITY DETECTION
-// ============================================================================
-
-static lv_timer_t *inactivity_timer = NULL;
-static uint32_t last_activity_time = 0;
-
-static void reset_inactivity_timer(void);
-
-static void inactivity_timer_callback(lv_timer_t *timer) {
-    (void)timer;
-
-    uint32_t current_time = lv_tick_get();
-    uint32_t elapsed = current_time - last_activity_time;
-
-    if (elapsed >= INACTIVITY_TIMEOUT) {
-        // Check if video is already playing to avoid repeated starts
-        if (!video_is_playing()) {
-            // Inactivity timeout reached - hide slideshow and show video
-            lv_obj_t *slideshow_img = slideshow_get_image();
-            if (slideshow_img) {
-                lv_obj_add_flag(slideshow_img, LV_OBJ_FLAG_HIDDEN);
-            }
-
-            // Hide welcome message
-            if (app_state_get_welcome_label()) {
-                lv_obj_add_flag(app_state_get_welcome_label(), LV_OBJ_FLAG_HIDDEN);
-            }
-
-            // Show and start video
-            video_show();
-            video_start();
-        }
-    }
-}
-
-static void reset_inactivity_timer(void) {
-    last_activity_time = lv_tick_get();
-
-    // If video is playing, stop it and show slideshow again
-    if (video_is_playing()) {
-        video_stop();
-        video_hide();
-
-        // Show slideshow again
-        lv_obj_t *slideshow_img = slideshow_get_image();
-        if (slideshow_img) {
-            lv_obj_clear_flag(slideshow_img, LV_OBJ_FLAG_HIDDEN);
-        }
-
-        // Show welcome message again
-        if (app_state_get_welcome_label()) {
-            lv_obj_clear_flag(app_state_get_welcome_label(), LV_OBJ_FLAG_HIDDEN);
-        }
-
-        printf("Activity detected - stopping video playback\n");
-    }
-}
-
-static void activity_event_callback(lv_event_t *e) {
-    (void)e;
-    reset_inactivity_timer();
-}
 
 // ============================================================================
 // INACTIVITY TIMER CONTROL (PUBLIC)
 // ============================================================================
 
 void start_inactivity_timer(void) {
-    if (!inactivity_timer) {
-        last_activity_time = lv_tick_get();
-        inactivity_timer = lv_timer_create(inactivity_timer_callback, 1000, NULL);
-    }
+    inactivity_timer_start(INACTIVITY_CONTEXT_HOME);
 }
 
 void stop_inactivity_timer(void) {
-    if (inactivity_timer) {
-        lv_timer_del(inactivity_timer);
-        inactivity_timer = NULL;
-        
-        // Stop video if playing
-        if (video_is_playing()) {
-            video_stop();
-            video_hide();
-        }
-    }
+    inactivity_timer_stop(INACTIVITY_CONTEXT_HOME);
 }
 
 void pause_inactivity_timer(void) {
-    if (inactivity_timer) {
-        lv_timer_pause(inactivity_timer);
-    }
+    inactivity_timer_pause(INACTIVITY_CONTEXT_HOME);
 }
 
 void resume_inactivity_timer(void) {
-    if (inactivity_timer) {
-        last_activity_time = lv_tick_get();
-        lv_timer_resume(inactivity_timer);
-    }
+    inactivity_timer_resume(INACTIVITY_CONTEXT_HOME);
 }
 
 // ============================================================================
@@ -120,7 +40,7 @@ void resume_inactivity_timer(void) {
 
 static void menu_btn_callback(lv_event_t *e) {
     (void)e;
-    reset_inactivity_timer();
+    inactivity_timer_reset(INACTIVITY_CONTEXT_HOME);
     show_screen(SCREEN_MENU);
 }
 
@@ -385,8 +305,11 @@ void create_gui(void) {
     }
 
     // Add event handler to detect user activity (touch/click events) only on home screen
-    lv_obj_add_event_cb(app_state_get_screen(), activity_event_callback, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(app_state_get_screen(), activity_event_callback, LV_EVENT_CLICKED, NULL);
+    // Two handlers: one to stop video, another to return to previous screen
+    lv_obj_add_event_cb(app_state_get_screen(), inactivity_home_activity_cb, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(app_state_get_screen(), inactivity_home_activity_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(app_state_get_screen(), inactivity_non_home_activity_cb, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(app_state_get_screen(), inactivity_non_home_activity_cb, LV_EVENT_CLICKED, NULL);
     
     // Start inactivity timer for home screen (called directly from main, not via navigation)
     start_inactivity_timer();

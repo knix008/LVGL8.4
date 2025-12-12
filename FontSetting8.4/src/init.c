@@ -148,26 +148,102 @@ int init_fonts(void) {
 // FONT RELOADING
 // ============================================================================
 
+// ============================================================================
+// GENERIC FONT RELOAD HELPER
+// ============================================================================
+
+/**
+ * Font target type for generic reload function
+ */
+typedef enum {
+    RELOAD_FONT_TITLE,
+    RELOAD_FONT_STATUS_BAR,
+    RELOAD_FONT_BUTTON,
+    RELOAD_FONT_LABEL,
+    RELOAD_FONT_HOME_CONTENTS
+} ReloadFontTarget;
+
+/**
+ * Generic font reload function that handles all font types
+ * @param target The font target to reload
+ * @return 0 on success, -1 on failure
+ */
+static int reload_font_generic(ReloadFontTarget target) {
+    char font_path[128];
+    const char *font_name = NULL;
+    int font_size = 0;
+    const char *target_name = NULL;
+
+    // Get font name, size, and target description based on target type
+    switch (target) {
+        case RELOAD_FONT_TITLE:
+            font_name = app_state_get_font_name_title();
+            font_size = app_state_get_font_size_title_bar();
+            target_name = "title bar";
+            break;
+        case RELOAD_FONT_STATUS_BAR:
+            font_name = app_state_get_font_name_status_bar();
+            font_size = app_state_get_font_size_status_bar();
+            target_name = "status bar";
+            break;
+        case RELOAD_FONT_BUTTON:
+            font_name = app_state_get_font_name_button_label();
+            font_size = app_state_get_font_size_button_label();
+            target_name = "button";
+            break;
+        case RELOAD_FONT_LABEL:
+            font_name = app_state_get_font_name_label();
+            font_size = app_state_get_font_size_label();
+            target_name = "label";
+            break;
+        case RELOAD_FONT_HOME_CONTENTS:
+            font_name = app_state_get_font_name_home_contents();
+            font_size = app_state_get_font_size_home_contents();
+            target_name = "home screen contents";
+            break;
+        default:
+            return -1;
+    }
+
+    snprintf(font_path, sizeof(font_path), "assets/fonts/%s", font_name);
+
+    lv_ft_info_t info;
+    info.name = font_path;
+    info.weight = font_size;
+    info.style = FT_FONT_STYLE_NORMAL;
+
+    if (lv_ft_font_init(&info)) {
+        // Update app state with newly loaded font based on target
+        switch (target) {
+            case RELOAD_FONT_TITLE:
+                app_state_set_font_20(info.font);
+                break;
+            case RELOAD_FONT_STATUS_BAR:
+                app_state_set_font_status_bar(info.font);
+                break;
+            case RELOAD_FONT_BUTTON:
+                app_state_set_font_button(info.font);
+                break;
+            case RELOAD_FONT_LABEL:
+                app_state_set_font_label(info.font);
+                break;
+            case RELOAD_FONT_HOME_CONTENTS:
+                app_state_set_font_home_contents(info.font);
+                break;
+        }
+        return 0;
+    } else {
+        log_warning("Failed to reload %s font: %s", target_name, font_path);
+        return -1;
+    }
+}
+
 /**
  * Reloads the title bar font with current settings
  * @return 0 on success, -1 on failure
  */
 int reload_title_font(void) {
-    char title_font_path[128];
-    snprintf(title_font_path, sizeof(title_font_path), "assets/fonts/%s", app_state_get_font_name_title());
-
-    lv_ft_info_t info;
-    info.name = title_font_path;
-    info.weight = app_state_get_font_size_title_bar();
-    info.style = FT_FONT_STYLE_NORMAL;
-
-    if (lv_ft_font_init(&info)) {
-        app_state_set_font_20(info.font);
-        return 0;
-    } else {
-        log_warning("Failed to reload title bar font: %s", title_font_path);
-        return -1;
-    }
+    return reload_font_generic(RELOAD_FONT_TITLE);
 }
 
 /**
@@ -175,21 +251,7 @@ int reload_title_font(void) {
  * @return 0 on success, -1 on failure
  */
 int reload_status_bar_font(void) {
-    char status_bar_font_path[128];
-    snprintf(status_bar_font_path, sizeof(status_bar_font_path), "assets/fonts/%s", app_state_get_font_name_status_bar());
-
-    lv_ft_info_t info;
-    info.name = status_bar_font_path;
-    info.weight = app_state_get_font_size_status_bar();
-    info.style = FT_FONT_STYLE_NORMAL;
-
-    if (lv_ft_font_init(&info)) {
-        app_state_set_font_status_bar(info.font);
-        return 0;
-    } else {
-        log_warning("Failed to reload status bar font: %s", status_bar_font_path);
-        return -1;
-    }
+    return reload_font_generic(RELOAD_FONT_STATUS_BAR);
 }
 
 /**
@@ -197,21 +259,7 @@ int reload_status_bar_font(void) {
  * @return 0 on success, -1 on failure
  */
 int reload_button_font(void) {
-    char button_font_path[128];
-    snprintf(button_font_path, sizeof(button_font_path), "assets/fonts/%s", app_state_get_font_name_button_label());
-
-    lv_ft_info_t info;
-    info.name = button_font_path;
-    info.weight = app_state_get_font_size_button_label();
-    info.style = FT_FONT_STYLE_NORMAL;
-
-    if (lv_ft_font_init(&info)) {
-        app_state_set_font_button(info.font);
-        return 0;
-    } else {
-        log_warning("Failed to reload button font: %s", button_font_path);
-        return -1;
-    }
+    return reload_font_generic(RELOAD_FONT_BUTTON);
 }
 
 /**
@@ -219,21 +267,7 @@ int reload_button_font(void) {
  * @return 0 on success, -1 on failure
  */
 int reload_label_font(void) {
-    char label_font_path[128];
-    snprintf(label_font_path, sizeof(label_font_path), "assets/fonts/%s", app_state_get_font_name_label());
-
-    lv_ft_info_t info;
-    info.name = label_font_path;
-    info.weight = app_state_get_font_size_label();
-    info.style = FT_FONT_STYLE_NORMAL;
-
-    if (lv_ft_font_init(&info)) {
-        app_state_set_font_label(info.font);
-        return 0;
-    } else {
-        log_warning("Failed to reload label font: %s", label_font_path);
-        return -1;
-    }
+    return reload_font_generic(RELOAD_FONT_LABEL);
 }
 
 /**
@@ -241,21 +275,7 @@ int reload_label_font(void) {
  * @return 0 on success, -1 on failure
  */
 int reload_home_contents_font(void) {
-    char home_contents_font_path[128];
-    snprintf(home_contents_font_path, sizeof(home_contents_font_path), "assets/fonts/%s", app_state_get_font_name_home_contents());
-
-    lv_ft_info_t info;
-    info.name = home_contents_font_path;
-    info.weight = app_state_get_font_size_home_contents();
-    info.style = FT_FONT_STYLE_NORMAL;
-
-    if (lv_ft_font_init(&info)) {
-        app_state_set_font_home_contents(info.font);
-        return 0;
-    } else {
-        log_warning("Failed to reload home screen contents font: %s", home_contents_font_path);
-        return -1;
-    }
+    return reload_font_generic(RELOAD_FONT_HOME_CONTENTS);
 }
 
 // ============================================================================

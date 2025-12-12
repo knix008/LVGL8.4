@@ -19,145 +19,129 @@ static const char* font_names[9] = {
 // Font sizes array
 static int font_sizes[] = {12, 14, 16, 18, 20, 24, 28, 32};
 
-// Callback for title bar font dropdown
-static void title_font_dropdown_event_cb(lv_event_t *e) {
+// ============================================================================
+// FONT DROPDOWN CALLBACK CONFIGURATION
+// ============================================================================
+
+// Font target enum for generic callback handling
+typedef enum {
+    FONT_TARGET_TITLE,
+    FONT_TARGET_STATUS_BAR,
+    FONT_TARGET_BUTTON,
+    FONT_TARGET_LABEL,
+    FONT_TARGET_HOME_CONTENTS
+} FontTarget;
+
+// Font attribute type (name vs size)
+typedef enum {
+    FONT_ATTR_NAME,
+    FONT_ATTR_SIZE
+} FontAttribute;
+
+// Configuration structure for font dropdown callbacks
+typedef struct {
+    FontTarget target;
+    FontAttribute attribute;
+} FontDropdownConfig;
+
+/**
+ * Generic font dropdown callback handler.
+ * Handles both font name and font size selections for all font targets.
+ *
+ * @param e Event containing dropdown selection
+ */
+static void font_dropdown_event_cb(lv_event_t *e) {
+    FontDropdownConfig *config = (FontDropdownConfig *)lv_event_get_user_data(e);
+    if (!config) return;
+
     lv_obj_t *dropdown = lv_event_get_target(e);
     uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 9) {
-        app_state_set_font_name_title(font_names[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_title_font() == 0) {
-            update_title_bar_fonts();
+
+    // Validate index based on attribute type
+    bool valid = (config->attribute == FONT_ATTR_NAME && idx < 9) ||
+                 (config->attribute == FONT_ATTR_SIZE && idx < 8);
+
+    if (!valid) return;
+
+    // Update app state based on target and attribute
+    if (config->attribute == FONT_ATTR_NAME) {
+        switch (config->target) {
+            case FONT_TARGET_TITLE:
+                app_state_set_font_name_title(font_names[idx]);
+                break;
+            case FONT_TARGET_STATUS_BAR:
+                app_state_set_font_name_status_bar(font_names[idx]);
+                break;
+            case FONT_TARGET_BUTTON:
+                app_state_set_font_name_button_label(font_names[idx]);
+                break;
+            case FONT_TARGET_LABEL:
+                app_state_set_font_name_label(font_names[idx]);
+                break;
+            case FONT_TARGET_HOME_CONTENTS:
+                app_state_set_font_name_home_contents(font_names[idx]);
+                break;
         }
+    } else {
+        switch (config->target) {
+            case FONT_TARGET_TITLE:
+                app_state_set_font_size_title_bar(font_sizes[idx]);
+                break;
+            case FONT_TARGET_STATUS_BAR:
+                app_state_set_font_size_status_bar(font_sizes[idx]);
+                break;
+            case FONT_TARGET_BUTTON:
+                app_state_set_font_size_button_label(font_sizes[idx]);
+                break;
+            case FONT_TARGET_LABEL:
+                app_state_set_font_size_label(font_sizes[idx]);
+                break;
+            case FONT_TARGET_HOME_CONTENTS:
+                app_state_set_font_size_home_contents(font_sizes[idx]);
+                break;
+        }
+    }
+
+    // Save configuration
+    save_font_config();
+
+    // Reload font and update UI based on target
+    int reload_result = -1;
+    switch (config->target) {
+        case FONT_TARGET_TITLE:
+            reload_result = reload_title_font();
+            if (reload_result == 0) update_title_bar_fonts();
+            break;
+        case FONT_TARGET_STATUS_BAR:
+            reload_result = reload_status_bar_font();
+            if (reload_result == 0) update_status_bar_fonts();
+            break;
+        case FONT_TARGET_BUTTON:
+            reload_result = reload_button_font();
+            if (reload_result == 0) update_button_fonts();
+            break;
+        case FONT_TARGET_LABEL:
+            reload_result = reload_label_font();
+            if (reload_result == 0) update_label_fonts();
+            break;
+        case FONT_TARGET_HOME_CONTENTS:
+            reload_result = reload_home_contents_font();
+            if (reload_result == 0) update_home_contents_fonts();
+            break;
     }
 }
 
-// Callback for title bar font size dropdown
-static void title_font_size_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 8) {
-        app_state_set_font_size_title_bar(font_sizes[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_title_font() == 0) {
-            update_title_bar_fonts();
-        }
-    }
-}
-
-// Callback for status bar font dropdown
-static void status_bar_font_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 9) {
-        app_state_set_font_name_status_bar(font_names[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_status_bar_font() == 0) {
-            update_status_bar_fonts();
-        }
-    }
-}
-
-// Callback for status bar font size dropdown
-static void status_bar_font_size_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 8) {
-        app_state_set_font_size_status_bar(font_sizes[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_status_bar_font() == 0) {
-            update_status_bar_fonts();
-        }
-    }
-}
-
-// Callback for button font dropdown
-static void button_font_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 9) {
-        app_state_set_font_name_button_label(font_names[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_button_font() == 0) {
-            update_button_fonts();
-        }
-    }
-}
-
-// Callback for button font size dropdown
-static void button_font_size_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 8) {
-        app_state_set_font_size_button_label(font_sizes[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_button_font() == 0) {
-            update_button_fonts();
-        }
-    }
-}
-
-// Callback for label font dropdown
-static void label_font_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 9) {
-        app_state_set_font_name_label(font_names[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_label_font() == 0) {
-            update_label_fonts();
-        }
-    }
-}
-
-// Callback for label font size dropdown
-static void label_font_size_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 8) {
-        app_state_set_font_size_label(font_sizes[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_label_font() == 0) {
-            update_label_fonts();
-        }
-    }
-}
-
-// Callback for home contents font dropdown
-static void home_contents_font_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 9) {
-        app_state_set_font_name_home_contents(font_names[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_home_contents_font() == 0) {
-            update_home_contents_fonts();
-        }
-    }
-}
-
-// Callback for home contents font size dropdown
-static void home_contents_font_size_dropdown_event_cb(lv_event_t *e) {
-    lv_obj_t *dropdown = lv_event_get_target(e);
-    uint16_t idx = lv_dropdown_get_selected(dropdown);
-    if (idx < 8) {
-        app_state_set_font_size_home_contents(font_sizes[idx]);
-        save_font_config();
-        // Reload font and update UI in real-time
-        if (reload_home_contents_font() == 0) {
-            update_home_contents_fonts();
-        }
-    }
-}
+// Static configuration instances for each dropdown
+static FontDropdownConfig config_title_name = {FONT_TARGET_TITLE, FONT_ATTR_NAME};
+static FontDropdownConfig config_title_size = {FONT_TARGET_TITLE, FONT_ATTR_SIZE};
+static FontDropdownConfig config_status_name = {FONT_TARGET_STATUS_BAR, FONT_ATTR_NAME};
+static FontDropdownConfig config_status_size = {FONT_TARGET_STATUS_BAR, FONT_ATTR_SIZE};
+static FontDropdownConfig config_button_name = {FONT_TARGET_BUTTON, FONT_ATTR_NAME};
+static FontDropdownConfig config_button_size = {FONT_TARGET_BUTTON, FONT_ATTR_SIZE};
+static FontDropdownConfig config_label_name = {FONT_TARGET_LABEL, FONT_ATTR_NAME};
+static FontDropdownConfig config_label_size = {FONT_TARGET_LABEL, FONT_ATTR_SIZE};
+static FontDropdownConfig config_home_name = {FONT_TARGET_HOME_CONTENTS, FONT_ATTR_NAME};
+static FontDropdownConfig config_home_size = {FONT_TARGET_HOME_CONTENTS, FONT_ATTR_SIZE};
 #include "../include/admin.h"
 #include "../include/config.h"
 #include "../include/state.h"
@@ -962,12 +946,12 @@ void show_calendar_popup(lv_event_t *e) {
  * @param section_label Text for the section label
  * @param current_font_name Current font name to select
  * @param current_font_size Current font size to select
- * @param font_cb Callback for font dropdown
- * @param size_cb Callback for size dropdown
+ * @param font_config Configuration for font name dropdown
+ * @param size_config Configuration for font size dropdown
  */
 static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char *section_label,
                                         const char *current_font_name, int current_font_size,
-                                        lv_event_cb_t font_cb, lv_event_cb_t size_cb) {
+                                        FontDropdownConfig *font_config, FontDropdownConfig *size_config) {
     // Section label
     lv_obj_t *label = lv_label_create(parent);
     lv_label_set_text(label, section_label);
@@ -990,7 +974,7 @@ static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char 
         }
     }
     lv_dropdown_set_selected(font_dropdown, font_idx);
-    lv_obj_add_event_cb(font_dropdown, font_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(font_dropdown, font_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, (void*)font_config);
 
     // Font size label
     lv_obj_t *size_label = lv_label_create(parent);
@@ -1013,7 +997,7 @@ static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char 
         }
     }
     lv_dropdown_set_selected(size_dropdown, size_idx);
-    lv_obj_add_event_cb(size_dropdown, size_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(size_dropdown, font_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, (void*)size_config);
 }
 
 // ============================================================================
@@ -1072,35 +1056,35 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     create_font_setting_section(content, 140, get_label("admin_screen.title_bar_font"),
                                 app_state_get_font_name_title(),
                                 app_state_get_font_size_title_bar(),
-                                title_font_dropdown_event_cb,
-                                title_font_size_dropdown_event_cb);
+                                &config_title_name,
+                                &config_title_size);
 
     // Font Settings Section - Status Bar
     create_font_setting_section(content, 220, get_label("admin_screen.status_bar_font"),
                                 app_state_get_font_name_status_bar(),
                                 app_state_get_font_size_status_bar(),
-                                status_bar_font_dropdown_event_cb,
-                                status_bar_font_size_dropdown_event_cb);
+                                &config_status_name,
+                                &config_status_size);
 
     // Font Settings Section - Buttons
     create_font_setting_section(content, 300, get_label("admin_screen.button_font"),
                                 app_state_get_font_name_button_label(),
                                 app_state_get_font_size_button_label(),
-                                button_font_dropdown_event_cb,
-                                button_font_size_dropdown_event_cb);
+                                &config_button_name,
+                                &config_button_size);
 
     // Font Settings Section - Labels
     create_font_setting_section(content, 380, get_label("admin_screen.label_font"),
                                 app_state_get_font_name_label(),
                                 app_state_get_font_size_label(),
-                                label_font_dropdown_event_cb,
-                                label_font_size_dropdown_event_cb);
+                                &config_label_name,
+                                &config_label_size);
 
     create_font_setting_section(content, 460, get_label("admin_screen.home_contents_font"),
                                 app_state_get_font_name_home_contents(),
                                 app_state_get_font_size_home_contents(),
-                                home_contents_font_dropdown_event_cb,
-                                home_contents_font_size_dropdown_event_cb);
+                                &config_home_name,
+                                &config_home_size);
 
     // Font color section (moved down to make room for font sections)
     create_color_section(content, get_label("admin_screen.label_text_color"), 540, COLOR_TARGET_LABEL_TEXT);

@@ -16,6 +16,7 @@
 #include "../include/logger.h"
 #include "../include/font.h"
 #include "../include/state.h"
+#include "../include/inactivity_timer.h"
 
 // ============================================================================
 // SCREEN STACK (still global, will be encapsulated in Phase 3.5)
@@ -45,6 +46,9 @@ int main(int argc, char **argv) {
         log_close();
         return 1;
     }
+
+    // Initialize inactivity timer system
+    inactivity_timer_init();
 
     // Initialize SDL2
     if (init_sdl() != 0) {

@@ -41,19 +41,19 @@
   },
   "fonts": {
     "title": {
-      "name": "NotoSansKR-Bold.ttf",
+      "name": "NotoSansKR-ExtraBold.ttf",
       "size": 16
     },
     "status_bar": {
-      "name": "NotoSansKR-Medium.ttf",
-      "size": 14
+      "name": "NotoSansKR-SemiBold.ttf",
+      "size": 16
     },
     "button_label": {
-      "name": "NotoSansKR-ExtraLight.ttf",
+      "name": "NotoSansKR-Medium.ttf",
       "size": 16
     },
     "label": {
-      "name": "NotoSansKR-Medium.ttf",
+      "name": "NotoSansKR-ExtraBold.ttf",
       "size": 16
     },
     "home_contents": {
