@@ -3,6 +3,7 @@
 #include "../include/state.h"
 #include "../include/config.h"
 #include "../include/init.h"
+#include "../include/inactivity_timer.h"
 // Font names array
 static const char* font_names[9] = {
     "NotoSansKR-Black.ttf",
@@ -53,6 +54,9 @@ typedef struct {
 static void font_dropdown_event_cb(lv_event_t *e) {
     FontDropdownConfig *config = (FontDropdownConfig *)lv_event_get_user_data(e);
     if (!config) return;
+
+    // Reset inactivity timer on user interaction
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
 
     lv_obj_t *dropdown = lv_event_get_target(e);
     uint16_t idx = lv_dropdown_get_selected(dropdown);
@@ -142,6 +146,7 @@ static FontDropdownConfig config_label_name = {FONT_TARGET_LABEL, FONT_ATTR_NAME
 static FontDropdownConfig config_label_size = {FONT_TARGET_LABEL, FONT_ATTR_SIZE};
 static FontDropdownConfig config_home_name = {FONT_TARGET_HOME_CONTENTS, FONT_ATTR_NAME};
 static FontDropdownConfig config_home_size = {FONT_TARGET_HOME_CONTENTS, FONT_ATTR_SIZE};
+
 #include "../include/admin.h"
 #include "../include/config.h"
 #include "../include/state.h"
@@ -234,7 +239,10 @@ static void update_color_picker_buttons(lv_obj_t *obj, ColorTarget target);
 // Event handler for color selection
 static void color_button_clicked(lv_event_t *e) {
     ColorOption *option = (ColorOption *)lv_event_get_user_data(e);
-    
+
+    // Reset inactivity timer on user interaction
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
+
     // Update app state based on target
     switch (option->target) {
         case COLOR_TARGET_BACKGROUND:
@@ -544,6 +552,9 @@ static void language_button_clicked(lv_event_t *e) {
 
     if (!language) return;
 
+    // Reset inactivity timer on user interaction
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
+
     // Update app state and set language
     if (set_language(language) == 0) {
         app_state_set_language(language);
@@ -738,6 +749,7 @@ static void popup_update_calendar_displays(void) {
 // Popup navigation callbacks
 static void popup_calendar_prev_cb(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     switch (popup_current_mode) {
         case POPUP_CALENDAR_MODE_MONTH:
             calendar_prev_month(&popup_calendar_date);
@@ -754,6 +766,7 @@ static void popup_calendar_prev_cb(lv_event_t *e) {
 
 static void popup_calendar_next_cb(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     switch (popup_current_mode) {
         case POPUP_CALENDAR_MODE_MONTH:
             calendar_next_month(&popup_calendar_date);
@@ -770,25 +783,30 @@ static void popup_calendar_next_cb(lv_event_t *e) {
 
 static void popup_calendar_select_month_cb(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     popup_current_mode = POPUP_CALENDAR_MODE_MONTH;
     popup_update_calendar_displays();
 }
 
 static void popup_calendar_select_day_cb(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     popup_current_mode = POPUP_CALENDAR_MODE_DAY;
     popup_update_calendar_displays();
 }
 
 static void popup_calendar_select_year_cb(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     popup_current_mode = POPUP_CALENDAR_MODE_YEAR;
     popup_update_calendar_displays();
 }
 
 static void popup_calendar_enter_cb(lv_event_t *e) {
     (void)e;
-    
+
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
+
     // Update app state with popup calendar date
     app_state_set_calendar_date(popup_calendar_date);
     
@@ -822,9 +840,12 @@ static void popup_calendar_enter_cb(lv_event_t *e) {
 // Show calendar popup when display is clicked
 void show_calendar_popup(lv_event_t *e) {
     (void)e; // Unused parameter
-    
+
+    // Reset inactivity timer on user interaction
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
+
     lv_obj_t *parent = lv_scr_act(); // Get the active screen
-    
+
     // Initialize popup calendar with current app state date
     popup_calendar_date = app_state_get_calendar_date();
     popup_current_mode = POPUP_CALENDAR_MODE_MONTH;
@@ -1004,17 +1025,26 @@ static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char 
 // MULTI-PAGE MANAGEMENT
 // ============================================================================
 
-#define ADMIN_PAGE_COUNT 3
-static int current_admin_page = 0;  // Current page index (0-2)
+#define ADMIN_PAGE_COUNT 4
+static int current_admin_page = 0;  // Current page index (0-3)
 static lv_obj_t *admin_content_container = NULL;  // Reference to content container
 static lv_obj_t *admin_prev_btn = NULL;  // Previous page button
 static lv_obj_t *admin_next_btn = NULL;  // Next page button
 static lv_obj_t *admin_page_label = NULL;  // Page indicator label
 
+// Page names for display
+static const char* page_names[] = {
+    "Calendar",
+    "Font",
+    "Colors",
+    "Language"
+};
+
 // Forward declarations for page creation functions
-static void create_admin_page_1(lv_obj_t *content);
-static void create_admin_page_2(lv_obj_t *content);
-static void create_admin_page_3(lv_obj_t *content);
+static void create_admin_page_calendar(lv_obj_t *content);
+static void create_admin_page_font(lv_obj_t *content);
+static void create_admin_page_colors(lv_obj_t *content);
+static void create_admin_page_language(lv_obj_t *content);
 
 // ============================================================================
 // PAGE NAVIGATION
@@ -1039,10 +1069,11 @@ static void update_page_navigation_buttons(void) {
         }
     }
 
-    // Update page indicator
+    // Update page indicator with page name
     if (admin_page_label) {
-        char page_text[16];
-        snprintf(page_text, sizeof(page_text), "%d / %d", current_admin_page + 1, ADMIN_PAGE_COUNT);
+        char page_text[64];
+        snprintf(page_text, sizeof(page_text), "%s (%d/%d)",
+                 page_names[current_admin_page], current_admin_page + 1, ADMIN_PAGE_COUNT);
         lv_label_set_text(admin_page_label, page_text);
     }
 }
@@ -1056,13 +1087,16 @@ static void refresh_admin_page(void) {
     // Create the current page content
     switch (current_admin_page) {
         case 0:
-            create_admin_page_1(admin_content_container);
+            create_admin_page_calendar(admin_content_container);
             break;
         case 1:
-            create_admin_page_2(admin_content_container);
+            create_admin_page_font(admin_content_container);
             break;
         case 2:
-            create_admin_page_3(admin_content_container);
+            create_admin_page_colors(admin_content_container);
+            break;
+        case 3:
+            create_admin_page_language(admin_content_container);
             break;
         default:
             break;
@@ -1074,6 +1108,7 @@ static void refresh_admin_page(void) {
 
 static void admin_prev_page_callback(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     if (current_admin_page > 0) {
         current_admin_page--;
         refresh_admin_page();
@@ -1082,6 +1117,7 @@ static void admin_prev_page_callback(lv_event_t *e) {
 
 static void admin_next_page_callback(lv_event_t *e) {
     (void)e;
+    inactivity_timer_reset(INACTIVITY_CONTEXT_NON_HOME);
     if (current_admin_page < ADMIN_PAGE_COUNT - 1) {
         current_admin_page++;
         refresh_admin_page();
@@ -1092,11 +1128,11 @@ static void admin_next_page_callback(lv_event_t *e) {
 // PAGE CONTENT CREATION
 // ============================================================================
 
-// Page 1: Calendar + Font Settings
-static void create_admin_page_1(lv_obj_t *content) {
-    // Main title
+// Page 0: Calendar Settings
+static void create_admin_page_calendar(lv_obj_t *content) {
+    // Page title
     lv_obj_t *title_label = lv_label_create(content);
-    lv_label_set_text(title_label, get_label("admin_screen.title"));
+    lv_label_set_text(title_label, "Calendar");
     apply_label_style(title_label);
     lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
 
@@ -1104,12 +1140,12 @@ static void create_admin_page_1(lv_obj_t *content) {
     lv_obj_t *calendar_title = lv_label_create(content);
     lv_label_set_text(calendar_title, get_label("admin_screen.calendar_setting"));
     apply_label_style(calendar_title);
-    lv_obj_set_pos(calendar_title, CONTENT_PADDING, 40);
+    lv_obj_set_pos(calendar_title, CONTENT_PADDING, 60);
 
     // Calendar date display button (clickable to open popup)
     lv_obj_t *calendar_btn = lv_btn_create(content);
     lv_obj_set_size(calendar_btn, 260, 50);
-    lv_obj_set_pos(calendar_btn, CONTENT_PADDING, 65);
+    lv_obj_set_pos(calendar_btn, CONTENT_PADDING, 85);
     apply_button_style(calendar_btn, app_state_get_button_color());
 
     // Create label inside the button for the calendar text
@@ -1128,33 +1164,42 @@ static void create_admin_page_1(lv_obj_t *content) {
         app_state_set_calendar_date(calendar_date);
     }
     update_calendar_display();
+}
+
+// Page 1: Font Settings
+static void create_admin_page_font(lv_obj_t *content) {
+    // Page title
+    lv_obj_t *title_label = lv_label_create(content);
+    lv_label_set_text(title_label, "Font");
+    apply_label_style(title_label);
+    lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
 
     // Font Settings Sections
-    create_font_setting_section(content, 140, get_label("admin_screen.title_bar_font"),
+    create_font_setting_section(content, 60, get_label("admin_screen.title_bar_font"),
                                 app_state_get_font_name_title(),
                                 app_state_get_font_size_title_bar(),
                                 &config_title_name,
                                 &config_title_size);
 
-    create_font_setting_section(content, 220, get_label("admin_screen.status_bar_font"),
+    create_font_setting_section(content, 140, get_label("admin_screen.status_bar_font"),
                                 app_state_get_font_name_status_bar(),
                                 app_state_get_font_size_status_bar(),
                                 &config_status_name,
                                 &config_status_size);
 
-    create_font_setting_section(content, 300, get_label("admin_screen.button_font"),
+    create_font_setting_section(content, 220, get_label("admin_screen.button_font"),
                                 app_state_get_font_name_button_label(),
                                 app_state_get_font_size_button_label(),
                                 &config_button_name,
                                 &config_button_size);
 
-    create_font_setting_section(content, 380, get_label("admin_screen.label_font"),
+    create_font_setting_section(content, 300, get_label("admin_screen.label_font"),
                                 app_state_get_font_name_label(),
                                 app_state_get_font_size_label(),
                                 &config_label_name,
                                 &config_label_size);
 
-    create_font_setting_section(content, 460, get_label("admin_screen.home_contents_font"),
+    create_font_setting_section(content, 380, get_label("admin_screen.home_contents_font"),
                                 app_state_get_font_name_home_contents(),
                                 app_state_get_font_size_home_contents(),
                                 &config_home_name,
@@ -1162,10 +1207,10 @@ static void create_admin_page_1(lv_obj_t *content) {
 }
 
 // Page 2: Color Settings
-static void create_admin_page_2(lv_obj_t *content) {
+static void create_admin_page_colors(lv_obj_t *content) {
     // Page title
     lv_obj_t *title_label = lv_label_create(content);
-    lv_label_set_text(title_label, get_label("admin_screen.title"));
+    lv_label_set_text(title_label, "Colors");
     apply_label_style(title_label);
     lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
 
@@ -1179,10 +1224,10 @@ static void create_admin_page_2(lv_obj_t *content) {
 }
 
 // Page 3: Language Settings
-static void create_admin_page_3(lv_obj_t *content) {
+static void create_admin_page_language(lv_obj_t *content) {
     // Page title
     lv_obj_t *title_label = lv_label_create(content);
-    lv_label_set_text(title_label, get_label("admin_screen.title"));
+    lv_label_set_text(title_label, "Language");
     apply_label_style(title_label);
     lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, CONTENT_PADDING, CONTENT_PADDING);
 
@@ -1224,11 +1269,11 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     // Store content container reference for page refresh
     admin_content_container = content;
 
-    // Reset to page 1 when screen is created
+    // Reset to first page when screen is created
     current_admin_page = 0;
 
     // Create initial page content
-    create_admin_page_1(content);
+    create_admin_page_calendar(content);
 
     // Create page navigation buttons at the bottom of content area
     // Position them above the status bar
@@ -1241,8 +1286,9 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
 
     // Page indicator label (center)
     admin_page_label = lv_label_create(parent);
-    char page_text[16];
-    snprintf(page_text, sizeof(page_text), "%d / %d", current_admin_page + 1, ADMIN_PAGE_COUNT);
+    char page_text[64];
+    snprintf(page_text, sizeof(page_text), "%s (%d/%d)",
+             page_names[current_admin_page], current_admin_page + 1, ADMIN_PAGE_COUNT);
     lv_label_set_text(admin_page_label, page_text);
     lv_obj_set_style_text_color(admin_page_label, lv_color_hex(COLOR_TEXT), 0);
     if (app_state_get_font_label()) {
