@@ -1,0 +1,394 @@
+{
+  "ko": {
+    "menu_items": {
+      "admin": "관리자 설정",
+      "network": "네트워크 설정",
+      "korean_input": "한글 입력",
+      "info": "정보",
+      "camera": "카메라",
+      "number_input": "숫자 입력",
+      "english_input": "영문 입력"
+    },
+    "home_screen": {
+      "menu_button": "메뉴",
+      "exit_button": "종료"
+    },
+    "screen_names": {
+      "home": "홈",
+      "menu": "메뉴",
+      "info": "정보"
+    },
+    "admin_screen": {
+      "title": "테마 색상 설정",
+      "background_color": "배경 색상",
+      "title_bar_color": "제목 막대 색상",
+      "status_bar_color": "상태 막대 색상",
+      "button_color": "버튼 색상",
+      "button_border_color": "버튼 테두리 색상",
+      "label_text_color": "텍스트 색상",
+      "font": "폰트",
+      "font_size": "폰트 크기",
+      "title_bar_font": "제목 막대 폰트",
+      "status_bar_font": "상태 막대 폰트",
+      "button_font": "버튼 폰트",
+      "label_font": "라벨 폰트",
+      "home_contents_font": "홈 화면 내용 폰트",
+      "calendar_setting": "캘린더 설정",
+      "calendar_mode": "모드",
+      "calendar_mode_month": "월",
+      "calendar_mode_day": "일",
+      "calendar_mode_year": "년",
+      "select": "선택",
+      "close": "닫기",
+      "language_title": "언어 설정",
+      "language_korean": "한글",
+      "language_english": "English",
+      "info_text": "\n선택한 설정이 자동 저장되며 즉시 적용됩니다.\n",
+      "colors": {
+        "dark_gray": "어두운 회색",
+        "black": "검정",
+        "navy": "남색",
+        "dark_green": "진한 녹색",
+        "blue": "파랑",
+        "red": "빨강",
+        "purple": "자주색",
+        "gray": "회색",
+        "dark_blue": "진한 파랑",
+        "white": "흰색",
+        "green": "초록"
+      }
+    },
+    "korean_input_screen": {
+      "mode_button": "모드",
+      "clear_button": "지우기",
+      "enter_button": "입력",
+      "space_button": "␣",
+      "instruction": "텍스트 박스를 클릭하여 키보드를 표시하세요",
+      "modes": {
+        "korean": "한글",
+        "number": "숫자",
+        "special": "특수문자"
+      }
+    },
+    "number_input_screen": {
+      "title": "숫자 입력",
+      "enter_button": "입력",
+      "instruction": "텍스트 박스를 클릭하여 키패드를 표시하세요",
+      "result_title": "입력 결과"
+    },
+    "english_input_screen": {
+      "title": "영문 입력",
+      "mode_button": "모드",
+      "mode_uppercase": "대문자",
+      "mode_lowercase": "소문자",
+      "space_button": "␣",
+      "clear_button": "지우기",
+      "delete_button": "←",
+      "enter_button": "입력",
+      "instruction": "텍스트 박스를 클릭하여 키보드를 표시하세요",
+      "result_title": "입력 결과"
+    },
+    "info_screen": {
+      "title": "애플리케이션 정보",
+      "app_name": "이름: LVGL Menu",
+      "version": "버전: 8.4",
+      "description_label": "설명:",
+      "description_text": "LVGL 기반의 메뉴 시스템입니다.\n한글 입력을 지원합니다.",
+      "copyright": "저작권: 2024"
+    },
+    "network_screen": {
+      "title": "네트워크 설정",
+      "ip_address_title": "IP 주소",
+      "ip_config_instruction": "위의 박스를 눌러서 IP 주소를 설정하세요",
+      "ip_popup_title": "IP 주소",
+      "ipv4_button": "IPv4",
+      "ipv6_button": "IPv6",
+      "clear_button": "지우기",
+      "backspace_button": "< 뒤로",
+      "back_button": "< 뒤로",
+      "save_button": "저장",
+      "cancel_button": "취소",
+      "error_title": "오류",
+      "error_empty": "IP 주소를 입력하세요",
+      "error_invalid_ipv4": "잘못된 IPv4 형식입니다\n예: 192.168.1.100",
+      "error_invalid_ipv6": "잘못된 IPv6 형식입니다\n예: 2001:0db8:85a3::7334",
+      "ok_button": "확인",
+      "wifi_settings": "Wi-Fi 설정",
+      "wifi_ssid": "SSID: MyNetwork",
+      "wifi_status": "상태: 연결됨",
+      "ethernet_settings": "이더넷 설정",
+      "ethernet_ip": "IP: 192.168.1.100",
+      "ethernet_status": "상태: 비활성",
+      "vpn_settings": "VPN 설정",
+      "vpn_status": "상태: 비활성"
+    },
+    "camera_screen": {
+      "title": "카메라",
+      "description": "카메라 화면입니다.",
+      "camera_on": "카메라 켜기",
+      "camera_off": "카메라 끄기",
+      "capture": "캡처",
+      "training": "학습",
+      "status": "상태",
+      "list_persons": "사람 목록",
+      "delete_person": "사람 삭제",
+      "fas_on": "FAS 켜기",
+      "fas_off": "FAS 끄기",
+      "ready": "준비",
+      "stream_not_connected": "스트림: 연결되지 않음",
+      "recognized": "인식됨",
+      "user_id": "사용자 ID",
+      "confidence_level": "신뢰도",
+      "person_id_title": "사람 ID 입력",
+      "person_id_placeholder": "예: 12345",
+      "person_id_save": "저장",
+      "person_id_cancel": "취소",
+      "person_id_error": "유효한 ID를 입력하세요"
+    },
+    "days_of_week": {
+      "sunday": "일요일",
+      "monday": "월요일",
+      "tuesday": "화요일",
+      "wednesday": "수요일",
+      "thursday": "목요일",
+      "friday": "금요일",
+      "saturday": "토요일"
+    },
+    "months": {
+      "january": "1월",
+      "february": "2월",
+      "march": "3월",
+      "april": "4월",
+      "may": "5월",
+      "june": "6월",
+      "july": "7월",
+      "august": "8월",
+      "september": "9월",
+      "october": "10월",
+      "november": "11월",
+      "december": "12월"
+    },
+    "months_abbr": {
+      "january": "1월",
+      "february": "2월",
+      "march": "3월",
+      "april": "4월",
+      "may": "5월",
+      "june": "6월",
+      "july": "7월",
+      "august": "8월",
+      "september": "9월",
+      "october": "10월",
+      "november": "11월",
+      "december": "12월"
+    },
+    "date_format": {
+      "year_suffix": "년",
+      "month_suffix": "월",
+      "day_suffix": "일"
+    },
+    "common": {
+      "warning": "주의",
+      "ok": "확인"
+    },
+    "menu_screen": {
+      "status_bar_full": "상태바가 가득 찼습니다. 최대 5개 아이콘만 허용됩니다."
+    }
+  },
+  "en": {
+    "menu_items": {
+      "admin": "Admin Settings",
+      "network": "Network Settings",
+      "korean_input": "Korean Input",
+      "info": "Information",
+      "camera": "Camera",
+      "number_input": "Number Input",
+      "english_input": "English Input"
+    },
+    "home_screen": {
+      "menu_button": "Menu",
+      "exit_button": "Exit"
+    },
+    "screen_names": {
+      "home": "Home",
+      "menu": "Menu",
+      "info": "Info"
+    },
+    "admin_screen": {
+      "title": "Theme Color Settings",
+      "background_color": "Background Color",
+      "title_bar_color": "Title Bar Color",
+      "status_bar_color": "Status Bar Color",
+      "button_color": "Button Color",
+      "button_border_color": "Button Border Color",
+      "label_text_color": "Label Text Color",
+      "font": "Font",
+      "font_size": "Font Size",
+      "title_bar_font": "Title Bar Font",
+      "status_bar_font": "Status Bar Font",
+      "button_font": "Button Font",
+      "label_font": "Label Font",
+      "home_contents_font": "Home Screen Contents Font",
+      "calendar_setting": "Calendar Setting",
+      "calendar_mode": "Mode",
+      "calendar_mode_month": "Month",
+      "calendar_mode_day": "Day",
+      "calendar_mode_year": "Year",
+      "select": "Select",
+      "close": "Close",
+      "language_title": "Language Settings",
+      "language_korean": "한글",
+      "language_english": "English",
+      "info_text": "\nSettings are saved automatically and \napplied immediately.\n",
+      "colors": {
+        "dark_gray": "Dark Gray",
+        "black": "Black",
+        "navy": "Navy",
+        "dark_green": "Dark Green",
+        "blue": "Blue",
+        "red": "Red",
+        "purple": "Purple",
+        "gray": "Gray",
+        "dark_blue": "Dark Blue",
+        "white": "White",
+        "green": "Green"
+      }
+    },
+    "korean_input_screen": {
+      "mode_button": "Mode",
+      "clear_button": "Clear",
+      "enter_button": "Enter",
+      "space_button": "␣",
+      "instruction": "Click the text box to show the keyboard",
+      "modes": {
+        "korean": "Korean",
+        "number": "Number",
+        "special": "Special"
+      }
+    },
+    "number_input_screen": {
+      "title": "Number Input",
+      "enter_button": "Enter",
+      "instruction": "Click the text box to show the keypad",
+      "result_title": "Input Result"
+    },
+    "english_input_screen": {
+      "title": "English Input",
+      "mode_button": "Mode",
+      "mode_uppercase": "Uppercase",
+      "mode_lowercase": "Lowercase",
+      "space_button": "␣",
+      "clear_button": "Clear",
+      "delete_button": "←",
+      "enter_button": "Enter",
+      "instruction": "Click the text box to show the keyboard",
+      "result_title": "Input Result"
+    },
+    "info_screen": {
+      "title": "Application Information",
+      "app_name": "Name: LVGL Menu",
+      "version": "Version: 8.4",
+      "description_label": "Description:",
+      "description_text": "A menu system based on LVGL.\nSupports Korean input.",
+      "copyright": "Copyright: 2024"
+    },
+    "network_screen": {
+      "title": "Network Settings",
+      "ip_address_title": "IP Address",
+      "ip_config_instruction": "Tap the box above to configure IP address",
+      "ip_popup_title": "IP Address",
+      "ipv4_button": "IPv4",
+      "ipv6_button": "IPv6",
+      "clear_button": "CLR",
+      "backspace_button": "< Backspace",
+      "back_button": "< Back",
+      "save_button": "Save",
+      "cancel_button": "Cancel",
+      "error_title": "Error",
+      "error_empty": "Please enter an IP address",
+      "error_invalid_ipv4": "Invalid IPv4 format\nExample: 192.168.1.100",
+      "error_invalid_ipv6": "Invalid IPv6 format\nExample: 2001:0db8:85a3::7334",
+      "ok_button": "OK",
+      "wifi_settings": "Wi-Fi Settings",
+      "wifi_ssid": "SSID: MyNetwork",
+      "wifi_status": "Status: Connected",
+      "ethernet_settings": "Ethernet Settings",
+      "ethernet_ip": "IP: 192.168.1.100",
+      "ethernet_status": "Status: Inactive",
+      "vpn_settings": "VPN Settings",
+      "vpn_status": "Status: Inactive"
+    },
+    "camera_screen": {
+      "title": "Camera",
+      "description": "Camera screen.",
+      "camera_on": "Camera On",
+      "camera_off": "Camera Off",
+      "capture": "Capture",
+      "training": "Training",
+      "status": "Status",
+      "list_persons": "List Persons",
+      "delete_person": "Delete Person",
+      "fas_on": "FAS On",
+      "fas_off": "FAS Off",
+      "ready": "Ready",
+      "stream_not_connected": "Stream: Not Connected",
+      "recognized": "Recognized",
+      "user_id": "User ID",
+      "confidence_level": "Confidence Level",
+      "person_id_title": "Enter Person ID",
+      "person_id_placeholder": "e.g. 12345",
+      "person_id_save": "Save",
+      "person_id_cancel": "Cancel",
+      "person_id_error": "Please enter a valid ID"
+    },
+    "days_of_week": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "months_abbr": {
+      "january": "Jan",
+      "february": "Feb",
+      "march": "Mar",
+      "april": "Apr",
+      "may": "May",
+      "june": "Jun",
+      "july": "Jul",
+      "august": "Aug",
+      "september": "Sep",
+      "october": "Oct",
+      "november": "Nov",
+      "december": "Dec"
+    },
+    "date_format": {
+      "year_suffix": "",
+      "month_suffix": "",
+      "day_suffix": ""
+    },
+    "common": {
+      "warning": "Warning",
+      "ok": "OK"
+    },
+    "menu_screen": {
+      "status_bar_full": "Status bar is full. Maximum 5 icons allowed."
+    }
+  }
+}
