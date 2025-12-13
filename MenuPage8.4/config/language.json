@@ -44,6 +44,11 @@
       "language_korean": "한글",
       "language_english": "English",
       "info_text": "\n선택한 설정이 자동 저장되며 즉시 적용됩니다.\n",
+      "page_calendar": "캘린더",
+      "page_font": "폰트",
+      "page_colors_1": "색상 1",
+      "page_colors_2": "색상 2",
+      "page_language": "언어",
       "colors": {
         "dark_gray": "어두운 회색",
         "black": "검정",
@@ -240,6 +245,11 @@
       "language_korean": "한글",
       "language_english": "English",
       "info_text": "\nSettings are saved automatically and \napplied immediately.\n",
+      "page_calendar": "Calendar",
+      "page_font": "Font",
+      "page_colors_1": "Colors 1",
+      "page_colors_2": "Colors 2",
+      "page_language": "Language",
       "colors": {
         "dark_gray": "Dark Gray",
         "black": "Black",

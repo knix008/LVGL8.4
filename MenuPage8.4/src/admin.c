@@ -1030,27 +1030,38 @@ static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char 
 // MULTI-PAGE MANAGEMENT
 // ============================================================================
 
-#define ADMIN_PAGE_COUNT 4
+#define ADMIN_PAGE_COUNT 5
 #define PAGE_TITLE_BAR_HEIGHT 50
-static int current_admin_page = 0;  // Current page index (0-3)
+static int current_admin_page = 0;  // Current page index (0-4)
 static lv_obj_t *admin_content_container = NULL;  // Reference to content container
 static lv_obj_t *admin_page_title_bar = NULL;  // Page title bar container
 static lv_obj_t *admin_prev_btn = NULL;  // Previous page button
 static lv_obj_t *admin_next_btn = NULL;  // Next page button
 static lv_obj_t *admin_page_label = NULL;  // Page indicator label
 
-// Page names for display
-static const char* page_names[] = {
-    "Calendar",
-    "Font",
-    "Colors",
-    "Language"
-};
+// Helper function to get localized page name
+static const char* get_page_name(int page_index) {
+    switch (page_index) {
+        case 0:
+            return get_label("admin_screen.page_calendar");
+        case 1:
+            return get_label("admin_screen.page_font");
+        case 2:
+            return get_label("admin_screen.page_colors_1");
+        case 3:
+            return get_label("admin_screen.page_colors_2");
+        case 4:
+            return get_label("admin_screen.page_language");
+        default:
+            return "Unknown";
+    }
+}
 
 // Forward declarations for page creation functions
 static void create_admin_page_calendar(lv_obj_t *content);
 static void create_admin_page_font(lv_obj_t *content);
-static void create_admin_page_colors(lv_obj_t *content);
+static void create_admin_page_colors_1(lv_obj_t *content);
+static void create_admin_page_colors_2(lv_obj_t *content);
 static void create_admin_page_language(lv_obj_t *content);
 
 // ============================================================================
@@ -1105,7 +1116,7 @@ static void create_page_title_bar(lv_obj_t *parent) {
     admin_page_label = lv_label_create(admin_page_title_bar);
     char page_text[64];
     snprintf(page_text, sizeof(page_text), "%s (%d/%d)",
-             page_names[current_admin_page], current_admin_page + 1, ADMIN_PAGE_COUNT);
+             get_page_name(current_admin_page), current_admin_page + 1, ADMIN_PAGE_COUNT);
     lv_label_set_text(admin_page_label, page_text);
     lv_obj_set_style_text_color(admin_page_label, lv_color_hex(app_state_get_label_text_color()), 0);
     if (app_state_get_font_label()) {
@@ -1152,7 +1163,7 @@ static void update_page_navigation_buttons(void) {
     if (admin_page_label) {
         char page_text[64];
         snprintf(page_text, sizeof(page_text), "%s (%d/%d)",
-                 page_names[current_admin_page], current_admin_page + 1, ADMIN_PAGE_COUNT);
+                 get_page_name(current_admin_page), current_admin_page + 1, ADMIN_PAGE_COUNT);
         lv_label_set_text(admin_page_label, page_text);
     }
 }
@@ -1175,9 +1186,12 @@ static void refresh_admin_page(void) {
             create_admin_page_font(admin_content_container);
             break;
         case 2:
-            create_admin_page_colors(admin_content_container);
+            create_admin_page_colors_1(admin_content_container);
             break;
         case 3:
+            create_admin_page_colors_2(admin_content_container);
+            break;
+        case 4:
             create_admin_page_language(admin_content_container);
             break;
         default:
@@ -1282,18 +1296,26 @@ static void create_admin_page_font(lv_obj_t *content) {
                                 &config_home_size);
 }
 
-// Page 2: Color Settings
-static void create_admin_page_colors(lv_obj_t *content) {
+// Page 2: Color Settings (Part 1)
+static void create_admin_page_colors_1(lv_obj_t *content) {
     // Calculate Y offset for content below page title bar
     int content_y_offset = CONTENT_PADDING + PAGE_TITLE_BAR_HEIGHT + 10;
 
-    // Color sections
+    // First three color sections
     create_color_section(content, get_label("admin_screen.label_text_color"), content_y_offset, COLOR_TARGET_LABEL_TEXT);
     create_color_section(content, get_label("admin_screen.background_color"), content_y_offset + 80, COLOR_TARGET_BACKGROUND);
     create_color_section(content, get_label("admin_screen.title_bar_color"), content_y_offset + 160, COLOR_TARGET_TITLE_BAR);
-    create_color_section(content, get_label("admin_screen.status_bar_color"), content_y_offset + 240, COLOR_TARGET_STATUS_BAR);
-    create_color_section(content, get_label("admin_screen.button_color"), content_y_offset + 320, COLOR_TARGET_BUTTON);
-    create_color_section(content, get_label("admin_screen.button_border_color"), content_y_offset + 400, COLOR_TARGET_BUTTON_BORDER);
+}
+
+// Page 3: Color Settings (Part 2)
+static void create_admin_page_colors_2(lv_obj_t *content) {
+    // Calculate Y offset for content below page title bar
+    int content_y_offset = CONTENT_PADDING + PAGE_TITLE_BAR_HEIGHT + 10;
+
+    // Last three color sections
+    create_color_section(content, get_label("admin_screen.status_bar_color"), content_y_offset, COLOR_TARGET_STATUS_BAR);
+    create_color_section(content, get_label("admin_screen.button_color"), content_y_offset + 80, COLOR_TARGET_BUTTON);
+    create_color_section(content, get_label("admin_screen.button_border_color"), content_y_offset + 160, COLOR_TARGET_BUTTON_BORDER);
 }
 
 // Page 3: Language Settings
