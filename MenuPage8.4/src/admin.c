@@ -460,12 +460,12 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
     lv_obj_set_pos(section_label, 10, y_pos);
     
     // Color buttons - create static array for each target
-    static ColorOption bg_options[4];
-    static ColorOption title_options[4];
-    static ColorOption status_options[4];
-    static ColorOption button_options[4];
-    static ColorOption button_border_options[4];
-    static ColorOption label_text_options[4];
+    static ColorOption bg_options[5];
+    static ColorOption title_options[5];
+    static ColorOption status_options[5];
+    static ColorOption button_options[5];
+    static ColorOption button_border_options[5];
+    static ColorOption label_text_options[5];
     
     ColorOption *options;
     if (target == COLOR_TARGET_BACKGROUND) {
@@ -473,36 +473,42 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
         bg_options[1] = (ColorOption){"검정", 0x000000, target};
         bg_options[2] = (ColorOption){"흰색", 0xFFFFFF, target};
         bg_options[3] = (ColorOption){"진한 녹색", 0x1A3A1A, target};
+        bg_options[4] = (ColorOption){"남색", 0x0A0A2A, target};
         options = bg_options;
     } else if (target == COLOR_TARGET_TITLE_BAR) {
         title_options[0] = (ColorOption){"어두운 회색", 0x1A1A1A, target};
         title_options[1] = (ColorOption){"검정", 0x000000, target};
         title_options[2] = (ColorOption){"파랑", 0x0A0A50, target};
         title_options[3] = (ColorOption){"빨강", 0x500A0A, target};
+        title_options[4] = (ColorOption){"자주색", 0x3A0A3A, target};
         options = title_options;
     } else if (target == COLOR_TARGET_STATUS_BAR) {
         status_options[0] = (ColorOption){"어두운 회색", 0x1A1A1A, target};
         status_options[1] = (ColorOption){"검정", 0x000000, target};
         status_options[2] = (ColorOption){"파랑", 0x0A0A50, target};
         status_options[3] = (ColorOption){"자주색", 0x3A0A3A, target};
+        status_options[4] = (ColorOption){"빨강", 0x500A0A, target};
         options = status_options;
     } else if (target == COLOR_TARGET_BUTTON) {
         button_options[0] = (ColorOption){"진한 회색", 0x1A1A1A, target};
         button_options[1] = (ColorOption){"검정", 0x000000, target};
         button_options[2] = (ColorOption){"회색", 0x444444, target};
         button_options[3] = (ColorOption){"진한 파랑", 0x0D0D3A, target};
+        button_options[4] = (ColorOption){"남색", 0x0A0A2A, target};
         options = button_options;
     } else if (target == COLOR_TARGET_LABEL_TEXT) {
         label_text_options[0] = (ColorOption){"흰색", 0xFFFFFF, target};
         label_text_options[1] = (ColorOption){"검정", 0x000000, target};
         label_text_options[2] = (ColorOption){"회색", 0x888888, target};
         label_text_options[3] = (ColorOption){"파랑", 0x4A4AFF, target};
+        label_text_options[4] = (ColorOption){"초록", 0x4AFF4A, target};
         options = label_text_options;
     } else {
         button_border_options[0] = (ColorOption){"회색", 0x888888, target};
         button_border_options[1] = (ColorOption){"흰색", 0xFFFFFF, target};
         button_border_options[2] = (ColorOption){"파랑", 0x4A4AFF, target};
         button_border_options[3] = (ColorOption){"초록", 0x4AFF4A, target};
+        button_border_options[4] = (ColorOption){"빨강", 0xFF4A4A, target};
         options = button_border_options;
     }
     
@@ -511,7 +517,7 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
     int button_height = 40;
     int spacing = 5;
     
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
         lv_obj_t *btn = lv_btn_create(parent);
         lv_obj_set_size(btn, button_width, button_height);
         lv_obj_set_pos(btn, 10 + i * (button_width + spacing), button_y);
@@ -548,6 +554,11 @@ static void create_color_section(lv_obj_t *parent, const char *title, int y_pos,
 // LANGUAGE SELECTION
 // ============================================================================
 
+// Admin page management variables (declared early for use in timer callback)
+#define ADMIN_PAGE_COUNT 5
+static int current_admin_page = 0;  // Current page index (0-4)
+static int saved_admin_page = -1;  // Saved page index for restoration (-1 means not saved)
+
 // Forward declare for timer callback
 static void refresh_admin_screen_timer_cb(lv_timer_t *timer);
 
@@ -583,6 +594,15 @@ static void refresh_admin_screen_timer_cb(lv_timer_t *timer) {
 
     // Update home screen button labels (it's not recreated like other screens)
     update_home_screen_labels();
+
+    // Save current admin page index if we're on the admin screen
+    for (int i = 0; i <= screen_stack_top; i++) {
+        if (screen_stack[i].screen_id == SCREEN_ADMIN && screen_stack[i].screen) {
+            // We're on the admin screen, save the current page index
+            saved_admin_page = current_admin_page;
+            break;
+        }
+    }
 
     // Mark all non-main screens as invalid (set screen to NULL)
     // This forces them to be recreated with new labels when navigated to
@@ -1030,9 +1050,7 @@ static void create_font_setting_section(lv_obj_t *parent, int y_pos, const char 
 // MULTI-PAGE MANAGEMENT
 // ============================================================================
 
-#define ADMIN_PAGE_COUNT 5
 #define PAGE_TITLE_BAR_HEIGHT 50
-static int current_admin_page = 0;  // Current page index (0-4)
 static lv_obj_t *admin_content_container = NULL;  // Reference to content container
 static lv_obj_t *admin_page_title_bar = NULL;  // Page title bar container
 static lv_obj_t *admin_prev_btn = NULL;  // Previous page button
@@ -1363,14 +1381,20 @@ static lv_obj_t *create_admin_content(lv_obj_t *parent) {
     // Store content container reference for page refresh
     admin_content_container = content;
 
-    // Reset to first page when screen is created
-    current_admin_page = 0;
+    // Restore saved page index if available, otherwise reset to first page
+    if (saved_admin_page >= 0 && saved_admin_page < ADMIN_PAGE_COUNT) {
+        current_admin_page = saved_admin_page;
+        saved_admin_page = -1;  // Clear saved value
+    } else {
+        // Reset to first page when screen is created for the first time
+        current_admin_page = 0;
+    }
 
     // Create page title bar at the top of content area
     create_page_title_bar(content);
 
-    // Create initial page content
-    create_admin_page_calendar(content);
+    // Create the current page content (not always calendar)
+    refresh_admin_page();
 
     // Initial button state update
     update_page_navigation_buttons();

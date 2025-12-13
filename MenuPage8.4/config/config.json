@@ -28,13 +28,13 @@
     }
   },
   "theme": {
-    "background_color": "0x2A2A2A",
-    "title_bar_color": "0x1A1A1A",
-    "status_bar_color": "0x000000",
-    "button_color": "0x000000",
+    "background_color": "0x000000",
+    "title_bar_color": "0x3A0A3A",
+    "status_bar_color": "0x500A0A",
+    "button_color": "0x0A0A2A",
     "button_border_color": "0x4AFF4A",
     "label_text_color": "0xFFFFFF",
-    "language": "ko"
+    "language": "en"
   },
   "calendar": {
     "selected_date": "2025-12-12"
